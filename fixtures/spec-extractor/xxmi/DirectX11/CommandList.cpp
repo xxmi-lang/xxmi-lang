@@ -124,3 +124,20 @@ bool CommandListExpression::parse(const wstring *expression)
 	if (operator_mask & OP_AND)
 		transform_operators_recursive(&tree, and_operators, ARRAYSIZE(and_operators), false, false);
 }
+
+bool ParseStoreCommand(const wchar_t* section, const wchar_t* key, wstring* val)
+{
+	CommandArgumentReader args(L"store", *val, section, ini_namespace, pre_command_list->scope);
+	if (!args.GetVariable(operation->var, false))
+		return args.Fail();
+	if (!args.ConsumeSeparator(SeparatorMode::Comma))
+		return args.Fail();
+	if (!args.GetTarget(&operation->src, true))
+		return args.Fail();
+	if (!args.ConsumeSeparator(SeparatorMode::Comma))
+		return args.Fail();
+	if (!args.GetExpression(&operation->offset_expression))
+		return false;
+	if (!args.Finished())
+		return args.Fail();
+}

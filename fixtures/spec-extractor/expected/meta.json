@@ -1,5 +1,5 @@
 {
-  "extractorVersion": 1,
+  "extractorVersion": 2,
   "dll": {
     "repository": "https://example.invalid/xxmi",
     "commit": "0000000000000000000000000000000000000000",

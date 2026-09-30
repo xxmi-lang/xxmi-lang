@@ -299,5 +299,12 @@
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
     }
+  ],
+  "builtinSections": [
+    {
+      "name": "BuiltInCommandListUnbindAllRenderTargets",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    }
   ]
 }

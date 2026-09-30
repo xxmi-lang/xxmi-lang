@@ -148,3 +148,12 @@ void LoadConfigFile()
 	G->log_level = GetIniEnumClass(L"Logging", L"log_level", LogVerbosity::INFO, NULL, LogVerbosityNames);
 	gLogDebug = GetIniBool(L"Logging", L"debug", false, NULL);
 }
+
+static void InsertBuiltInIniSections()
+{
+	static const wchar_t text[] =
+		L"[BuiltInCommandListUnbindAllRenderTargets]\n"
+		L"o0 = null\n"
+	;
+	ParseIniExcerpt(text);
+}

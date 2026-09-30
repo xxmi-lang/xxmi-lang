@@ -2,10 +2,10 @@ import type { Spec, SpecMeta } from '@xxmi-lang/core';
 import { functions, extractCommands } from './commands.ts';
 import { DllSource, Extraction, gitInfo, type GitInfo } from './dll.ts';
 import { extractEnums, extractOperators } from './operators.ts';
-import { extractSections } from './sections.ts';
+import { extractBuiltinSections, extractSections } from './sections.ts';
 
 /** Bump when the output shape or extraction rules change, so regenerated specs are expected. */
-export const EXTRACTOR_VERSION = 1;
+export const EXTRACTOR_VERSION = 2;
 
 export type SpecBody = Omit<Spec, 'meta'>;
 
@@ -19,6 +19,7 @@ export function extractBody(
   const { commands, resourceMembers } = extractCommands(x);
   const body: SpecBody = {
     sections: extractSections(x),
+    builtinSections: extractBuiltinSections(x),
     commands,
     resourceMembers,
     functions: x.step([], () => functions(dll.file('CommandList.cpp'), patterns)),
@@ -31,6 +32,7 @@ export function extractBody(
 /** Identity of every flaggable entry, case-insensitive like the DLL. */
 function* identities(body: SpecBody): Generator<[string, { xxmi: boolean }]> {
   const id = (...parts: string[]): string => parts.join('\u0000').toLowerCase();
+  for (const b of body.builtinSections) yield [id('builtin', b.name), b];
   for (const s of body.sections) {
     yield [id('section', s.name), s];
     for (const k of s.keys) yield [id('key', s.name, k.name), k];
@@ -87,7 +89,7 @@ export function serializeSpec(spec: Spec): Record<string, string> {
   const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
   return {
     'meta.json': json(spec.meta),
-    'sections.json': json({ sections: spec.sections }),
+    'sections.json': json({ sections: spec.sections, builtinSections: spec.builtinSections }),
     'commands.json': json({
       commands: spec.commands,
       resourceMembers: spec.resourceMembers,

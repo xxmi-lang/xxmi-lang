@@ -137,3 +137,12 @@ void LoadConfigFile()
 {
 	gLogDebug = GetIniBool(L"Logging", L"debug", false, NULL);
 }
+
+static void InsertBuiltInIniSections()
+{
+	static const wchar_t text[] =
+		L"[BuiltInCommandListUnbindAllRenderTargets]\n"
+		L"o0 = null\n"
+	;
+	ParseIniExcerpt(text);
+}

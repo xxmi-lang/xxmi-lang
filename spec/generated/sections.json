@@ -2251,5 +2251,22 @@
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
     }
+  ],
+  "builtinSections": [
+    {
+      "name": "BuiltInCustomShaderDisableScissorClipping",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCustomShaderEnableScissorClipping",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCommandListUnbindAllRenderTargets",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    }
   ]
 }

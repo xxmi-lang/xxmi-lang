@@ -1,4 +1,4 @@
-import type { SpecDynamicKeys, SpecKey, SpecSection } from '@xxmi-lang/core';
+import type { SpecBuiltinSection, SpecDynamicKeys, SpecKey, SpecSection } from '@xxmi-lang/core';
 import {
   AnchorNotFoundError,
   findCalls,
@@ -350,4 +350,17 @@ function functionBodies(
 
 function addDynamic(list: SpecDynamicKeys[], entry: SpecDynamicKeys): void {
   if (!list.some((d) => d.kind === entry.kind)) list.push(entry);
+}
+
+/** Sections the DLL parses from its own ini excerpt in `InsertBuiltInIniSections`. */
+export function extractBuiltinSections(x: Extraction): SpecBuiltinSection[] {
+  return x.step([], () => {
+    const fn = 'InsertBuiltInIniSections';
+    const source = `${INI}:${fn}`;
+    const names = stringLiterals(x.dll.file(INI).functionBody(fn))
+      .map((line) => /^\[([^\]]+)\]/.exec(line.trim())?.[1])
+      .filter((name): name is string => name !== undefined);
+    if (names.length === 0) throw new AnchorNotFoundError(INI, fn, 'no [section] lines');
+    return names.map((name) => ({ name, source, xxmi: false }));
+  });
 }

@@ -141,6 +141,11 @@ describe('extractSpec on the synthetic DLL pair', () => {
       'commandlist/prefix',
     ]);
     expect(cmd('drawindexed')).toMatchObject({ kind: 'draw', argCount: 3 });
+    expect(cmd('store')).toMatchObject({ kind: 'general', argCount: 3 });
+    expect(cmd('handling')?.argCount).toBeUndefined();
+    expect(spec.builtinSections.map((b) => b.name)).toEqual([
+      'BuiltInCommandListUnbindAllRenderTargets',
+    ]);
     expect(cmd('dispatchindirect')).toMatchObject({ argCount: 1, indirect: true });
     expect(cmd('if')).toMatchObject({ kind: 'flow', match: 'prefix' });
     expect(spec.commands.filter((c) => c.kind === 'prefix').map((c) => c.name)).toEqual([
