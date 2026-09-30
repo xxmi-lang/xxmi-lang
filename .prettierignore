@@ -1,0 +1,10 @@
+node_modules/
+dist/
+corpus/
+pnpm-lock.yaml
+LICENSE
+docs/
+CLAUDE.md
+fixtures/
+*.wasm
+.zzmi-package/

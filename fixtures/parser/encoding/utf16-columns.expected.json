@@ -1,0 +1,21 @@
+{
+  "encoding": "utf8",
+  "issues": [
+    {
+      "kind": "error",
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 0
+        },
+        "end": {
+          "line": 3,
+          "character": 7
+        }
+      },
+      "startOffset": 114,
+      "endOffset": 121,
+      "message": "Syntax error: unexpected `$名前 = 2`"
+    }
+  ]
+}

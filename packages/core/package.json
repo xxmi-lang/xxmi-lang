@@ -1,0 +1,28 @@
+{
+  "name": "@xxmi-lang/core",
+  "version": "0.0.0",
+  "description": "Parser, spec, symbol model, index, rules and transforms for XXMI mod .ini files",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./grammar/tree-sitter-migoto.wasm": "./grammar/tree-sitter-migoto.wasm"
+  },
+  "files": [
+    "dist",
+    "grammar"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "web-tree-sitter": "0.26.13"
+  }
+}

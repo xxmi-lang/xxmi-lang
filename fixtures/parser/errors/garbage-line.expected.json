@@ -1,0 +1,21 @@
+{
+  "encoding": "utf8",
+  "issues": [
+    {
+      "kind": "error",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 0
+        },
+        "end": {
+          "line": 2,
+          "character": 22
+        }
+      },
+      "startOffset": 27,
+      "endOffset": 49,
+      "message": "Syntax error: unexpected `this line is not valid`"
+    }
+  ]
+}

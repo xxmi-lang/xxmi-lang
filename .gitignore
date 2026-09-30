@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+.DS_Store
+
+# Real community mods for local testing only. Never commit (see docs/05-transforms.md).
+corpus/
+
+# Backups written by `xxmi normalize` / `xxmi migrate` outside git.
+.xxmi-backup/
+
+# ZZMI-Package checkout used by CI for `pnpm test:corpus`.
+.zzmi-package/

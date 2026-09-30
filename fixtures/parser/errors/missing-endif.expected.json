@@ -1,0 +1,21 @@
+{
+  "encoding": "utf8",
+  "issues": [
+    {
+      "kind": "error",
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 0
+        },
+        "end": {
+          "line": 2,
+          "character": 7
+        }
+      },
+      "startOffset": 15,
+      "endOffset": 33,
+      "message": "Syntax error: unexpected `if $x == 1`"
+    }
+  ]
+}

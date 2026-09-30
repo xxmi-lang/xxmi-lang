@@ -1,0 +1,21 @@
+{
+  "encoding": "utf8",
+  "issues": [
+    {
+      "kind": "error",
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 0
+        },
+        "end": {
+          "line": 6,
+          "character": 6
+        }
+      },
+      "startOffset": 22,
+      "endOffset": 64,
+      "message": "Syntax error: unexpected `$y = ($x + 1`"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly: parse the latest ZZMI-Package, not just the pinned commit.
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Pinned so PR CI doesn't break when the package changes; the weekly run uses main.
+  ZZMI_PACKAGE_REF: 1ecd24dbc85f96239eaadeb7c4e0788aef7fae4f
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - run: pnpm build
+
+      - run: pnpm test
+
+      - name: Check out ZZMI-Package
+        uses: actions/checkout@v4
+        with:
+          repository: leotorrez/ZZMI-Package
+          ref: ${{ github.event_name == 'schedule' && 'main' || env.ZZMI_PACKAGE_REF }}
+          path: .zzmi-package
+          persist-credentials: false
+
+      - name: Parse ZZMI-Package (every .ini must parse without ERROR/MISSING nodes)
+        run: pnpm test:corpus --strict
+        env:
+          XXMI_PACKAGE_SRC: .zzmi-package
