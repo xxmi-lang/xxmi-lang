@@ -1,0 +1,50 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM102",
+    "severity": "warning",
+    "message": "Unknown key `strid` in [ResourceBody]; the DLL ignores it. Did you mean `stride`?",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 5
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM102",
+    "severity": "warning",
+    "message": "`force_stereo` is read by vanilla 3DMigoto but not by XXMI; the DLL ignores it.",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 0
+      },
+      "end": {
+        "line": 5,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM102",
+    "severity": "warning",
+    "message": "Unrecognised entry: unknown_setting = 1.",
+    "range": {
+      "start": {
+        "line": 8,
+        "character": 0
+      },
+      "end": {
+        "line": 8,
+        "character": 19
+      }
+    }
+  }
+]

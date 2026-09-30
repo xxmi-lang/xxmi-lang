@@ -1,0 +1,18 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM002",
+    "severity": "warning",
+    "message": "File isn't valid UTF-8 (likely GBK or Shift-JIS). The DLL reads inis as UTF-8, so non-ASCII text such as names and paths won't read as intended.",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 0
+      },
+      "end": {
+        "line": 0,
+        "character": 0
+      }
+    }
+  }
+]

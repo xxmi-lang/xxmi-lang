@@ -116,6 +116,9 @@ describe('extractSpec on the synthetic DLL pair', () => {
       'user_config:string',
     ]);
     expect(keys('Logging')).toEqual(['log_level:enum:LogVerbosityNames', 'debug:bool']);
+    expect(keys('Loader')).toEqual(['loader:string', 'check_version:bool']);
+    expect(section('Resource')?.removedKeys.map((k) => k.name)).toEqual(['mode']);
+    expect(section('Logging')?.removedKeys).toEqual([]);
     expect(
       section('Key')
         ?.keys.filter((k) => k.repeatable)

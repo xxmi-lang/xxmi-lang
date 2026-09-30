@@ -183,6 +183,7 @@ function mergeSection(spec: Spec, name: string, raw: Table, path: string, proble
       allowsBareLines: fields.allowsBareLines === true,
       allowsDuplicateKeys: fields.allowsDuplicateKeys === true,
       keys: [],
+      removedKeys: [],
       dynamicKeys: [],
     });
     if (!section) return;

@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM108",
+    "severity": "error",
+    "message": "`drawindexed` takes 3 arguments, got 2",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 14
+      },
+      "end": {
+        "line": 1,
+        "character": 18
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM108",
+    "severity": "error",
+    "message": "`dispatch` takes 3 arguments, got 4",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 11
+      },
+      "end": {
+        "line": 2,
+        "character": 21
+      }
+    }
+  }
+]

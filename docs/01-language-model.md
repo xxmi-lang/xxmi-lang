@@ -113,7 +113,9 @@ Minimal license-clean reproductions live in `fixtures/parser/xxmi-dialect/`.
 
 ### Error recovery
 
-tree-sitter's recovery is heuristic. Most errors stay local (an unterminated `if` ends at the next section header), but some swallow the rest of the file: an unclosed `(` in `$y = ($x + 1` becomes one ERROR node that also covers every later section (`fixtures/parser/errors/unclosed-paren.ini`, and an `it.fails` test in `packages/core/test/parser.test.ts`). Lowering (M2) must handle this so errors don't hide later sections, for example by reparsing from the next section header when an ERROR node spans one.
+tree-sitter's recovery is heuristic. Most errors stay local, but some swallow the rest of the file: parsing a whole file, an unclosed `(` in `$y = ($x + 1` becomes one ERROR node that also covers every later section (`fixtures/parser/errors/unclosed-paren.ini`).
+
+Lowering avoids this (M2). `model/scan.ts` finds sections exactly the way the DLL's `ParseIniStream` does (a trimmed line starting with `[` is a header, `;` comments only at the start of a line, `key = value` split at the first `=`). Each section, and the preamble, is then parsed on its own with tree-sitter `includedRanges`, keeping absolute positions. A syntax error can't cross a section boundary, which also matches the DLL, which parses sections independently.
 
 ### Parser contract for core
 
@@ -178,6 +180,12 @@ Most library docs are free-form `;` comments (see `main.ini` "Input/Usage" block
 - **Roots:** the opened folder, plus the **package root**. The package root comes from `xxmi.toml` (`package = "../../"`) or is auto-detected by walking up from the mod to a folder containing `d3dx.ini` and `Core/<Game>/`. In a typical XXMI install, `ZZMI/Mods/<mod>/` walks up to `ZZMI/`.
 - **Includes:** follow `[Include*]` `include`, `include_recursive` and `exclude_recursive` like the DLL does, including the recursive `Mods/` include from `d3dx.ini`. Files are indexed lazily: open files first, then include targets, then the rest in the background.
 - **Bundled library snapshot:** each release of `@xxmi-lang/core` embeds a pre-built index of the latest ZZMI package libraries (symbols and docs only). A user with just a mod folder still gets completion and hover for `CommandList\ZZMI\…`. A local package, when found, overrides the snapshot.
+- **As built (M2, `packages/core/src/workspace/`):**
+  - The package root is found by walking up to a folder with `d3dx.ini`; `xxmi.toml` `package =` is not read yet.
+  - When a root is found, `d3dx.ini` (namespace `''`) and everything it `include`s are loaded, transitively. `include_recursive` folders (`Mods/`) are **not** bulk-loaded; only the files being linted are, each with the namespace the DLL would give it (its path from the root, `\`-separated).
+  - Without a root, targets get path namespaces relative to the lint folder, which keeps them unique within the run.
+  - Library references then resolve through `packages/core/snapshots/zzmi.json`, built with `pnpm xxmi index <ZZMI package> --out packages/core/snapshots/zzmi.json --name zzmi`. A snapshot is used only when no loaded file declares any of its namespaces. CI checks it matches the pinned ZZMI-Package commit.
+  - Include-derived namespaces use the on-disk spelling and `\`; the DLL keeps the path as written in `include =`. This only matters for explicit references to path namespaces, which libraries don't use (they declare `namespace =`).
 - **Invalidation:** file watcher (LSP `workspace/didChangeWatchedFiles`). Re-lower only changed files, then re-resolve references in files that depend on changed symbols.
 
 ## 5. Game profiles

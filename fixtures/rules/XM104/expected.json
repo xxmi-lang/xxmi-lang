@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM104",
+    "severity": "warning",
+    "message": "Duplicate key found: type (first on line 2; the DLL uses the first)",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 4
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM104",
+    "severity": "warning",
+    "message": "Duplicate non-command list key found: hash (first on line 6; the DLL uses the first)",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 0
+      },
+      "end": {
+        "line": 6,
+        "character": 4
+      }
+    }
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM106",
+    "severity": "error",
+    "message": "`elif` after `else` in the same `if` block",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 0
+      },
+      "end": {
+        "line": 4,
+        "character": 7
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM106",
+    "severity": "error",
+    "message": "`endif` without a matching `if`",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 0
+      },
+      "end": {
+        "line": 6,
+        "character": 5
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM106",
+    "severity": "error",
+    "message": "Scope unbalanced: `if` without `endif` in [CommandListB]",
+    "range": {
+      "start": {
+        "line": 9,
+        "character": 0
+      },
+      "end": {
+        "line": 9,
+        "character": 5
+      }
+    }
+  }
+]

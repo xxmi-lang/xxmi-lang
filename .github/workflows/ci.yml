@@ -13,7 +13,8 @@ permissions:
   contents: read
 
 env:
-  # Pinned so PR CI doesn't break when the package changes; the weekly run uses main.
+  # Pinned so PR CI doesn't break when the package changes; the weekly run uses main. Must match
+  # the commit in packages/core/snapshots/zzmi.json (rebuild it with `pnpm xxmi index`).
   ZZMI_PACKAGE_REF: 1ecd24dbc85f96239eaadeb7c4e0788aef7fae4f
 
 jobs:
@@ -92,7 +93,16 @@ jobs:
           path: .zzmi-package
           persist-credentials: false
 
-      - name: Parse ZZMI-Package (every .ini must parse without ERROR/MISSING nodes)
+      # --strict: every .ini must parse without ERROR/MISSING nodes, and linting the package
+      # itself must report no errors (docs/09-roadmap.md M2).
+      - name: Parse and lint ZZMI-Package
         run: pnpm test:corpus --strict
         env:
           XXMI_PACKAGE_SRC: .zzmi-package
+
+      - name: Bundled ZZMI snapshot matches the pinned package
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
+          diff packages/core/snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"

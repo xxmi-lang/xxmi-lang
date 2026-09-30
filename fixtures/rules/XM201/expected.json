@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM201",
+    "severity": "error",
+    "message": "Unresolved command list `CommandListMissing`.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 6
+      },
+      "end": {
+        "line": 2,
+        "character": 24
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM201",
+    "severity": "error",
+    "message": "Unresolved custom shader `CustomShaderMissing`.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 6
+      },
+      "end": {
+        "line": 3,
+        "character": 25
+      }
+    }
+  }
+]

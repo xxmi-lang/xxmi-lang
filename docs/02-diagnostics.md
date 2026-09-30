@@ -50,6 +50,24 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 
 Messages quote the DLL's own warning text where one exists, so users can match log output to editor output.
 
+### As implemented (M2)
+
+All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/lint/rules/`, each with `fixtures/rules/<id>/{bad,good}` and an `expected.json`. Where the DLL source settled a question, the rule follows it:
+
+- **XM102:** unknown keys in regular sections are checked against the extracted spec. Keys vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, …) get a message saying so. `[Profile]` is free-form. In command-list sections, only lines the grammar can't read as a command, resource copy or assignment are flagged (the DLL's "Unrecognised entry"); a misspelt keyword such as `runn` surfaces as XM001 instead.
+- **XM103:** reports lines without `=` in sections that don't allow them.
+- **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini.
+- **XM107:** follows DLL load order, reporting the later duplicate.
+- **XM108:** uses extracted argument counts (draw commands, `store`) and skips lines that already have a syntax error.
+- **XM109:** takes over from XM001 for parse errors on expression lines (`if …`, `$x = …`, `local …`).
+- **XM202:** covers resource and pool references on both sides of `=`. `ParseTargetCustomResource` fails for an undeclared destination too.
+- **XM203:** checks locals first (declared earlier in the same section), then `$\ns\name`, then the global name, as `parse_command_list_var_name` does.
+- **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt.
+- **XM207:** only covers `include =`. A missing file gives the DLL's "Error opening" overlay warning, while a missing `include_recursive` folder is only logged at info level, so it isn't reported.
+- **XM208:** tries the ini's folder first, then the 3DMigoto folder, like `ParseResourceSection`, and skips absolute paths.
+
+`pnpm test:corpus` lints every root and diffs per-rule counts against `corpus/.baseline.json` (`lint` key); with `--strict` any lint error fails.
+
 ## Configuration
 
 `xxmi.toml` at the workspace or mod root. The nearest one up the tree wins, and settings merge with defaults.

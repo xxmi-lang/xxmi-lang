@@ -5,7 +5,7 @@ import { extractEnums, extractOperators } from './operators.ts';
 import { extractBuiltinSections, extractSections } from './sections.ts';
 
 /** Bump when the output shape or extraction rules change, so regenerated specs are expected. */
-export const EXTRACTOR_VERSION = 2;
+export const EXTRACTOR_VERSION = 3;
 
 export type SpecBody = Omit<Spec, 'meta'>;
 
@@ -52,6 +52,20 @@ function* identities(body: SpecBody): Generator<[string, { xxmi: boolean }]> {
   }
 }
 
+/** Records, per section, the keys vanilla reads that the XXMI DLL no longer does. */
+export function recordRemovedKeys(body: SpecBody, baseline: SpecBody): void {
+  for (const section of body.sections) {
+    const vanilla = baseline.sections.find(
+      (s) => s.name.toLowerCase() === section.name.toLowerCase(),
+    );
+    if (!vanilla) continue;
+    const known = new Set(section.keys.map((k) => k.name.toLowerCase()));
+    section.removedKeys = vanilla.keys
+      .filter((k) => !known.has(k.name.toLowerCase()))
+      .map((k) => ({ name: k.name, source: k.source }));
+  }
+}
+
 /** Sets `xxmi: true` on everything in `body` that the vanilla `baseline` doesn't have. */
 export function flagXxmi(body: SpecBody, baseline: SpecBody): void {
   const known = new Set([...identities(baseline)].map(([key]) => key));
@@ -76,6 +90,7 @@ export function extractSpec(options: ExtractOptions): ExtractResult {
   const { body } = extractBody(DllSource.load(options.dllRoot), true);
   const baseline = extractBody(DllSource.load(options.baselineRoot), false);
   flagXxmi(body, baseline.body);
+  recordRemovedKeys(body, baseline.body);
   const meta: SpecMeta = {
     extractorVersion: EXTRACTOR_VERSION,
     dll: options.dllGit ?? gitInfo(options.dllRoot),

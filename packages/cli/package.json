@@ -1,0 +1,28 @@
+{
+  "name": "@xxmi-lang/cli",
+  "version": "0.0.0",
+  "description": "xxmi: lint and query XXMI / 3DMigoto mod .ini files",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "bin": {
+    "xxmi": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "node --conditions=source src/cli.ts"
+  },
+  "dependencies": {
+    "@xxmi-lang/core": "workspace:*"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
+  }
+}

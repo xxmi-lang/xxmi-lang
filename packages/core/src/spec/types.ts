@@ -52,6 +52,11 @@ export interface SpecSection extends Sourced, Documented {
   allowsDuplicateKeys: boolean;
   /** Keys read by the section parser. Command-list sections also accept every command. */
   keys: SpecKey[];
+  /**
+   * Keys vanilla 3DMigoto reads in this section that XXMI no longer does (stereo options, …).
+   * Old d3dx.ini files still carry them; the DLL ignores them. `source` is the vanilla location.
+   */
+  removedKeys: { name: string; source: string }[];
   dynamicKeys: SpecDynamicKeys[];
 }
 

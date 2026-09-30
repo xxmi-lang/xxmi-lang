@@ -3,6 +3,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AnchorNotFoundError, CppFile } from './cpp.ts';
 
+const COMPONENT_DIRS = ['D3DCompiler', 'Injector'];
+
 /** The DirectX11 sources of a 3DMigoto-family DLL checkout. */
 export class DllSource {
   private readonly files = new Map<string, CppFile>();
@@ -20,6 +22,19 @@ export class DllSource {
     const files = names.map((n) => new CppFile(n, readFileSync(join(dir, n), 'utf8')));
     const util = join(root, 'util.h');
     if (existsSync(util)) files.push(new CppFile('util.h', readFileSync(util, 'utf8')));
+    // Other binaries built from the same repo read d3dx.ini too: the D3DCompiler wrapper and the
+    // Injector (3DMigoto Loader). Only their literal-section reads are used.
+    for (const component of COMPONENT_DIRS) {
+      const componentDir = join(root, component);
+      if (!existsSync(componentDir)) continue;
+      for (const name of readdirSync(componentDir)
+        .filter((n) => n.endsWith('.cpp'))
+        .sort()) {
+        files.push(
+          new CppFile(`${component}/${name}`, readFileSync(join(componentDir, name), 'utf8')),
+        );
+      }
+    }
     return new DllSource(files);
   }
 

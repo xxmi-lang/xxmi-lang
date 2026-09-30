@@ -38,6 +38,7 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -49,6 +50,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -60,6 +62,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -126,6 +129,7 @@
           "xxmi": true
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": true
@@ -180,6 +184,12 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "mode",
+          "source": "IniHandler.cpp:ParseResourceSections"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -230,6 +240,7 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [
         {
           "kind": "ini_param",
@@ -271,6 +282,7 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -295,6 +307,32 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Loader",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "loader",
+          "valueType": "string",
+          "source": "DLLMainHook.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "check_version",
+          "valueType": "bool",
+          "source": "DLLMainHook.cpp:literal",
+          "xxmi": true
+        }
+      ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
