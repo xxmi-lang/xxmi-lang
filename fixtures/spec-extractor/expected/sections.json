@@ -1,0 +1,303 @@
+{
+  "sections": [
+    {
+      "name": "TextureOverride",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "hash",
+          "valueType": "hash",
+          "source": "IniHandler.cpp:ParseTextureOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "match_priority",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "override_byte_stride",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": true
+        },
+        {
+          "name": "match_type",
+          "valueType": "enum:ResourceDimensionNames",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "CommandList",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "Constants",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "Pool",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "pool_size",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_index_type",
+          "valueType": "enum:PoolIndexTypeNames",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "max_copies_per_frame",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "filename",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "type",
+          "valueType": "enum:CustomResourceTypeNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "color_space",
+          "valueType": "enum:CustomColorSpaceNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "data",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceInitialData",
+          "xxmi": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": true
+    },
+    {
+      "name": "Resource",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "max_copies_per_frame",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "filename",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "type",
+          "valueType": "enum:CustomResourceTypeNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "color_space",
+          "valueType": "enum:CustomColorSpaceNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "data",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceInitialData",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Key",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "Key",
+          "valueType": "string",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false,
+          "repeatable": true
+        },
+        {
+          "name": "Back",
+          "valueType": "string",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false,
+          "repeatable": true
+        },
+        {
+          "name": "type",
+          "valueType": "enum:KeyOverrideTypeNames",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false
+        },
+        {
+          "name": "transition",
+          "valueType": "int",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "condition",
+          "valueType": "string",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "wrap",
+          "valueType": "bool",
+          "source": "Override.cpp:KeyOverrideCycle::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [
+        {
+          "kind": "ini_param",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "kind": "variable",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Include",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "include",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false
+        },
+        {
+          "name": "include_recursive",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false
+        },
+        {
+          "name": "user_config",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Logging",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "log_level",
+          "valueType": "enum:LogVerbosityNames",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "debug",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    }
+  ]
+}

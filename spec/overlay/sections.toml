@@ -1,0 +1,72 @@
+# Documentation for sections and their keys, merged over spec/generated/sections.json.
+# Every statement here is checked against the XXMI DLL source (XXMI-Libs-Package, DirectX11/).
+
+[sections.Resource.keys.type]
+doc = """
+Kind of resource to create. HLSL names are used: `Buffer`, `StructuredBuffer`, \
+`AppendStructuredBuffer`, `ConsumeStructuredBuffer`, `ByteAddressBuffer`, `Texture1D`, \
+`Texture2D`, `Texture3D`, `TextureCube`, and the `RW` variants. A `RW` name creates the \
+same resource as its plain name; how the resource is bound decides the view. A \
+`[Resource…]` section with no keys at all is valid: it declares a name that other \
+resources can be copied or referenced into."""
+example = """
+[ResourceCounters]
+type = RWStructuredBuffer
+stride = 4
+array = 16"""
+
+[sections.Resource.keys.format]
+doc = """
+DXGI format of the resource: a format name with or without the `DXGI_FORMAT_` prefix \
+(`R32_UINT`, `DXGI_FORMAT_R8G8B8A8_UNORM`, …) or its numeric value. An unknown name gives \
+"Unknown format"."""
+
+[sections.Resource.keys.filename]
+doc = """
+File to load the resource from. A relative path is tried first relative to the folder \
+of the ini file that declares the section, then relative to the 3DMigoto folder."""
+example = """
+[ResourceBodyDiffuse]
+filename = Textures/BodyDiffuse.dds"""
+
+[sections.Resource.keys.stride]
+doc = "Size in bytes of one element, e.g. the structure size of a `StructuredBuffer`."
+
+[sections.TextureOverride.keys.hash]
+doc = """
+Hash of the resource this section matches, in hex (as shown by frame analysis and the \
+hunting overlay). A section needs either `hash` or `match_*` options, not both. Two \
+sections with the same hash give "Possible Mod Conflict: Duplicate TextureOverride hash" \
+unless one of them sets `match_priority` or uses draw-call matching."""
+
+[sections.TextureOverride.keys.match_priority]
+doc = """
+Integer that orders sections matching the same resource (fuzzy `match_*` sections, or \
+several sections on one hash). Setting it also marks a duplicate hash as intentional, \
+which silences the "Possible Mod Conflict" warning."""
+
+[sections.ShaderOverride.keys.hash]
+doc = "64-bit hash of the shader this section applies to, in hex (as shown by the hunting overlay)."
+
+[sections.Include.keys.include]
+doc = """
+Loads another ini file. The path is relative to the folder of the file containing the \
+`[Include]` section. Sections in the included file are namespaced by its path unless it \
+declares `namespace = …`. A file included twice is skipped with "File included multiple \
+times"."""
+example = """
+[Include]
+include = Libraries/Includes.ini"""
+
+[sections.Include.keys.include_recursive]
+doc = """
+Loads every `.ini` file under a folder, recursively: files first, sorted \
+case-insensitively, then subfolders. Only names ending in lowercase `.ini` are loaded. \
+Each file is namespaced by its path. Names matching an `exclude_recursive` pattern are \
+skipped."""
+
+[sections.Include.keys.exclude_recursive]
+doc = """
+Glob pattern of file or folder names `include_recursive` skips; may be given more than \
+once. The usual `exclude_recursive = DISABLED*` in d3dx.ini is what makes a `DISABLED` \
+prefix turn a mod off; the DLL has no built-in rule for it."""

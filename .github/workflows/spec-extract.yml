@@ -1,0 +1,105 @@
+# Weekly: re-extract spec/generated/ from the latest XXMI DLL source and open a PR when it changes.
+name: spec-extract
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: spec-extract
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check out XXMI-Libs-Package master
+        uses: actions/checkout@v4
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: master
+          path: .dll/xxmi
+          persist-credentials: false
+          sparse-checkout: |
+            /DirectX11/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      - name: Check out 3Dmigoto master
+        uses: actions/checkout@v4
+        with:
+          repository: bo3b/3Dmigoto
+          ref: master
+          path: .dll/vanilla
+          persist-credentials: false
+          sparse-checkout: |
+            /DirectX11/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      # Fails (exit 3) when the DLL moved a table or parser the extractor anchors on.
+      - name: Extract
+        run: pnpm spec:extract
+        env:
+          XXMI_DLL_SRC: .dll/xxmi
+          MIGOTO_DLL_SRC: .dll/vanilla
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet -- spec/generated; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- spec/generated
+          fi
+
+      # Overlays that point at entries the DLL removed make this fail; the PR says so.
+      - name: Test against the new spec
+        id: test
+        if: steps.diff.outputs.changed == 'true'
+        continue-on-error: true
+        run: pnpm test
+        env:
+          XXMI_DLL_SRC: .dll/xxmi
+          MIGOTO_DLL_SRC: .dll/vanilla
+
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+        run: |
+          commit=$(node -p "require('./spec/generated/meta.json').dll.commit")
+          branch="spec/update-${commit:0:12}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add spec/generated
+          git commit -m "spec: regenerate from XXMI-Libs-Package ${commit:0:12}"
+          git push --force origin "$branch"
+          body="Regenerated \`spec/generated/\` from SpectrumQT/XXMI-Libs-Package@${commit}.
+
+          Tests against the new spec: **${TEST_OUTCOME}**. Review the diff for removed or renamed entries; overlays in \`spec/overlay/\` that point at removed entries make the tests fail."
+          if gh pr view "$branch" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            echo "PR already open for $branch"
+          else
+            gh pr create --base main --head "$branch" --title "spec: regenerate from XXMI-Libs-Package ${commit:0:12}" --body "$body"
+          fi

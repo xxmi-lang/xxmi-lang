@@ -1,0 +1,143 @@
+# Documentation for command-list commands, merged over spec/generated/commands.json.
+# Every statement here is checked against the XXMI DLL source (XXMI-Libs-Package, DirectX11/).
+# Entries are addressed by name, case-insensitively; see packages/core/src/spec/load.ts.
+
+[commands.run]
+doc = """
+Runs another command list or a custom shader: `run = CommandList<name>` or \
+`run = CustomShader<name>` (also the `BuiltIn` variants). The name is looked up in the current \
+file's namespace first, then globally; use `CommandList\\<namespace>\\<name>` to call into \
+another namespace.
+
+A command list is run in both phases: its pre list before the draw call and its post list \
+after. With an explicit `pre run = …` or `post run = …`, both of the target's lists run \
+together at that point. A custom shader runs before the draw call unless prefixed with `post`."""
+example = """
+[TextureOverrideBody]
+hash = 1a2b3c4d
+run = CommandListSetTextures
+run = CommandList\\ZZMI\\SetTextures"""
+
+[commands.if]
+doc = """
+Starts a conditional block: `if <expression>` … `endif`, with optional `elif <expression>` \
+(or `else if <expression>`) and `else` branches. Blocks nest. An expression is true when it \
+evaluates to non-zero. The DLL warns "Scope unbalanced" for a section whose `if`/`endif` \
+don't pair up."""
+example = """
+if $active && $\\Healthbar\\character_id
+    run = CommandListDraw
+elif $fallback
+    run = CommandListFallback
+else
+    handling = skip
+endif"""
+
+[commands.elif]
+doc = "Alternative branch of an `if` block, tested when every earlier condition was false. `else if` is accepted as a synonym."
+
+[commands.else]
+doc = "Final branch of an `if` block, taken when no condition matched."
+
+[commands.endif]
+doc = "Closes the innermost `if` block."
+
+[commands.global]
+doc = """
+Declares a global variable. Only valid in `[Constants]`: \
+`global [persist|locked] $name [= value]`. The initialiser is a number or an expression \
+evaluated when the config loads; without one the variable starts at 0. The variable belongs to the file's namespace; other files reach it as `$\\<namespace>\\name`. \
+Declaring the same variable twice gives "Redeclaration of …".
+
+`persist` saves the value to the user config (d3dx_user.ini) and restores it on load. \
+`locked` (XXMI) makes the variable read-only: any later assignment, `store` or key/preset \
+override fails with "Unable to assign value to <locked> variable"."""
+example = """
+[Constants]
+global $active = 1
+global persist $swapvar = 0
+global locked $default_alpha = 1.0"""
+
+[commands.persist]
+doc = "Modifier for `global` in `[Constants]`: the variable's value is saved to the user config (d3dx_user.ini) and restored on load."
+
+[commands.locked]
+doc = "Modifier for `global` in `[Constants]` (XXMI): the variable can't be assigned after its initialiser; attempts fail with \"Unable to assign value to <locked> variable\"."
+
+[commands.local]
+doc = """
+Declares a variable scoped to the current command list: `local $name` or \
+`local $name = <expression>`. The pre and post lists of a section share it. A local may \
+not re-declare a local from an enclosing `if` scope ("Illegal redeclaration"), but \
+independent branches may each declare their own. A local that shadows a global of the \
+same name only gets a notice."""
+example = """
+[CommandListMeasure]
+local $stride = vb0->Stride
+if $stride > 0
+    local $offset = vb0->Offset
+endif"""
+
+[commands.checktextureoverride]
+doc = """
+Runs the command lists of any `[TextureOverride]` sections that match the resource \
+bound to a slot: `checktextureoverride = ps-t0`, `= vb0`, `= ib`, … Like `run`, it runs \
+the matching pre lists before the draw call and post lists after it, unless prefixed with \
+`pre`/`post`, in which case both run together."""
+example = """
+[ShaderOverrideCharacter]
+hash = 0123456789abcdef
+checktextureoverride = vb0
+checktextureoverride = ib"""
+
+[commands.clear]
+doc = """
+Clears a render target, depth/stencil or UAV: `clear = <target> [value …] [depth] \
+[stencil] [int]`. Up to four values give the clear colour, and the last one given fills \
+the remaining channels. Values written as `0x…` force an integer UAV clear, as does `int`. \
+For a depth/stencil view the first value is the depth and the second the stencil (the \
+first, if only `stencil` is given); `depth` or `stencil` limits the clear to that side, \
+and with neither both are cleared."""
+example = """
+clear = ResourceScratch
+clear = ResourceDepth depth 1.0"""
+
+[commands.draw]
+doc = """
+Issues a draw call: `draw = <vertex count>, <start vertex>`. `draw = from_caller` \
+repeats the current draw call (of whatever kind) with its original parameters, and \
+`draw = auto` draws the whole bound vertex buffer from vertex 0."""
+example = "draw = from_caller"
+
+[commands.drawindexed]
+doc = """
+Issues an indexed draw call: `drawindexed = <index count>, <start index>, <base vertex>`. \
+`drawindexed = auto` draws the whole bound index buffer from index 0."""
+example = """
+[TextureOverrideBodyIB]
+hash = 1a2b3c4d
+handling = skip
+drawindexed = auto"""
+
+[commands.handling]
+doc = """
+`handling = skip` stops the game's original draw call from being issued (it only makes \
+sense before the draw). `handling = abort` stops executing the rest of the command list, \
+in both the pre and post phases."""
+example = """
+[TextureOverrideHead]
+hash = 1a2b3c4d
+handling = skip
+drawindexed = auto"""
+
+[commands.store]
+doc = """
+Reads one value from a buffer resource into a variable (XXMI): \
+`store = <variable>, <resource>, <index>`. The buffer is read as a flat array of 4-byte \
+values and `index` counts values, not bytes. The destination may be a pool variable \
+(`$PoolFoo[$i]`). The value comes from the CPU-side cache when available, otherwise from \
+a GPU readback; an index outside the buffer gives 0."""
+example = """
+[CommandList.SetValue]
+store = $packed, Resource.UAV, 7
+$low = $packed & 127"""

@@ -1,0 +1,2121 @@
+{
+  "enums": [
+    {
+      "name": "VariableFlagNames",
+      "values": [
+        {
+          "name": "global",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "persist",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "locked",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "D3DCompileFlagNames",
+      "values": [
+        {
+          "name": "debug",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "skip_validation",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "skip_optimization",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "pack_matrix_row_major",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "pack_matrix_column_major",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "partial_precision",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "force_vs_software_no_opt",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "force_ps_software_no_opt",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "no_preshader",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "avoid_flow_control",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "prefer_flow_control",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "enable_strictness",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "enable_backwards_compatibility",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "ieee_strictness",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "optimization_level0",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "optimization_level1",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "optimization_level2",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "optimization_level3",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "warnings_are_errors",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "resources_may_alias",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "enable_unbounded_descriptor_tables",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "all_resources_bound",
+          "source": "CommandList.h:D3DCompileFlagNames",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.h:D3DCompileFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "CustomResourceTypeNames",
+      "values": [
+        {
+          "name": "Buffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "StructuredBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "AppendStructuredBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "ConsumeStructuredBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "ByteAddressBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "Texture1D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "Texture2D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "Texture3D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "TextureCube",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWStructuredBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWByteAddressBuffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWTexture1D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWTexture2D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "RWTexture3D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.h:CustomResourceTypeNames",
+      "xxmi": false
+    },
+    {
+      "name": "CustomColorSpaceNames",
+      "values": [
+        {
+          "name": "sRGB",
+          "source": "CommandList.h:CustomColorSpaceNames",
+          "xxmi": true
+        },
+        {
+          "name": "Linear",
+          "source": "CommandList.h:CustomColorSpaceNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:CustomColorSpaceNames",
+      "xxmi": true
+    },
+    {
+      "name": "CustomResourceBindFlagNames",
+      "values": [
+        {
+          "name": "vertex_buffer",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "index_buffer",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "constant_buffer",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "shader_resource",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "stream_output",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "render_target",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "depth_stencil",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "unordered_access",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "decoder",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "video_encoder",
+          "source": "CommandList.h:CustomResourceBindFlagNames",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.h:CustomResourceBindFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "DataCacheBindFlagNames",
+      "values": [
+        {
+          "name": "vertex_buffer",
+          "source": "CommandList.h:DataCacheBindFlagNames",
+          "xxmi": true
+        },
+        {
+          "name": "index_buffer",
+          "source": "CommandList.h:DataCacheBindFlagNames",
+          "xxmi": true
+        },
+        {
+          "name": "constant_buffer",
+          "source": "CommandList.h:DataCacheBindFlagNames",
+          "xxmi": true
+        },
+        {
+          "name": "all",
+          "source": "CommandList.h:DataCacheBindFlagNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:DataCacheBindFlagNames",
+      "xxmi": true
+    },
+    {
+      "name": "PoolIndexTypeNames",
+      "values": [
+        {
+          "name": "ring",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "fifo",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "static",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "spatial",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:PoolIndexTypeNames",
+      "xxmi": true
+    },
+    {
+      "name": "ResourceCopyTargetTypeNames",
+      "values": [
+        {
+          "name": "Empty",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ConstantBuffer",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ShaderResource",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "VertexBuffer",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "IndexBuffer",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "StreamOutput",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "RenderTarget",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "DepthStencilTarget",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "UnorderedAccessView",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "CustomResource",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "IniParams",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "CursorMask",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "CursorColor",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ThisResource",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "Pool",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "SwapChain",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "RealSwapChain",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "FakeSwapChain",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "CPU",
+          "source": "CommandList.h:ResourceCopyTargetTypeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:ResourceCopyTargetTypeNames",
+      "xxmi": true
+    },
+    {
+      "name": "ResourceCopyTargetEvaluationModeNames",
+      "values": [
+        {
+          "name": "Resource",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceIdentity",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceStride",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceSourceStride",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceSize",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceOffset",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceRegionHash",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceSpatialHash",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceFormat",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceWidth",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceHeight",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceArray",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceMips",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "ResourceBindFlags",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolIdentity",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolSize",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolIndex",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolFullRangeResource",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolFullRangeVariable",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "PoolRange",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "SlotRange",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "Variable",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "LayoutElementFormat",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "LayoutElementOffset",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+      "xxmi": true
+    },
+    {
+      "name": "ResourceCopyOptionNames",
+      "values": [
+        {
+          "name": "copy",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "ref",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "reference",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "copy_desc",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "copy_description",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "unless_null",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "mono",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "set_viewport",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "no_view_cache",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "raw",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "resolve_msaa",
+          "source": "CommandList.h:ResourceCopyOptionNames",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.h:ResourceCopyOptionNames",
+      "xxmi": false
+    },
+    {
+      "name": "ParamOverrideTypeNames",
+      "values": [
+        {
+          "name": "rt_width",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "rt_height",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "res_width",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "res_height",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "window_width",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "window_height",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "vertex_count",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "index_count",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "instance_count",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "first_vertex",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "first_index",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "first_instance",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "thread_group_count_x",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "thread_group_count_y",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "thread_group_count_z",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "indirect_offset",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "draw_type",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_showing",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_screen_x",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_screen_y",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_window_x",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_window_y",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_x",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_y",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_hotspot_x",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_hotspot_y",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "time",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "scissor_left",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "scissor_top",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "scissor_right",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "scissor_bottom",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "hunting",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "frame_analysis",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "effective_dpi",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "sli",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "stereo_active",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "stereo_available",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "frame_number",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "draw_number",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "dispatch_number",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "frame_time",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "fps",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:ParamOverrideTypeNames",
+      "xxmi": false
+    },
+    {
+      "name": "EnableHooksNames",
+      "values": [
+        {
+          "name": "deferred_contexts",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "immediate_context",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "context",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "device",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "all",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "recommended",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "except_set_shader_resources",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "except_set_samplers",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "except_set_rasterizer_state",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "skip_dxgi_factory",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        },
+        {
+          "name": "skip_dxgi_device",
+          "source": "DLLMainHook.h:EnableHooksNames",
+          "xxmi": false
+        }
+      ],
+      "source": "DLLMainHook.h:EnableHooksNames",
+      "xxmi": false
+    },
+    {
+      "name": "KeyOverrideTypeNames",
+      "values": [
+        {
+          "name": "activate",
+          "source": "Override.h:KeyOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "hold",
+          "source": "Override.h:KeyOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "toggle",
+          "source": "Override.h:KeyOverrideTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cycle",
+          "source": "Override.h:KeyOverrideTypeNames",
+          "xxmi": false
+        }
+      ],
+      "source": "Override.h:KeyOverrideTypeNames",
+      "xxmi": false
+    },
+    {
+      "name": "TransitionTypeNames",
+      "values": [
+        {
+          "name": "linear",
+          "source": "Override.h:TransitionTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "cosine",
+          "source": "Override.h:TransitionTypeNames",
+          "xxmi": false
+        }
+      ],
+      "source": "Override.h:TransitionTypeNames",
+      "xxmi": false
+    },
+    {
+      "name": "ResourceCPUAccessFlagNames",
+      "values": [
+        {
+          "name": "write",
+          "source": "ResourceHash.h:ResourceCPUAccessFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "read",
+          "source": "ResourceHash.h:ResourceCPUAccessFlagNames",
+          "xxmi": false
+        }
+      ],
+      "source": "ResourceHash.h:ResourceCPUAccessFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "ResourceMiscFlagNames",
+      "values": [
+        {
+          "name": "generate_mips",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "shared",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "texturecube",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "drawindirect_args",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "buffer_allow_raw_views",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "buffer_structured",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "resource_clamp",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "shared_keyedmutex",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "gdi_compatible",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "shared_nthandle",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "restricted_content",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "restrict_shared_resource",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "restrict_shared_resource_driver",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "guarded",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "tile_pool",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "tiled",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "hw_protected",
+          "source": "ResourceHash.h:ResourceMiscFlagNames",
+          "xxmi": false
+        }
+      ],
+      "source": "ResourceHash.h:ResourceMiscFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "LogVerbosityNames",
+      "values": [
+        {
+          "name": "disabled",
+          "source": "globals.h:LogVerbosityNames",
+          "xxmi": true
+        },
+        {
+          "name": "warning",
+          "source": "globals.h:LogVerbosityNames",
+          "xxmi": true
+        },
+        {
+          "name": "info",
+          "source": "globals.h:LogVerbosityNames",
+          "xxmi": true
+        },
+        {
+          "name": "debug",
+          "source": "globals.h:LogVerbosityNames",
+          "xxmi": true
+        }
+      ],
+      "source": "globals.h:LogVerbosityNames",
+      "xxmi": true
+    },
+    {
+      "name": "MarkingModeNames",
+      "values": [
+        {
+          "name": "skip",
+          "source": "globals.h:MarkingModeNames",
+          "xxmi": false
+        },
+        {
+          "name": "mono",
+          "source": "globals.h:MarkingModeNames",
+          "xxmi": false
+        },
+        {
+          "name": "original",
+          "source": "globals.h:MarkingModeNames",
+          "xxmi": false
+        },
+        {
+          "name": "pink",
+          "source": "globals.h:MarkingModeNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:MarkingModeNames",
+      "xxmi": false
+    },
+    {
+      "name": "MarkingActionNames",
+      "values": [
+        {
+          "name": "hlsl",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "asm",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "assembly",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "regex",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "ShaderRegex",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "clipboard",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "mono_snapshot",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        },
+        {
+          "name": "snapshot_if_pink",
+          "source": "globals.h:MarkingActionNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:MarkingActionNames",
+      "xxmi": false
+    },
+    {
+      "name": "ShaderHashNames",
+      "values": [
+        {
+          "name": "3dmigoto",
+          "source": "globals.h:ShaderHashNames",
+          "xxmi": false
+        },
+        {
+          "name": "embedded",
+          "source": "globals.h:ShaderHashNames",
+          "xxmi": false
+        },
+        {
+          "name": "bytecode",
+          "source": "globals.h:ShaderHashNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:ShaderHashNames",
+      "xxmi": false
+    },
+    {
+      "name": "FrameAnalysisOptionNames",
+      "values": [
+        {
+          "name": "dump_rt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_depth",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_tex",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_cb",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_vb",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_ib",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jps",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jpg",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jpeg",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jps_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jpg_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "jpeg_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "buf",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "txt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "desc",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "clear_rt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "persist",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "mono",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "filename_reg",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "filename_handle",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "log",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "hold",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_on_unmap",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_on_update",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "deferred_ctx_immediate",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "deferred_ctx_accurate",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "share_dupes",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "symlink",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_rt_jps",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_rt_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_depth_jps",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_depth_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_tex_jps",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_tex_dds",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_cb_txt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_vb_txt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        },
+        {
+          "name": "dump_ib_txt",
+          "source": "globals.h:FrameAnalysisOptionNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:FrameAnalysisOptionNames",
+      "xxmi": false
+    },
+    {
+      "name": "DepthBufferFilterNames",
+      "values": [
+        {
+          "name": "none",
+          "source": "globals.h:DepthBufferFilterNames",
+          "xxmi": false
+        },
+        {
+          "name": "depth_active",
+          "source": "globals.h:DepthBufferFilterNames",
+          "xxmi": false
+        },
+        {
+          "name": "depth_inactive",
+          "source": "globals.h:DepthBufferFilterNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:DepthBufferFilterNames",
+      "xxmi": false
+    },
+    {
+      "name": "GetResolutionFromNames",
+      "values": [
+        {
+          "name": "swap_chain",
+          "source": "globals.h:GetResolutionFromNames",
+          "xxmi": false
+        },
+        {
+          "name": "depth_stencil",
+          "source": "globals.h:GetResolutionFromNames",
+          "xxmi": false
+        }
+      ],
+      "source": "globals.h:GetResolutionFromNames",
+      "xxmi": false
+    },
+    {
+      "name": "InputDisableScopeNames",
+      "values": [
+        {
+          "name": "mods",
+          "source": "globals.h:InputDisableScopeNames",
+          "xxmi": true
+        },
+        {
+          "name": "all",
+          "source": "globals.h:InputDisableScopeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "globals.h:InputDisableScopeNames",
+      "xxmi": true
+    },
+    {
+      "name": "XInputButtons",
+      "values": [
+        {
+          "name": "DPAD_UP",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "DPAD_DOWN",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "DPAD_LEFT",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "DPAD_RIGHT",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "START",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "BACK",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "LEFT_THUMB",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "RIGHT_THUMB",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "LEFT_SHOULDER",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "RIGHT_SHOULDER",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "A",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "B",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "X",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "Y",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        },
+        {
+          "name": "GUIDE",
+          "source": "input.cpp:XInputButtons",
+          "xxmi": false
+        }
+      ],
+      "source": "input.cpp:XInputButtons",
+      "xxmi": false
+    },
+    {
+      "name": "DXGIFormats",
+      "values": [
+        {
+          "name": "UNKNOWN",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32A32_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32A32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32A32_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32A32_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16B16A16_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G8X24_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "D32_FLOAT_S8X24_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32_FLOAT_X8X24_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "X32_TYPELESS_G8X24_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R10G10B10A2_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R10G10B10A2_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R10G10B10A2_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R11G11B10_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16G16_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "D32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R24G8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "D24_UNORM_S8_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R24_UNORM_X8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "X24_TYPELESS_G8_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "D16_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R16_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8_UINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8_SINT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "A8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R1_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R9G9B9E5_SHAREDEXP",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8_B8G8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "G8R8_G8B8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC1_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC1_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC1_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC2_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC2_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC2_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC3_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC3_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC3_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC4_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC4_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC4_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC5_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC5_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC5_SNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B5G6R5_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B5G5R5A1_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8A8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8X8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R10G10B10_XR_BIAS_A2_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8A8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8A8_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8X8_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B8G8R8X8_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC6H_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC6H_UF16",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC6H_SF16",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC7_TYPELESS",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC7_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "BC7_UNORM_SRGB",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "AYUV",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "Y410",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "Y416",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "NV12",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "P010",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "P016",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "420_OPAQUE",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "YUY2",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "Y210",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "Y216",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "NV11",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "AI44",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "IA44",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "P8",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "A8P8",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "B4G4R4A4_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        }
+      ],
+      "source": "util.h:DXGIFormats",
+      "xxmi": false
+    }
+  ]
+}

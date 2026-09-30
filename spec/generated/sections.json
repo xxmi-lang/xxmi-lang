@@ -1,0 +1,2255 @@
+{
+  "sections": [
+    {
+      "name": "TextureOverride",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "hash",
+          "valueType": "hash",
+          "source": "IniHandler.cpp:ParseTextureOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "format",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "height",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "width_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "height_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "override_byte_stride",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": true
+        },
+        {
+          "name": "override_vertex_count",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": true
+        },
+        {
+          "name": "uav_byte_stride",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": true
+        },
+        {
+          "name": "iteration",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "filter_index",
+          "valueType": "float",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "expand_region_copy",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "deny_cpu_read",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_priority",
+          "valueType": "int",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_type",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_usage",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_bind_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_cpu_access_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_misc_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_byte_width",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_stride",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_mips",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_width",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_height",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_depth",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_array",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_msaa",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_msaa_quality",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_fuzzy_match",
+          "xxmi": false
+        },
+        {
+          "name": "match_first_vertex",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_first_index",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_first_instance",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_vertex_count",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_index_count",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        },
+        {
+          "name": "match_instance_count",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_texture_override_common",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "CommandList",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "Constants",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "Present",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ShaderOverride",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "hash",
+          "valueType": "hash",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "allow_duplicate_hash",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:ShaderOverrideIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "depth_filter",
+          "valueType": "enum:DepthBufferFilterNames",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "model",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "disable_scissor",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "filter_index",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "CustomShader",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "vs",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "hs",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "ds",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "gs",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "ps",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "cs",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "max_executions_per_frame",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseCustomShaderSections",
+          "xxmi": false
+        },
+        {
+          "name": "blend",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[0]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[1]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[2]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[3]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[4]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[5]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[6]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend[7]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[0]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[1]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[2]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[3]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[4]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[5]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[6]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha[7]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[0]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[1]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[2]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[3]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[4]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[5]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[6]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "mask[7]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "alpha_to_coverage",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseBlendState",
+          "xxmi": false
+        },
+        {
+          "name": "sample_mask",
+          "valueType": "hex",
+          "source": "IniHandler.cpp:ParseBlendState",
+          "xxmi": false
+        },
+        {
+          "name": "blend_factor[0]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend_factor[1]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend_factor[2]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend_factor[3]",
+          "valueType": "unknown",
+          "source": "IniHandler.cpp:CustomShaderIniKeys",
+          "xxmi": false
+        },
+        {
+          "name": "blend_state_merge",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseBlendState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_write_mask",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_func",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_read_mask",
+          "valueType": "hex",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_write_mask",
+          "valueType": "hex",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_front",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_back",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "stencil_ref",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_stencil_state_merge",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseDepthStencilState",
+          "xxmi": false
+        },
+        {
+          "name": "fill",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "cull",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "front",
+          "valueType": "enum",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_bias",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_bias_clamp",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "slope_scaled_depth_bias",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "depth_clip_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "scissor_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "multisample_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "antialiased_line_enable",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "rasterizer_state_merge",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseRSState",
+          "xxmi": false
+        },
+        {
+          "name": "topology",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseTopology",
+          "xxmi": false
+        },
+        {
+          "name": "sampler",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseSamplerState",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ShaderRegex",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "shader_model",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_shader_regex_section_main",
+          "xxmi": false
+        },
+        {
+          "name": "temps",
+          "valueType": "string",
+          "source": "IniHandler.cpp:parse_shader_regex_section_main",
+          "xxmi": false
+        },
+        {
+          "name": "filter_index",
+          "valueType": "float",
+          "source": "IniHandler.cpp:parse_shader_regex_section_main",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCommandList",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCustomShader",
+      "prefix": true,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ClearRenderTargetView",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ClearDepthStencilView",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ClearUnorderedAccessViewUint",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "ClearUnorderedAccessViewFloat",
+      "prefix": false,
+      "kind": "commandlist",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": true,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:CommandListSections",
+      "xxmi": false
+    },
+    {
+      "name": "Pool",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "pool_size",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_index_type",
+          "valueType": "enum:PoolIndexTypeNames",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_lazy_initialization",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_element_type_switch_reset",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_allocate_slot_on_missing",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_expiration_timeout_frames",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_expiration_reset_elements",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_expiration_refresh_on_read",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_spatial_radius",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_persist_variables",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "pool_variable_default_value",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourcePoolSection",
+          "xxmi": true
+        },
+        {
+          "name": "max_copies_per_frame",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "filename",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "type",
+          "valueType": "enum:CustomResourceTypeNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "color_space",
+          "valueType": "enum:CustomColorSpaceNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "height",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "depth",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "mips",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "array",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "msaa",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "msaa_quality",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "byte_width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "stride",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "width_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "height_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "bind_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "misc_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "data",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceInitialData",
+          "xxmi": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": true
+    },
+    {
+      "name": "Resource",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "max_copies_per_frame",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "filename",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "type",
+          "valueType": "enum:CustomResourceTypeNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "color_space",
+          "valueType": "enum:CustomColorSpaceNames",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "height",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "depth",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "mips",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "array",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "msaa",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "msaa_quality",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "byte_width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "stride",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "width_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "height_multiply",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "bind_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "misc_flags",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": false
+        },
+        {
+          "name": "data",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseResourceInitialData",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Key",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "Key",
+          "valueType": "string",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false,
+          "repeatable": true
+        },
+        {
+          "name": "Back",
+          "valueType": "string",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false,
+          "repeatable": true
+        },
+        {
+          "name": "type",
+          "valueType": "enum:KeyOverrideTypeNames",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false
+        },
+        {
+          "name": "delay",
+          "valueType": "int",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false
+        },
+        {
+          "name": "release_delay",
+          "valueType": "int",
+          "source": "IniHandler.cpp:RegisterPresetKeyBindings",
+          "xxmi": false
+        },
+        {
+          "name": "transition",
+          "valueType": "int",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "release_transition",
+          "valueType": "int",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "transition_type",
+          "valueType": "enum:TransitionTypeNames",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "release_transition_type",
+          "valueType": "enum:TransitionTypeNames",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "condition",
+          "valueType": "string",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "run",
+          "valueType": "string",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "wrap",
+          "valueType": "bool",
+          "source": "Override.cpp:KeyOverrideCycle::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "smart",
+          "valueType": "bool",
+          "source": "Override.cpp:KeyOverrideCycle::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [
+        {
+          "kind": "ini_param",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "kind": "variable",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Include",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": true,
+      "keys": [
+        {
+          "name": "include",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false
+        },
+        {
+          "name": "user_config",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false
+        },
+        {
+          "name": "include_recursive",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false
+        },
+        {
+          "name": "exclude_recursive",
+          "valueType": "string",
+          "source": "IniHandler.cpp:ParseIncludedIniFiles",
+          "xxmi": false,
+          "repeatable": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Preset",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "unique_triggers_required",
+          "valueType": "int",
+          "source": "IniHandler.cpp:ParsePresetOverrideSections",
+          "xxmi": false
+        },
+        {
+          "name": "transition",
+          "valueType": "int",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "release_transition",
+          "valueType": "int",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "transition_type",
+          "valueType": "enum:TransitionTypeNames",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "release_transition_type",
+          "valueType": "enum:TransitionTypeNames",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "condition",
+          "valueType": "string",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "name": "run",
+          "valueType": "string",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [
+        {
+          "kind": "ini_param",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        },
+        {
+          "kind": "variable",
+          "source": "Override.cpp:Override::ParseIniSection",
+          "xxmi": false
+        }
+      ],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Hunting",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "hunting",
+          "valueType": "int",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "overlay_buffer_hash_lifetime",
+          "valueType": "int",
+          "source": "Hunting.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "reload_config",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "wipe_user_config",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "monitor_performance",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "freeze_performance_monitor",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "monitor_performance_interval",
+          "valueType": "float",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "toggle_hunting",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "repeat_rate",
+          "valueType": "int",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "marking_mode",
+          "valueType": "enum:MarkingModeNames",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_marking_mode",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "marking_actions",
+          "valueType": "string",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_pixelshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_pixelshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_pixelshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_vertexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_vertexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_vertexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_vertexbuffer_slot",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "previous_vertexbuffer_slot",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "next_indexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_indexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_indexbuffer",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_vertexshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_vertexshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_vertexshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_computeshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_computeshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_computeshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_geometryshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_geometryshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_geometryshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_domainshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_domainshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_domainshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_hullshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_hullshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_hullshader",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "next_rendertarget",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "previous_rendertarget",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "mark_rendertarget",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "done_hunting",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "reload_fixes",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "show_original",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "analyse_frame",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "analyse_options",
+          "valueType": "string",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "kill_deferred",
+          "valueType": "key-binding",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "tune_enable",
+          "valueType": "bool",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "tune_step",
+          "valueType": "float",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "verbose_overlay",
+          "valueType": "bool",
+          "source": "Hunting.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Logging",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "log_level",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "calls",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "debug",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "unbuffered",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "force_cpu_affinity",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "waitfordebugger",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "crash",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "dump_all_profiles",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "debug_locks",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "show_warnings",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "System",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "dll_initialization_delay",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "skip_early_includes_load",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "config_initialization_delay",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "proxy_d3d11",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "load_library_redirect",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "hook",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "allow_check_interface",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "allow_create_device",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "allow_platform_update",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "check_foreground_window",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "settings_auto_save_interval",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "clear_unknown_settings",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "screen_width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "screen_height",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "force_detect_color_space",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "additional_foreground_window",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Input",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "toggle_input",
+          "valueType": "key-binding",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "input_disable_mode",
+          "valueType": "enum:InputDisableScopeNames",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "input",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": true
+    },
+    {
+      "name": "Device",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "width",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "height",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "refresh_rate",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "upscaling",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "upscale_mode",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "filter_refresh_rate",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "full_screen",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "toggle_full_screen",
+          "valueType": "key-binding",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "force_full_screen_on_key",
+          "valueType": "key-binding",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "allow_windowcommands",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "get_resolution_from",
+          "valueType": "enum:GetResolutionFromNames",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "hide_cursor",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "cursor_upscaling_bypass",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Rendering",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "shader_hash",
+          "valueType": "enum:ShaderHashNames",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "texture_hash",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "override_directory",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "cache_directory",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "cache_shaders",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "rasterizer_disable_scissor",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "track_texture_updates",
+          "valueType": "bool-or-int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "cache_resource_data",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "track_region_hashes",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "track_implicit_index_buffers",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "allow_buffer_resize",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "assemble_signature_comments",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "disassemble_undecipherable_custom_data",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "patch_assembly_cb_offsets",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "recursive_include",
+          "valueType": "bool-or-int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_fixed",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_shaders",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_hlsl",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_binary",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "dump_usage",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "ini_params",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_sv_position",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "recompile_all_vs",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_DepthTexture1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_DepthTexture2",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_ZPosCalc1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_ZPosCalc2",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_PositionTexture",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_PositionCalc",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_Dependencies1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_Dependencies2",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_InvTransform",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ZRepair_DepthTextureHash",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_BackProjectionTransform1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_BackProjectionTransform2",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ObjectPosition1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ObjectPosition2",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ObjectPosition1Multiplier",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_ObjectPosition2Multiplier",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_MatrixOperand1",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "fix_MatrixOperand1Multiplier",
+          "valueType": "string",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Loader",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "check_target_even_without_loader",
+          "valueType": "bool",
+          "source": "D3D11Wrapper.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "Target",
+          "valueType": "string",
+          "source": "D3D11Wrapper.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Profile",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": true,
+      "allowsDuplicateKeys": false,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Stereo",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "ConvergenceMap",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    }
+  ]
+}

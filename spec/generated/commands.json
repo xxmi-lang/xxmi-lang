@@ -1,0 +1,582 @@
+{
+  "commands": [
+    {
+      "name": "checktextureoverride",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "run",
+      "kind": "general",
+      "match": "exact",
+      "values": [
+        {
+          "name": "customshader",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "builtincustomshader",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "commandlist",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "builtincommandlist",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "preset",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "exclude_preset",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "handling",
+      "kind": "general",
+      "match": "exact",
+      "values": [
+        {
+          "name": "skip",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "abort",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "reset_per_frame_limits",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "clear",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "analyse_options",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "dump",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "special",
+      "kind": "general",
+      "match": "exact",
+      "values": [
+        {
+          "name": "upscaling_switch_bb",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "draw_3dmigoto_overlay",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "store",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true
+    },
+    {
+      "name": "commandlist",
+      "kind": "general",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true
+    },
+    {
+      "name": "draw",
+      "kind": "draw",
+      "match": "exact",
+      "values": [
+        {
+          "name": "from_caller",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        },
+        {
+          "name": "auto",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 2
+    },
+    {
+      "name": "drawauto",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false
+    },
+    {
+      "name": "drawindexed",
+      "kind": "draw",
+      "match": "exact",
+      "values": [
+        {
+          "name": "auto",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 3
+    },
+    {
+      "name": "drawindexedinstanced",
+      "kind": "draw",
+      "match": "exact",
+      "values": [
+        {
+          "name": "auto",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 5
+    },
+    {
+      "name": "drawinstanced",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 4
+    },
+    {
+      "name": "dispatch",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 3
+    },
+    {
+      "name": "drawindexedinstancedindirect",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 1,
+      "indirect": true
+    },
+    {
+      "name": "drawinstancedindirect",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 1,
+      "indirect": true
+    },
+    {
+      "name": "dispatchindirect",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 1,
+      "indirect": true
+    },
+    {
+      "name": "if",
+      "kind": "flow",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "elif",
+      "kind": "flow",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "else if",
+      "kind": "flow",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "else",
+      "kind": "flow",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "endif",
+      "kind": "flow",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "local",
+      "kind": "declaration",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListVariableAssignment",
+      "xxmi": false
+    },
+    {
+      "name": "global",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "persist",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "locked",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": true
+    },
+    {
+      "name": "post",
+      "kind": "prefix",
+      "match": "prefix",
+      "values": [],
+      "source": "IniHandler.cpp:ParseCommandList",
+      "xxmi": false
+    },
+    {
+      "name": "pre",
+      "kind": "prefix",
+      "match": "prefix",
+      "values": [],
+      "source": "IniHandler.cpp:ParseCommandList",
+      "xxmi": false
+    }
+  ],
+  "resourceMembers": [
+    {
+      "name": "mips",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "size",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "array",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "index",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "width",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "offset",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "stride",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "format",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "height",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "region",
+      "args": [
+        "unsigned",
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "bindflags",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "lastframe",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "hashregion",
+      "args": [
+        "unsigned",
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "spatialhash",
+      "args": [
+        "unsigned",
+        "unsigned",
+        "unsigned",
+        "float"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "sourcestride",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "elementformat",
+      "args": [
+        "string",
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "elementoffset",
+      "args": [
+        "string",
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    }
+  ],
+  "functions": [
+    {
+      "name": "countbits",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "sin",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "cos",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "tan",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "asin",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "acos",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "atan",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "abs",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "sign",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "ceil",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "floor",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "trunc",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "round",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "frac",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "sqrt",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "rsqrt",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "exp",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "exp2",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "log",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "log2",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "saturate",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    },
+    {
+      "name": "random",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    }
+  ]
+}

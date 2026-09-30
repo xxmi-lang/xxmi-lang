@@ -1,0 +1,282 @@
+{
+  "tokens": [
+    {
+      "token": "===",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "!==",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "<<",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": ">>",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": "==",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "!=",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "//",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "<=",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": ">=",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "&&",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "||",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "**",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "(",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": ")",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "!",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "~",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": "&",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": "|",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": "^",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": true
+    },
+    {
+      "token": "*",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "/",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "%",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "+",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "-",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": "<",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    },
+    {
+      "token": ">",
+      "source": "CommandList.cpp:operator_tokens",
+      "xxmi": false
+    }
+  ],
+  "precedence": [
+    {
+      "level": 0,
+      "group": "unary_operators",
+      "associativity": "right",
+      "unary": true,
+      "operators": [
+        "!",
+        "~",
+        "-",
+        "+"
+      ],
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": false
+    },
+    {
+      "level": 1,
+      "group": "exponent_operators",
+      "associativity": "right",
+      "unary": false,
+      "operators": [
+        "**"
+      ],
+      "source": "CommandList.cpp:exponent_operators",
+      "xxmi": false
+    },
+    {
+      "level": 2,
+      "group": "multi_division_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "*",
+        "/",
+        "//",
+        "%"
+      ],
+      "source": "CommandList.cpp:multi_division_operators",
+      "xxmi": false
+    },
+    {
+      "level": 3,
+      "group": "add_subtract_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "+",
+        "-"
+      ],
+      "source": "CommandList.cpp:add_subtract_operators",
+      "xxmi": false
+    },
+    {
+      "level": 4,
+      "group": "shift_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "<<",
+        ">>"
+      ],
+      "source": "CommandList.cpp:shift_operators",
+      "xxmi": true
+    },
+    {
+      "level": 5,
+      "group": "relational_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "<",
+        "<=",
+        ">",
+        ">="
+      ],
+      "source": "CommandList.cpp:relational_operators",
+      "xxmi": false
+    },
+    {
+      "level": 6,
+      "group": "equality_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "==",
+        "!=",
+        "===",
+        "!=="
+      ],
+      "source": "CommandList.cpp:equality_operators",
+      "xxmi": false
+    },
+    {
+      "level": 7,
+      "group": "bitwise_and_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "&"
+      ],
+      "source": "CommandList.cpp:bitwise_and_operators",
+      "xxmi": true
+    },
+    {
+      "level": 8,
+      "group": "bitwise_xor_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "^"
+      ],
+      "source": "CommandList.cpp:bitwise_xor_operators",
+      "xxmi": true
+    },
+    {
+      "level": 9,
+      "group": "bitwise_or_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "|"
+      ],
+      "source": "CommandList.cpp:bitwise_or_operators",
+      "xxmi": true
+    },
+    {
+      "level": 10,
+      "group": "and_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "&&"
+      ],
+      "source": "CommandList.cpp:and_operators",
+      "xxmi": false
+    },
+    {
+      "level": 11,
+      "group": "or_operators",
+      "associativity": "left",
+      "unary": false,
+      "operators": [
+        "||"
+      ],
+      "source": "CommandList.cpp:or_operators",
+      "xxmi": false
+    }
+  ]
+}

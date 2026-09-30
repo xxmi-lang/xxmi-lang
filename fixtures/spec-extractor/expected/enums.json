@@ -1,0 +1,82 @@
+{
+  "enums": [
+    {
+      "name": "VariableFlagNames",
+      "values": [
+        {
+          "name": "global",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "persist",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": false
+        },
+        {
+          "name": "locked",
+          "source": "CommandList.h:VariableFlagNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "CustomResourceTypeNames",
+      "values": [
+        {
+          "name": "Buffer",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        },
+        {
+          "name": "Texture2D",
+          "source": "CommandList.h:CustomResourceTypeNames",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.h:CustomResourceTypeNames",
+      "xxmi": false
+    },
+    {
+      "name": "PoolIndexTypeNames",
+      "values": [
+        {
+          "name": "ring",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "static",
+          "source": "CommandList.h:PoolIndexTypeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:PoolIndexTypeNames",
+      "xxmi": true
+    },
+    {
+      "name": "DXGIFormats",
+      "values": [
+        {
+          "name": "UNKNOWN",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R32G32B32A32_FLOAT",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        },
+        {
+          "name": "R8G8B8A8_UNORM",
+          "source": "util.h:DXGIFormats",
+          "xxmi": false
+        }
+      ],
+      "source": "util.h:DXGIFormats",
+      "xxmi": false
+    }
+  ]
+}

@@ -6,7 +6,7 @@ This doc covers how we know what the language is (the spec), how we parse it (tr
 
 ### Why extract
 
-The DLL defines the language, and XXMI keeps extending it: `store`, pools, bitwise operators, `local`, `->` member access, `Region(...)`. A hand-written keyword list will drift. `packages/spec-extractor` reads the C++ source and writes `spec/generated/*.json`. A CI job reruns it against the latest XXMI-Libs-Package `master` and opens a PR when the output changes.
+The DLL defines the language, and XXMI keeps extending it: `store`, pools, bitwise and shift operators, math functions (`sin(…)`, `saturate(…)`, …), `locked` globals, `->` member access, `Region(...)`. (`local` is older: vanilla 3DMigoto already has it.) A hand-written keyword list will drift. `packages/spec-extractor` reads the C++ source and writes `spec/generated/*.json`. A CI job reruns it against the latest XXMI-Libs-Package `master` and opens a PR when the output changes.
 
 ### Sources
 
@@ -28,29 +28,58 @@ Line numbers are from `master` as of 2026-09-29 and will move. The extractor mus
 | Pool semantics | `IniHandler.cpp`, Pool section parsing (around the `lower_bound(L"Pool")` loop) | Index types, persistence ("ring" only), wildcard `[*]` |
 | Enums (formats, types, usage flags, shader stages, slots) | DirectX11 headers and the enum tables used by `GetIniEnum*` | DXGI formats may be easier to take from a static list |
 
-### Output schema (sketch)
+### How the extractor finds things (M1)
+
+`packages/spec-extractor` reads `DirectX11/*.{cpp,h}` plus the root `util.h`. It strips comments (string-aware, so `L"//"` survives), then finds tables and functions by name:
+
+- **Section tables and key lists:** `{L"Name", bool}` arrays; `wchar_t *XIniKeys[]` whitelists, expanding same-file `#define` macros such as `TEXTURE_OVERRIDE_FUZZY_MATCHES`.
+- **Keys and their types:** `GetIni*(section, L"key", …)` call sites, typed by the getter (`GetIniInt` → `int`, `GetIniEnumClass(…, XNames)` → `enum:XNames`, a string passed straight to `ParseFormatString` → `enum:DXGIFormats`). Calls with a literal section name (`GetIniBool(L"Logging", …)`, `RegisterIniKeyBinding(L"Hunting", …)`) are collected from every file. Calls with a variable section are attributed through `SECTION_KEY_SOURCES` in `packages/spec-extractor/src/sections.ts`, the one hand-kept map from section to parser function. For command-list sections, only whitelisted keys count as keys; everything else is a command.
+- **Commands:** literal comparisons on the key, value or line (`!wcscmp(key, L"…")` is exact, `wcsncmp` / `.compare(0, n, …)` is a prefix match) in the dispatch functions, plus `ParseDrawCommandArgs(…, indirect, nargs, …)` for draw argument counts.
+- **Operators:** `operator_tokens[]`, plus precedence from the order of the `transform_operators_recursive(&tree, <group>, …, right_assoc, unary)` calls, and `DEFINE_OPERATOR(name, "pattern", …)` for each group member. Identifier patterns in `unary_operators` are the math functions.
+- **Enums:** every `EnumName_t<…> XNames[]` table, plus `DXGIFormats[]` from `util.h`.
+
+A missing anchor makes extraction exit 3 and name what's missing, instead of silently shrinking the spec. `xxmi: true` is not hand-marked. The extractor runs a second, lenient extraction over vanilla 3DMigoto (`bo3b/3Dmigoto`) and flags every entry vanilla lacks, matching names case-insensitively. Where the two DLLs differ in shape, the extractor accepts both: XXMI's `ParseResourceSection` vs. vanilla's `ParseResourceSections`, and `line.compare(0, 5, L"local")` vs. `name.compare(0, 6, L"local ")`. An integration test pins known vanilla features (`run`, `if`, `local`, `global`, Resource `type`/`format`, …) to `xxmi: false`, so an anchor mismatch in the baseline can't quietly mark them XXMI-only.
+
+Known limits: keys the DLL builds at runtime (`blend[0]`…`mask[7]`, via `swprintf`) have `valueType: "unknown"`; overlays may supply a type. XXMI no longer reads any `[Stereo]` or `[ConvergenceMap]` keys (vanilla did), so those sections have none.
+
+### Output
+
+`spec/generated/` holds five files, written by `pnpm spec:extract` (`XXMI_DLL_SRC` = XXMI-Libs-Package checkout, `MIGOTO_DLL_SRC` = 3Dmigoto checkout). The TypeScript types are in `packages/core/src/spec/types.ts`.
 
 ```jsonc
-// spec/generated/sections.json
-{
-  "dllCommit": "…", "extractedAt": "…",
-  "sections": [
-    {
-      "name": "Resource", "prefix": true, "kind": "regular",
-      "keys": [
-        { "name": "type", "valueType": "enum:ResourceType", "source": "IniHandler.cpp:ParseResourceSections" },
-        { "name": "format", "valueType": "enum:DXGI_FORMAT", "source": "…" },
-        { "name": "filename", "valueType": "path", "source": "…" }
-      ]
-    },
-    { "name": "CommandList", "prefix": true, "kind": "commandlist", "allowsBareLines": true }
-  ]
-}
-// spec/generated/commands.json
-{ "commands": [ { "name": "store", "args": ["variable", "resource", "index"], "contexts": ["commandlist"], "source": "CommandList.cpp:ParseCommandListGeneralCommands", "xxmi": true } ] }
+// meta.json: no wall-clock timestamp, so the same commits give byte-identical output
+{ "extractorVersion": 1,
+  "dll":      { "repository": "https://github.com/SpectrumQT/XXMI-Libs-Package", "commit": "…", "commitDate": "…" },
+  "baseline": { "repository": "https://github.com/bo3b/3Dmigoto", "commit": "…", "commitDate": "…" } }
+// sections.json
+{ "sections": [ { "name": "Resource", "prefix": true, "kind": "regular",
+    "allowsBareLines": false, "allowsDuplicateKeys": false,
+    "keys": [ { "name": "type", "valueType": "enum:CustomResourceTypeNames",
+                "source": "IniHandler.cpp:ParseResourceSection", "xxmi": false } ],
+    "dynamicKeys": [], "source": "IniHandler.cpp:RegularSections", "xxmi": false } ] }
+// commands.json: commands (kind general|draw|flow|declaration|prefix), resourceMembers, functions
+{ "commands": [ { "name": "store", "kind": "general", "match": "exact", "values": [],
+                  "source": "CommandList.cpp:ParseCommandListGeneralCommands", "xxmi": true } ],
+  "resourceMembers": [ { "name": "region", "args": ["unsigned", "unsigned"], … } ],
+  "functions": [ { "name": "saturate", … } ] }
+// operators.json: tokens, and precedence levels (0 binds tightest)
+// enums.json: every EnumName_t table plus DXGIFormats
 ```
 
-`spec/overlay/*.toml` adds what extraction can't provide: human docs, examples, better arg types, deprecation notes, and "since XXMI version". The loader deep-merges overlay over generated. Overlay entries for names that don't exist in generated are an error, unless marked `source = "manual"`.
+`spec/overlay/*.toml` adds what extraction can't provide: human docs, examples, better value/arg types, deprecation notes, and "since XXMI version". `loadSpec()` in `@xxmi-lang/core` deep-merges the overlays over the generated spec, in file-name order. Tables address entries by name, case-insensitively:
+
+```toml
+[commands.store]              # also [members.<name>], [functions.<name>], [enums.<name>]
+doc = "…"
+example = """…"""
+[sections.Resource.keys.type]
+doc = "…"
+valueType = "enum:CustomResourceTypeNames"   # keys may override valueType; members may set args
+[operators."<<"]
+doc = "…"
+```
+
+An overlay entry for a name the generated spec doesn't have is an error, unless it has `source = "manual"` plus a `note` saying why; it's then added. Overlays can't set `xxmi` or `source` on generated entries, and an unknown field is an error, so typos surface.
 
 ### Dialects
 

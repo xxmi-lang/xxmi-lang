@@ -41,7 +41,48 @@ jobs:
 
       - run: pnpm build
 
+      # The DLL sources spec/generated/ was extracted from (commits recorded in meta.json).
+      - name: Read spec source commits
+        id: spec
+        shell: bash
+        run: |
+          echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")" >> "$GITHUB_OUTPUT"
+          echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
+
+      - name: Check out XXMI-Libs-Package (DLL source)
+        uses: actions/checkout@v4
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.spec.outputs.dll }}
+          path: .dll/xxmi
+          persist-credentials: false
+          sparse-checkout: |
+            /DirectX11/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      - name: Check out 3Dmigoto (vanilla baseline)
+        uses: actions/checkout@v4
+        with:
+          repository: bo3b/3Dmigoto
+          ref: ${{ steps.spec.outputs.baseline }}
+          path: .dll/vanilla
+          persist-credentials: false
+          sparse-checkout: |
+            /DirectX11/
+            /util.h
+          sparse-checkout-cone-mode: false
+
       - run: pnpm test
+        env:
+          XXMI_DLL_SRC: .dll/xxmi
+          MIGOTO_DLL_SRC: .dll/vanilla
+
+      - name: spec/generated matches its DLL commit
+        run: pnpm spec:extract --check
+        env:
+          XXMI_DLL_SRC: .dll/xxmi
+          MIGOTO_DLL_SRC: .dll/vanilla
 
       - name: Check out ZZMI-Package
         uses: actions/checkout@v4

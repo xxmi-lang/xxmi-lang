@@ -1,0 +1,13 @@
+{
+  "extractorVersion": 1,
+  "dll": {
+    "repository": "https://example.invalid/xxmi",
+    "commit": "0000000000000000000000000000000000000000",
+    "commitDate": "2026-01-01T00:00:00Z"
+  },
+  "baseline": {
+    "repository": "https://example.invalid/vanilla",
+    "commit": "0000000000000000000000000000000000000000",
+    "commitDate": "2026-01-01T00:00:00Z"
+  }
+}
