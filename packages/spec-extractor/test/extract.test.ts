@@ -116,7 +116,14 @@ describe('extractSpec on the synthetic DLL pair', () => {
       'user_config:string',
     ]);
     expect(keys('Logging')).toEqual(['log_level:enum:LogVerbosityNames', 'debug:bool']);
-    expect(keys('Loader')).toEqual(['loader:string', 'check_version:bool']);
+    expect(keys('Loader')).toEqual([
+      'loader:string',
+      'check_version:bool',
+      'module:string',
+      'require_admin:bool',
+      'delay:int',
+    ]);
+    expect(keys('Rendering')).toEqual(['storage_directory:string']);
     expect(section('Resource')?.removedKeys.map((k) => k.name)).toEqual(['mode']);
     expect(section('Logging')?.removedKeys).toEqual([]);
     expect(
@@ -199,6 +206,16 @@ describe('source drift', () => {
       t.replace('#define TEXTURE_OVERRIDE_FUZZY_MATCHES', '#define SOMETHING_ELSE'),
     );
     expect(() => extractBody(dll, true)).toThrow(/TEXTURE_OVERRIDE_FUZZY_MATCHES/);
+  });
+
+  it('fails loudly when a component folder is missing (e.g. a sparse checkout)', () => {
+    const full = DllSource.load(join(FIXTURES, 'xxmi'));
+    const partial = new DllSource(
+      full.all().filter((f) => !f.name.startsWith('Injector/')),
+      ['Injector'],
+    );
+    expect(() => extractBody(partial, true)).toThrow(/Injector\/: could not find directory/);
+    expect(extractBody(partial, false).warnings).toHaveLength(1);
   });
 
   it('records instead of failing in baseline mode', () => {

@@ -8,9 +8,12 @@ const COMPONENT_DIRS = ['D3DCompiler', 'Injector'];
 /** The DirectX11 sources of a 3DMigoto-family DLL checkout. */
 export class DllSource {
   private readonly files = new Map<string, CppFile>();
+  /** Component folders (`D3DCompiler`, `Injector`) the checkout doesn't have. */
+  readonly missingComponents: string[];
 
-  constructor(files: Iterable<CppFile>) {
+  constructor(files: Iterable<CppFile>, missingComponents: string[] = []) {
     for (const file of files) this.files.set(file.name, file);
+    this.missingComponents = missingComponents;
   }
 
   /** Loads `<root>/DirectX11/*.{cpp,h}` plus the shared `<root>/util.h` (DXGI format names). */
@@ -24,9 +27,13 @@ export class DllSource {
     if (existsSync(util)) files.push(new CppFile('util.h', readFileSync(util, 'utf8')));
     // Other binaries built from the same repo read d3dx.ini too: the D3DCompiler wrapper and the
     // Injector (3DMigoto Loader). Only their literal-section reads are used.
+    const missing: string[] = [];
     for (const component of COMPONENT_DIRS) {
       const componentDir = join(root, component);
-      if (!existsSync(componentDir)) continue;
+      if (!existsSync(componentDir)) {
+        missing.push(component);
+        continue;
+      }
       for (const name of readdirSync(componentDir)
         .filter((n) => n.endsWith('.cpp'))
         .sort()) {
@@ -35,7 +42,7 @@ export class DllSource {
         );
       }
     }
-    return new DllSource(files);
+    return new DllSource(files, missing);
   }
 
   file(name: string): CppFile {

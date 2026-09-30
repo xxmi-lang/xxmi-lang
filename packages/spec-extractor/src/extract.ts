@@ -1,5 +1,6 @@
 import type { Spec, SpecMeta } from '@xxmi-lang/core';
 import { functions, extractCommands } from './commands.ts';
+import { AnchorNotFoundError } from './cpp.ts';
 import { DllSource, Extraction, gitInfo, type GitInfo } from './dll.ts';
 import { extractEnums, extractOperators } from './operators.ts';
 import { extractBuiltinSections, extractSections } from './sections.ts';
@@ -15,6 +16,16 @@ export function extractBody(
   strict: boolean,
 ): { body: SpecBody; warnings: string[] } {
   const x = new Extraction(dll, strict);
+  // A partial checkout (e.g. a CI sparse checkout) would otherwise silently drop keys.
+  for (const component of dll.missingComponents) {
+    x.step(undefined, () => {
+      throw new AnchorNotFoundError(
+        `${component}/`,
+        'directory',
+        'check out the whole repo or add it to the sparse checkout',
+      );
+    });
+  }
   const { operators, patterns } = extractOperators(x);
   const { commands, resourceMembers } = extractCommands(x);
   const body: SpecBody = {

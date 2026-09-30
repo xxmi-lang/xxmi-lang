@@ -57,8 +57,11 @@ jobs:
           ref: ${{ steps.spec.outputs.dll }}
           path: .dll/xxmi
           persist-credentials: false
+          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
           sparse-checkout: |
             /DirectX11/
+            /D3DCompiler/
+            /Injector/
             /util.h
           sparse-checkout-cone-mode: false
 
@@ -69,8 +72,11 @@ jobs:
           ref: ${{ steps.spec.outputs.baseline }}
           path: .dll/vanilla
           persist-credentials: false
+          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
           sparse-checkout: |
             /DirectX11/
+            /D3DCompiler/
+            /Injector/
             /util.h
           sparse-checkout-cone-mode: false
 

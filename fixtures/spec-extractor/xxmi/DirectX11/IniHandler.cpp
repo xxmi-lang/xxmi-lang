@@ -15,6 +15,7 @@ static Section RegularSections[] = {
 	{L"Include", true},
 	{L"Logging", false},
 	{L"Loader", false},
+	{L"Rendering", false},
 };
 static Section AllowLinesWithoutEquals[] = {
 	{L"Profile", false},

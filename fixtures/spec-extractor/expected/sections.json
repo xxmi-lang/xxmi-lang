@@ -330,6 +330,43 @@
           "valueType": "bool",
           "source": "DLLMainHook.cpp:literal",
           "xxmi": true
+        },
+        {
+          "name": "module",
+          "valueType": "string",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "require_admin",
+          "valueType": "bool",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "delay",
+          "valueType": "int",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        }
+      ],
+      "removedKeys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    },
+    {
+      "name": "Rendering",
+      "prefix": false,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [
+        {
+          "name": "storage_directory",
+          "valueType": "string",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
         }
       ],
       "removedKeys": [],
