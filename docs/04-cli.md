@@ -38,6 +38,12 @@ xxmi index [dir] --out FILE   Build a symbol index snapshot (used for the bundle
 xxmi spec extract --dll DIR   Same as `pnpm spec:extract`, for maintainers
 ```
 
+### Implemented so far (M2)
+
+- `xxmi lint` with `--format text|json`, `--rules` and `--max-warnings`. Not yet: `sarif`, `--fix`, and the `--json` alias. `xxmi lint --help` lists every rule.
+- `xxmi index <package dir> --out FILE [--name NAME]`.
+- `xxmi spec extract` is still `pnpm spec:extract`. From the repo: `pnpm xxmi …` runs the CLI from source.
+
 ## Output
 
 - **Text:** `path:line:col  severity  XM201  message  [fix available]`. Paths are relative to the cwd. This is concise on purpose so agents can read it cheaply.

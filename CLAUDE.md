@@ -46,7 +46,8 @@ pnpm test                # unit + golden tests
 pnpm test:corpus         # parses corpus/ (local only) + $XXMI_PACKAGE_SRC; failure rate, first error per file, baseline diff (lint from M2)
 pnpm grammar:update      # rebuilds packages/core/grammar/*.wasm from a tree-sitter-migoto fork checkout (XXMI_GRAMMAR_SRC env var)
 pnpm spec:extract        # regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags); --check to verify
-pnpm --filter @xxmi-lang/cli dev -- lint path/to/mod
+pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
+pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
 ```
 
 ## Definition of done for any task

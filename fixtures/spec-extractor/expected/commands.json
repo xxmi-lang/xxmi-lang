@@ -42,7 +42,8 @@
       "match": "exact",
       "values": [],
       "source": "CommandList.cpp:ParseCommandListGeneralCommands",
-      "xxmi": true
+      "xxmi": true,
+      "argCount": 3
     },
     {
       "name": "commandlist",

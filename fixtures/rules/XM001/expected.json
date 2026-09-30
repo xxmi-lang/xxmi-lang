@@ -1,0 +1,18 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM001",
+    "severity": "error",
+    "message": "Syntax error: unexpected `this line is not valid`",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 22
+      }
+    }
+  }
+]

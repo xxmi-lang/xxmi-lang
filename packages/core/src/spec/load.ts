@@ -44,9 +44,11 @@ function readJson(path: string): unknown {
 export function loadGeneratedSpec(root = DEFAULT_SPEC_ROOT): Spec {
   const dir = join(root, 'generated');
   const commands = readJson(join(dir, 'commands.json')) as SpecCommands;
+  const sections = readJson(join(dir, 'sections.json')) as SpecSections;
   return {
     meta: readJson(join(dir, 'meta.json')) as SpecMeta,
-    sections: (readJson(join(dir, 'sections.json')) as SpecSections).sections,
+    sections: sections.sections,
+    builtinSections: sections.builtinSections,
     commands: commands.commands,
     resourceMembers: commands.resourceMembers,
     functions: commands.functions,
@@ -181,6 +183,7 @@ function mergeSection(spec: Spec, name: string, raw: Table, path: string, proble
       allowsBareLines: fields.allowsBareLines === true,
       allowsDuplicateKeys: fields.allowsDuplicateKeys === true,
       keys: [],
+      removedKeys: [],
       dynamicKeys: [],
     });
     if (!section) return;

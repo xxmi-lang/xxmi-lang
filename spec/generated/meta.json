@@ -1,5 +1,5 @@
 {
-  "extractorVersion": 1,
+  "extractorVersion": 3,
   "dll": {
     "repository": "https://github.com/SpectrumQT/XXMI-Libs-Package",
     "commit": "34fa32fab97b828319f01a0af29ba36228c6d12e",

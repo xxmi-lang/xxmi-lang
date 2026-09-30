@@ -1,0 +1,50 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM202",
+    "severity": "error",
+    "message": "Unresolved resource `ResourceMissing`.",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 8
+      },
+      "end": {
+        "line": 1,
+        "character": 23
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM202",
+    "severity": "error",
+    "message": "Unresolved resource `ResourceMissingToo`.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 18
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM202",
+    "severity": "error",
+    "message": "Unresolved resource pool `PoolMissing`.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 12
+      },
+      "end": {
+        "line": 3,
+        "character": 26
+      }
+    }
+  }
+]

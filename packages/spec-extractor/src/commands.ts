@@ -68,10 +68,15 @@ function generalCommands(file: CppFile): SpecCommand[] {
   const source = `${file.name}:${fn}`;
   const commands: SpecCommand[] = [];
   for (const block of ifBlocks(file.functionBody(fn))) {
+    const argCount = readerArgCount(file, block.body);
     for (const key of comparisons(block.condition, KEY)) {
       const existing = commands.find((c) => c.name === key.name);
       const vals = values(block.body, source);
-      if (existing) {
+      if (argCount !== undefined && !existing) {
+        const cmd = command(key, 'general', source, vals);
+        cmd.argCount = argCount;
+        commands.push(cmd);
+      } else if (existing) {
         for (const v of vals)
           if (!existing.values.some((e) => e.name === v.name)) existing.values.push(v);
       } else {
@@ -81,6 +86,22 @@ function generalCommands(file: CppFile): SpecCommand[] {
   }
   if (commands.length === 0) throw new AnchorNotFoundError(file.name, fn, 'no key comparisons');
   return commands;
+}
+
+/**
+ * Argument count of a command whose parser (the `return ParseX(…)` in `body`) reads its value
+ * with `CommandArgumentReader`: one more than the comma separators it consumes, provided it
+ * insists on consuming all input (`args.Finished()`).
+ */
+function readerArgCount(file: CppFile, body: string): number | undefined {
+  const handler = /return\s+(Parse\w+)\s*\(/.exec(body)?.[1];
+  if (!handler) return undefined;
+  const code = file.tryFunctionBody(handler);
+  if (!code || !/\bCommandArgumentReader\b/.test(code) || !/\.Finished\s*\(\s*\)/.test(code)) {
+    return undefined;
+  }
+  const commas = [...code.matchAll(/ConsumeSeparator\s*\(\s*SeparatorMode::Comma\s*\)/g)].length;
+  return commas + 1;
 }
 
 /** `ParseDrawCommand`: keyword, special values, and `ParseDrawCommandArgs(…, indirect, nargs, …)`. */

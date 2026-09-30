@@ -1,0 +1,18 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM208",
+    "severity": "warning",
+    "message": "File not found: missing.buf",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 11
+      },
+      "end": {
+        "line": 1,
+        "character": 22
+      }
+    }
+  }
+]

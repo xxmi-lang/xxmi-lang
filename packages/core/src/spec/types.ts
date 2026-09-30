@@ -52,11 +52,22 @@ export interface SpecSection extends Sourced, Documented {
   allowsDuplicateKeys: boolean;
   /** Keys read by the section parser. Command-list sections also accept every command. */
   keys: SpecKey[];
+  /**
+   * Keys vanilla 3DMigoto reads in this section that XXMI no longer does (stereo options, …).
+   * Old d3dx.ini files still carry them; the DLL ignores them. `source` is the vanilla location.
+   */
+  removedKeys: { name: string; source: string }[];
   dynamicKeys: SpecDynamicKeys[];
+}
+
+/** A section the DLL defines itself (`InsertBuiltInIniSections`), e.g. `BuiltInCommandListUnbindAllRenderTargets`. */
+export interface SpecBuiltinSection extends Sourced {
+  name: string;
 }
 
 export interface SpecSections {
   sections: SpecSection[];
+  builtinSections: SpecBuiltinSection[];
 }
 
 export type CommandKind = 'general' | 'draw' | 'flow' | 'declaration' | 'prefix';
@@ -73,7 +84,10 @@ export interface SpecCommand extends Sourced, Documented {
   match: 'exact' | 'prefix';
   /** Keyword values the DLL recognises specially (`handling = skip`, `draw = auto`, …). */
   values: SpecCommandValue[];
-  /** Comma-separated expression arguments, for draw commands. */
+  /**
+   * Number of comma-separated arguments: from `ParseDrawCommandArgs` for draw commands, or from
+   * the separators a `CommandArgumentReader`-based parser consumes (e.g. `store`).
+   */
   argCount?: number;
   /** First argument is a resource holding the indirect arguments. */
   indirect?: boolean;
@@ -139,6 +153,7 @@ export interface SpecMeta {
 export interface Spec {
   meta: SpecMeta;
   sections: SpecSection[];
+  builtinSections: SpecBuiltinSection[];
   commands: SpecCommand[];
   resourceMembers: SpecResourceMember[];
   functions: SpecFunction[];

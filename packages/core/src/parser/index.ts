@@ -91,6 +91,37 @@ export async function parseText(text: string): Promise<ParseResult> {
   return { tree, issues: collectSyntaxIssues(tree) };
 }
 
+/** A slice of the text to parse on its own, in UTF-16 offsets and LSP positions. */
+export interface ParseSpan {
+  start: number;
+  end: number;
+  range: Range;
+}
+
+/**
+ * Parses each span of `text` as if it were the whole document, keeping absolute positions
+ * (tree-sitter `includedRanges`). Used to parse sections independently, so a syntax error can't
+ * spill into the next section. Each returned tree must be deleted by the caller.
+ */
+export async function parseSpans(text: string, spans: ParseSpan[]): Promise<ParseResult[]> {
+  sharedParser ??= createParser();
+  const parser = await sharedParser;
+  return spans.map((span) => {
+    const tree = parser.parse(text, null, {
+      includedRanges: [
+        {
+          startIndex: span.start,
+          endIndex: span.end,
+          startPosition: { row: span.range.start.line, column: span.range.start.character },
+          endPosition: { row: span.range.end.line, column: span.range.end.character },
+        },
+      ],
+    });
+    if (!tree) throw new Error('tree-sitter returned no tree (grammar not loaded?)');
+    return { tree, issues: collectSyntaxIssues(tree) };
+  });
+}
+
 /** Reads, decodes and parses one file. */
 export async function parseFile(path: string): Promise<FileParseResult> {
   const { text, encoding } = decodeText(await readFile(path));

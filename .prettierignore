@@ -10,3 +10,4 @@ fixtures/
 .zzmi-package/
 spec/generated/
 .dll/
+packages/core/snapshots/

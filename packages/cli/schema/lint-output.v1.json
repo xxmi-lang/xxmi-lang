@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/xxmi-lang/xxmi-lang/blob/main/packages/cli/schema/lint-output.v1.json",
+  "title": "xxmi lint --format json (version 1)",
+  "description": "Changes only with a version bump (docs/04-cli.md).",
+  "type": "object",
+  "required": ["version", "files", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "encoding", "diagnostics"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative to the working directory when inside it; always `/`-separated."
+          },
+          "encoding": { "enum": ["utf8", "utf8bom", "unknown"] },
+          "era": { "type": "string", "description": "Detected format era (from M5)." },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "severity", "message", "range"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string", "pattern": "^XM\\d{3}$" },
+                "severity": { "enum": ["error", "warning", "info", "hint"] },
+                "message": { "type": "string", "minLength": 1 },
+                "range": { "$ref": "#/$defs/range" },
+                "fix": { "type": "object", "description": "Quick fix (from later milestones)." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["files", "error", "warning", "info", "hint"],
+      "additionalProperties": false,
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "error": { "type": "integer", "minimum": 0 },
+        "warning": { "type": "integer", "minimum": 0 },
+        "info": { "type": "integer", "minimum": 0 },
+        "hint": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "description": "0-based line; 0-based column in UTF-16 code units (LSP).",
+      "required": ["line", "character"],
+      "additionalProperties": false,
+      "properties": {
+        "line": { "type": "integer", "minimum": 0 },
+        "character": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/position" },
+        "end": { "$ref": "#/$defs/position" }
+      }
+    }
+  }
+}

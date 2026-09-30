@@ -218,6 +218,12 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "stereomode",
+          "source": "IniHandler.cpp:parse_texture_override_common"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -229,6 +235,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -240,6 +247,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -251,6 +259,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -297,6 +306,12 @@
           "valueType": "float",
           "source": "IniHandler.cpp:ParseShaderOverrideSections",
           "xxmi": false
+        }
+      ],
+      "removedKeys": [
+        {
+          "name": "partner",
+          "source": "IniHandler.cpp:ParseShaderOverrideSections"
         }
       ],
       "dynamicKeys": [],
@@ -701,6 +716,7 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -731,6 +747,7 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -742,6 +759,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -753,6 +771,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -764,6 +783,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -775,6 +795,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -786,6 +807,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -797,6 +819,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": true,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:CommandListSections",
       "xxmi": false
@@ -989,6 +1012,7 @@
           "xxmi": true
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": true
@@ -1115,6 +1139,12 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "mode",
+          "source": "IniHandler.cpp:ParseResourceSections"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -1207,6 +1237,16 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "separation",
+          "source": "Override.cpp:Override::ParseIniSection"
+        },
+        {
+          "name": "convergence",
+          "source": "Override.cpp:Override::ParseIniSection"
+        }
+      ],
       "dynamicKeys": [
         {
           "kind": "ini_param",
@@ -1255,6 +1295,7 @@
           "repeatable": true
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -1307,6 +1348,16 @@
           "valueType": "string",
           "source": "Override.cpp:Override::ParseIniSection",
           "xxmi": false
+        }
+      ],
+      "removedKeys": [
+        {
+          "name": "separation",
+          "source": "Override.cpp:Override::ParseIniSection"
+        },
+        {
+          "name": "convergence",
+          "source": "Override.cpp:Override::ParseIniSection"
         }
       ],
       "dynamicKeys": [
@@ -1632,6 +1683,16 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "take_screenshot",
+          "source": "Hunting.cpp:literal"
+        },
+        {
+          "name": "mark_snapshot",
+          "source": "Hunting.cpp:literal"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -1644,32 +1705,32 @@
       "allowsDuplicateKeys": false,
       "keys": [
         {
+          "name": "calls",
+          "valueType": "int",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "unbuffered",
+          "valueType": "int",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "force_cpu_affinity",
+          "valueType": "int",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
+        },
+        {
           "name": "log_level",
           "valueType": "string",
           "source": "IniHandler.cpp:literal",
           "xxmi": true
         },
         {
-          "name": "calls",
-          "valueType": "int",
-          "source": "IniHandler.cpp:literal",
-          "xxmi": false
-        },
-        {
           "name": "debug",
           "valueType": "int",
-          "source": "IniHandler.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "unbuffered",
-          "valueType": "bool",
-          "source": "IniHandler.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "force_cpu_affinity",
-          "valueType": "bool",
           "source": "IniHandler.cpp:literal",
           "xxmi": false
         },
@@ -1702,6 +1763,12 @@
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
           "xxmi": true
+        }
+      ],
+      "removedKeys": [
+        {
+          "name": "input",
+          "source": "IniHandler.cpp:literal"
         }
       ],
       "dynamicKeys": [],
@@ -1812,6 +1879,7 @@
           "xxmi": true
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -1842,6 +1910,7 @@
           "xxmi": true
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": true
@@ -1932,6 +2001,12 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "force_stereo",
+          "source": "IniHandler.cpp:literal"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -1943,6 +2018,18 @@
       "allowsBareLines": false,
       "allowsDuplicateKeys": false,
       "keys": [
+        {
+          "name": "storage_directory",
+          "valueType": "string",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_shaders",
+          "valueType": "int",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
+          "xxmi": false
+        },
         {
           "name": "shader_hash",
           "valueType": "enum:ShaderHashNames",
@@ -2035,12 +2122,6 @@
         },
         {
           "name": "export_fixed",
-          "valueType": "bool",
-          "source": "IniHandler.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "export_shaders",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
           "xxmi": false
@@ -2190,6 +2271,12 @@
           "xxmi": false
         }
       ],
+      "removedKeys": [
+        {
+          "name": "stereo_params",
+          "source": "IniHandler.cpp:literal"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -2212,8 +2299,63 @@
           "valueType": "string",
           "source": "D3D11Wrapper.cpp:literal",
           "xxmi": false
+        },
+        {
+          "name": "loader",
+          "valueType": "string",
+          "source": "DLLMainHook.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "module",
+          "valueType": "string",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "check_version",
+          "valueType": "bool",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "require_admin",
+          "valueType": "bool",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "entry_point",
+          "valueType": "string",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "hook_proc",
+          "valueType": "int",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "launch",
+          "valueType": "string",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "wait_for_target",
+          "valueType": "bool",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "delay",
+          "valueType": "int",
+          "source": "Injector/Injector.cpp:literal",
+          "xxmi": false
         }
       ],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -2225,6 +2367,7 @@
       "allowsBareLines": true,
       "allowsDuplicateKeys": false,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -2236,6 +2379,28 @@
       "allowsBareLines": false,
       "allowsDuplicateKeys": false,
       "keys": [],
+      "removedKeys": [
+        {
+          "name": "automatic_mode",
+          "source": "IniHandler.cpp:literal"
+        },
+        {
+          "name": "create_profile",
+          "source": "IniHandler.cpp:literal"
+        },
+        {
+          "name": "surface_createmode",
+          "source": "IniHandler.cpp:literal"
+        },
+        {
+          "name": "surface_square_createmode",
+          "source": "IniHandler.cpp:literal"
+        },
+        {
+          "name": "force_no_nvapi",
+          "source": "IniHandler.cpp:literal"
+        }
+      ],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
@@ -2247,8 +2412,26 @@
       "allowsBareLines": false,
       "allowsDuplicateKeys": false,
       "keys": [],
+      "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
+      "xxmi": false
+    }
+  ],
+  "builtinSections": [
+    {
+      "name": "BuiltInCustomShaderDisableScissorClipping",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCustomShaderEnableScissorClipping",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
+      "xxmi": false
+    },
+    {
+      "name": "BuiltInCommandListUnbindAllRenderTargets",
+      "source": "IniHandler.cpp:InsertBuiltInIniSections",
       "xxmi": false
     }
   ]

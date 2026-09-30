@@ -1,0 +1,18 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM107",
+    "severity": "warning",
+    "message": "Duplicate section found: [commandlista] (first at line 1; the DLL uses the first)",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 1
+      },
+      "end": {
+        "line": 2,
+        "character": 13
+      }
+    }
+  }
+]

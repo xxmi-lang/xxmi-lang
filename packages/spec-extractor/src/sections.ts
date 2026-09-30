@@ -1,4 +1,4 @@
-import type { SpecDynamicKeys, SpecKey, SpecSection } from '@xxmi-lang/core';
+import type { SpecBuiltinSection, SpecDynamicKeys, SpecKey, SpecSection } from '@xxmi-lang/core';
 import {
   AnchorNotFoundError,
   findCalls,
@@ -169,6 +169,41 @@ function whitelist(file: CppFile, name: string): string[] {
   return keys;
 }
 
+const LITE_GETTERS: Record<string, string> = {
+  find_ini_setting_lite: 'string',
+  find_ini_bool_lite: 'bool',
+  find_ini_int_lite: 'int',
+};
+
+/**
+ * The early-startup readers (`ini_parser_lite.cpp`, used by DLLMainHook.cpp and the Injector):
+ * `s = find_ini_section_lite(buf, "loader")`, then `find_ini_setting_lite(s, "target", …)`.
+ */
+function liteReads(file: CppFile): KeyRead[] {
+  const sections = new Map<string, string>();
+  for (const m of file.code.matchAll(
+    /(\w+)\s*=\s*find_ini_section_lite\s*\(\s*\w+\s*,\s*"([^"]+)"/g,
+  )) {
+    if (m[1] && m[2]) sections.set(m[1], m[2]);
+  }
+  const reads: { index: number; read: KeyRead }[] = [];
+  for (const [getter, valueType] of Object.entries(LITE_GETTERS)) {
+    for (const call of findCalls(file.code, getter)) {
+      const section = sections.get(call.args[0] ?? '');
+      const key = stringLiteral(call.args[1] ?? '');
+      if (section === undefined || key === undefined) continue;
+      reads.push({
+        index: call.index,
+        read: {
+          section,
+          key: { name: key, valueType, source: `${file.name}:literal`, xxmi: false },
+        },
+      });
+    }
+  }
+  return reads.sort((a, b) => a.index - b.index).map((r) => r.read);
+}
+
 /** `whitelisted_duplicate_key`: sections whose keys may all repeat, and per-section keys. */
 function duplicateWhitelist(file: CppFile): {
   sections: SectionEntry[];
@@ -233,6 +268,7 @@ export function extractSections(x: Extraction): SpecSection[] {
       if (section === undefined) continue;
       literalReads.push({ section, key: read.key });
     }
+    literalReads.push(...liteReads(file));
   }
 
   const sections: SpecSection[] = [];
@@ -320,6 +356,7 @@ export function extractSections(x: Extraction): SpecSection[] {
           (isCommandList && noDuplicateWarningsForCommandLists) ||
           duplicates.sections.some((d) => d.name === lower),
         keys,
+        removedKeys: [],
         dynamicKeys,
         source: `${INI}:${tableName}`,
         xxmi: false,
@@ -350,4 +387,17 @@ function functionBodies(
 
 function addDynamic(list: SpecDynamicKeys[], entry: SpecDynamicKeys): void {
   if (!list.some((d) => d.kind === entry.kind)) list.push(entry);
+}
+
+/** Sections the DLL parses from its own ini excerpt in `InsertBuiltInIniSections`. */
+export function extractBuiltinSections(x: Extraction): SpecBuiltinSection[] {
+  return x.step([], () => {
+    const fn = 'InsertBuiltInIniSections';
+    const source = `${INI}:${fn}`;
+    const names = stringLiterals(x.dll.file(INI).functionBody(fn))
+      .map((line) => /^\[([^\]]+)\]/.exec(line.trim())?.[1])
+      .filter((name): name is string => name !== undefined);
+    if (names.length === 0) throw new AnchorNotFoundError(INI, fn, 'no [section] lines');
+    return names.map((name) => ({ name, source, xxmi: false }));
+  });
 }

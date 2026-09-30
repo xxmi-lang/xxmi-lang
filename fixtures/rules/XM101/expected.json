@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM101",
+    "severity": "error",
+    "message": "Unknown section type [TextureOverid Body]. Did you mean a [TextureOverride…] section?",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 1
+      },
+      "end": {
+        "line": 0,
+        "character": 19
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM101",
+    "severity": "error",
+    "message": "Unknown section type [Totally Unknown].",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 1
+      },
+      "end": {
+        "line": 3,
+        "character": 16
+      }
+    }
+  }
+]

@@ -45,6 +45,22 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 **Accept:** linting the ZZMI package itself reports no false-positive errors (any real errors found get reported upstream); every rule has good/bad fixtures; lint of the full corpus finishes without crashes; JSON output validates against its schema.
 
+**Status (2026-09-30):** done.
+
+- **ZZMI-Package lint (@ `1ecd24d`):** 0 errors, 17 warnings, each checked against the DLL source.
+  - 15 × XM102: keys XXMI doesn't read. 12 of them vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, `take_screenshot`, …); the other 3 no version reads (`[Stereo] unlock_*`, `[Logging] convergence`/`separation`).
+  - 2 × XM208: `Core/ZZMI/main.ini` points at `MyText.txt` and `Notifications/ErrorOldVersionZZMI.md`, which the package doesn't ship.
+  - None of these are errors; the two missing files are worth reporting to the package maintainers.
+- **Extractor fixes it took to get there:**
+  - Keys read by the Injector and `DLLMainHook.cpp` through `find_ini_*_lite`, and by the D3DCompiler wrapper, were missing and caused false XM102s on `[Loader]` and `[Rendering]`; they're now extracted.
+  - Missing `include_recursive` folders are no longer XM207: the DLL only logs them.
+- **Fixtures:** every rule has good/bad fixtures (`fixtures/rules/`), and namespace rules 1–7 each have one with hand-written expectations (`fixtures/namespaces/`).
+- **Corpus and schema:** the corpus lints with no crashes (per-rule counts are in `corpus/.baseline.json`), and CLI JSON output validates against `packages/cli/schema/lint-output.v1.json` in tests.
+- **Error recovery:** the M0 gap is closed. Sections are parsed independently, so a syntax error can't hide later sections.
+- **Performance:** the whole ZZMI package (19 files) lints in about 110 ms.
+- **Snapshot:** the bundled ZZMI library snapshot (`packages/core/snapshots/zzmi.json`) is checked in CI against the pinned package commit.
+- **Not done yet:** `xxmi.toml` `package =`, SARIF output, `--fix`, and loading other mods under `include_recursive` for cross-mod references.
+
 ## M3: LSP MVP and first release (v0.1)
 
 - `xxmi-lsp` with the phase 1 capabilities in `03-lsp.md`.

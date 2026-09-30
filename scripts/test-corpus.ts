@@ -1,22 +1,23 @@
 /**
- * Parses every .ini under corpus/ and under a game package checkout, then prints the parse-failure
- * rate and the first error per failing file.
+ * Parses and lints every .ini under corpus/ and under a game package checkout. Prints the
+ * parse-failure rate with the first error per failing file, and diagnostic counts per rule
+ * compared against the baseline (a jump in one rule usually means a false-positive regression).
  *
  *   XXMI_PACKAGE_SRC=../ZZMI-Package pnpm test:corpus [paths…] [--json] [--strict] [--update-baseline]
  *
  * Roots: corpus/ (if present), each path in XXMI_PACKAGE_SRC (separated like PATH), and any
  * paths given as arguments.
  *
- * --update-baseline  store the counts in corpus/.baseline.json under "parse"
- * --strict           exit 1 if any file fails to parse
+ * --update-baseline  store the counts in corpus/.baseline.json under "parse" and "lint"
+ * --strict           exit 1 if any file fails to parse or has a lint error
  * --json             print a JSON report instead of text
  *
- * Exit codes: 0 ok, 1 more failures than the baseline (or any failure with --strict),
- * 2 usage error (no roots found).
+ * Exit codes: 0 ok, 1 more parse failures or more diagnostics of some rule than the baseline
+ * (or, with --strict, any parse failure or lint error), 2 usage error, 3 lint crashed.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, delimiter, join, relative, resolve } from 'node:path';
-import { parseFile, type FileParseResult } from '../packages/core/src/index.ts';
+import { lintPaths, parseFile, type FileParseResult } from '../packages/core/src/index.ts';
 
 const REPO = resolve(import.meta.dirname, '..');
 const CORPUS = join(REPO, 'corpus');
@@ -44,6 +45,16 @@ interface RootReport {
   failureRate: number;
   nonUtf8: number;
   failures: FileReport[];
+  /** Diagnostics per rule id. */
+  lint: Record<string, number>;
+  lintErrors: number;
+  /** Set when linting threw: a bug (tolerant-by-default is a hard rule). */
+  crash?: string;
+}
+
+interface LintBaseline {
+  updatedAt: string;
+  roots: Record<string, Record<string, number>>;
 }
 
 interface ParseBaseline {
@@ -110,7 +121,7 @@ async function checkRoot(root: Root): Promise<RootReport> {
       });
     }
   }
-  return {
+  const report: RootReport = {
     label: root.label,
     dir: display(root.dir),
     files: files.length,
@@ -118,7 +129,22 @@ async function checkRoot(root: Root): Promise<RootReport> {
     failureRate: files.length === 0 ? 0 : failures.length / files.length,
     nonUtf8,
     failures,
+    lint: {},
+    lintErrors: 0,
   };
+  try {
+    const result = await lintPaths([root.dir]);
+    for (const f of result.files) {
+      for (const d of f.diagnostics) report.lint[d.id] = (report.lint[d.id] ?? 0) + 1;
+    }
+    report.lintErrors = result.summary.error;
+  } catch (error) {
+    report.crash = error instanceof Error ? (error.stack ?? error.message) : String(error);
+  }
+  report.lint = Object.fromEntries(
+    Object.entries(report.lint).sort(([a], [b]) => (a < b ? -1 : 1)),
+  );
+  return report;
 }
 
 function readJson(path: string): Record<string, unknown> {
@@ -154,11 +180,26 @@ const regressions = reports.filter((r) => {
   const base = baseline?.roots[r.label];
   return base !== undefined && r.failed > base.failed;
 });
+const lintBaseline = baselineFile.lint as LintBaseline | undefined;
+/** `root: rule` pairs with more diagnostics than the baseline recorded. */
+const lintRegressions = reports.flatMap((r) => {
+  const base = lintBaseline?.roots[r.label];
+  if (!base) return [];
+  return Object.entries(r.lint)
+    .filter(([id, count]) => count > (base[id] ?? 0))
+    .map(([id, count]) => `${r.label}: ${id} ${base[id] ?? 0} → ${count}`);
+});
+const crashes = reports.filter((r) => r.crash !== undefined);
 
 if (flags.has('--json')) {
   console.log(
     JSON.stringify(
-      { version: 1, roots: reports, regressions: regressions.map((r) => r.label) },
+      {
+        version: 1,
+        roots: reports,
+        regressions: regressions.map((r) => r.label),
+        lintRegressions,
+      },
       null,
       2,
     ),
@@ -179,8 +220,22 @@ if (flags.has('--json')) {
         `(failure rate ${percent(report.failureRate)}), ${report.nonUtf8} not UTF-8${vsBase}`,
     );
   }
+  for (const report of reports) {
+    const base = lintBaseline?.roots[report.label];
+    const ids = [...new Set([...Object.keys(report.lint), ...Object.keys(base ?? {})])].sort();
+    if (report.crash) console.log(`\n${report.label}: LINT CRASHED\n${report.crash}`);
+    else if (ids.length === 0) console.log(`\n${report.label}: no lint diagnostics`);
+    else {
+      console.log(`\n${report.label} lint (${report.lintErrors} errors):`);
+      for (const id of ids) {
+        const was = base ? `  [baseline ${base[id] ?? 0}]` : '';
+        console.log(`  ${id}  ${report.lint[id] ?? 0}${was}`);
+      }
+    }
+  }
   for (const r of regressions)
     console.log(`\nREGRESSION: ${r.label} has more parse failures than the baseline.`);
+  for (const r of lintRegressions) console.log(`REGRESSION: ${r}`);
 }
 
 if (flags.has('--update-baseline')) {
@@ -199,9 +254,14 @@ if (flags.has('--update-baseline')) {
       ]),
     ),
   };
-  writeFileSync(BASELINE, `${JSON.stringify({ ...baselineFile, parse: next }, null, 2)}\n`);
+  const lint: LintBaseline = {
+    updatedAt: next.updatedAt,
+    roots: Object.fromEntries(reports.map((r) => [r.label, r.lint])),
+  };
+  writeFileSync(BASELINE, `${JSON.stringify({ ...baselineFile, parse: next, lint }, null, 2)}\n`);
   if (!flags.has('--json')) console.log(`\nBaseline written to ${display(BASELINE)}`);
 }
 
-const strictFailed = flags.has('--strict') && reports.some((r) => r.failed > 0);
-process.exit(regressions.length > 0 || strictFailed ? 1 : 0);
+if (crashes.length > 0) process.exit(3);
+const strictFailed = flags.has('--strict') && reports.some((r) => r.failed > 0 || r.lintErrors > 0);
+process.exit(regressions.length > 0 || lintRegressions.length > 0 || strictFailed ? 1 : 0);

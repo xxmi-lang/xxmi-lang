@@ -13,6 +13,8 @@ static Section RegularSections[] = {
 	{L"Key", true},
 	{L"Include", true},
 	{L"Logging", false},
+	{L"Loader", false},
+	{L"Rendering", false},
 };
 static Section AllowLinesWithoutEquals[] = {
 	{L"Profile", false},
@@ -70,6 +72,7 @@ static void ParseResourceSections()
 		custom_resource->override_format = ParseFormatString(setting, true);
 	}
 	custom_resource->override_width = GetIniInt(section_name, L"width", -1, NULL);
+	custom_resource->override_mode = GetIniEnum(section_name, L"mode", 0, NULL, L"mono", StereoModeNames, 3, 0);
 }
 
 static void ParseResourceInitialData(CustomResource *custom_resource, const wchar_t *section)
@@ -136,4 +139,13 @@ static void ParseCommandList(const wchar_t *id, CommandList *pre_command_list, C
 void LoadConfigFile()
 {
 	gLogDebug = GetIniBool(L"Logging", L"debug", false, NULL);
+}
+
+static void InsertBuiltInIniSections()
+{
+	static const wchar_t text[] =
+		L"[BuiltInCommandListUnbindAllRenderTargets]\n"
+		L"o0 = null\n"
+	;
+	ParseIniExcerpt(text);
 }

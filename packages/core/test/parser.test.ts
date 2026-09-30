@@ -76,8 +76,9 @@ describe('parseText', () => {
     expect(await sectionHeaders(text)).toContain('[CommandListB]');
   });
 
-  // Known recovery gap: tree-sitter folds the rest of the file into one ERROR node.
-  // docs/01-language-model.md §2 "Error recovery"; M2 lowering must work around it.
+  // Whole-file parsing still has this gap: tree-sitter folds the rest of the file into one ERROR
+  // node. Lowering avoids it by parsing each section on its own (parseSpans; see model.test.ts
+  // "keeps later sections when a section has a syntax error").
   it.fails('keeps the next section after an unclosed (', async () => {
     const text = '[CommandListA]\n$y = ($x + 1\n$z = 2\n\n[CommandListB]\n$w = 3\n';
     expect(await sectionHeaders(text)).toContain('[CommandListB]');
