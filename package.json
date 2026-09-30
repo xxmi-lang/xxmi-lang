@@ -15,7 +15,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r run typecheck && tsc -p scripts --noEmit",
-    "grammar:update": "node scripts/update-grammar.ts"
+    "grammar:update": "node scripts/update-grammar.ts",
+    "spec:extract": "node packages/spec-extractor/src/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

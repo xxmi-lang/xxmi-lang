@@ -28,6 +28,13 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 **Accept:** every section prefix and operator in the DLL tables appears in the generated spec with a `source`; `store`, `local`, Pool and `->` features are present and flagged `xxmi: true`; rerunning on the same commit gives byte-identical output.
 
+**Status (2026-09-30):** done, with one correction to the criteria. `local` is present but `xxmi: false`, because vanilla 3DMigoto already parses `local $x` (`ParseCommandListVariableAssignment`: `name.compare(0, 6, L"local ")`), and the DLL wins over this doc. `store`, Pool (the section and all its keys), all 17 `->` members, `locked`, the shift/bitwise operators and the math functions are flagged `xxmi: true`.
+
+- `spec/generated/` is from XXMI-Libs-Package @ `34fa32f` with 3Dmigoto @ `8f329bd` as the vanilla baseline: 28 sections, 32 commands, 17 resource members, 22 functions, 26 operator tokens in 12 precedence levels, 26 enum tables. Two runs are byte-identical, including from CRLF sources.
+- CI checks that `spec/generated/` still matches the DLL commits in `meta.json` (`pnpm spec:extract --check`) and runs the real-DLL integration tests. `spec-extract.yml` re-extracts weekly from both `master`s and opens a PR on diff.
+- Overlays (`spec/overlay/commands.toml`, `sections.toml`) document the 20 most used commands and keys (ranked over ZZMI-Package and the local corpus): `run`, `if`/`elif`/`else`/`endif`, `global` (+ `persist`, `locked`), `local`, `checktextureoverride`, `clear`, `draw`, `drawindexed`, `handling`, `store`, and Resource `type`/`format`/`filename`/`stride`, TextureOverride `hash`/`match_priority`, ShaderOverride `hash`, and Include `include`/`include_recursive`/`exclude_recursive`. Every statement was checked against the DLL source.
+- Found for later milestones: recursive include only loads names ending in lowercase `.ini`, so `Mod.INI` is skipped silently (a candidate rule); XXMI reads no `[Stereo]` keys.
+
 ## M2: Core model, index and `xxmi lint`
 
 - CST → model lowering; namespace resolution rules 1–7 with a fixture for each.

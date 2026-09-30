@@ -1,0 +1,202 @@
+{
+  "commands": [
+    {
+      "name": "run",
+      "kind": "general",
+      "match": "exact",
+      "values": [
+        {
+          "name": "customshader",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        },
+        {
+          "name": "commandlist",
+          "match": "prefix",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "handling",
+      "kind": "general",
+      "match": "exact",
+      "values": [
+        {
+          "name": "skip",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": false
+    },
+    {
+      "name": "store",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true
+    },
+    {
+      "name": "commandlist",
+      "kind": "general",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true
+    },
+    {
+      "name": "draw",
+      "kind": "draw",
+      "match": "exact",
+      "values": [
+        {
+          "name": "from_caller",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 2
+    },
+    {
+      "name": "drawindexed",
+      "kind": "draw",
+      "match": "exact",
+      "values": [
+        {
+          "name": "auto",
+          "match": "exact",
+          "source": "CommandList.cpp:ParseDrawCommand",
+          "xxmi": false
+        }
+      ],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 3
+    },
+    {
+      "name": "dispatchindirect",
+      "kind": "draw",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseDrawCommand",
+      "xxmi": false,
+      "argCount": 1,
+      "indirect": true
+    },
+    {
+      "name": "if",
+      "kind": "flow",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "elif",
+      "kind": "flow",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "else",
+      "kind": "flow",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "endif",
+      "kind": "flow",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListFlowControl",
+      "xxmi": false
+    },
+    {
+      "name": "local",
+      "kind": "declaration",
+      "match": "prefix",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListVariableAssignment",
+      "xxmi": false
+    },
+    {
+      "name": "global",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "persist",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": false
+    },
+    {
+      "name": "locked",
+      "kind": "declaration",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.h:VariableFlagNames",
+      "xxmi": true
+    },
+    {
+      "name": "post",
+      "kind": "prefix",
+      "match": "prefix",
+      "values": [],
+      "source": "IniHandler.cpp:ParseCommandList",
+      "xxmi": false
+    },
+    {
+      "name": "pre",
+      "kind": "prefix",
+      "match": "prefix",
+      "values": [],
+      "source": "IniHandler.cpp:ParseCommandList",
+      "xxmi": false
+    }
+  ],
+  "resourceMembers": [
+    {
+      "name": "size",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "region",
+      "args": [
+        "unsigned",
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    }
+  ],
+  "functions": [
+    {
+      "name": "sin",
+      "source": "CommandList.cpp:unary_operators",
+      "xxmi": true
+    }
+  ]
+}

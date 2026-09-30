@@ -12,3 +12,6 @@ corpus/
 
 # ZZMI-Package checkout used by CI for `pnpm test:corpus`.
 .zzmi-package/
+
+# DLL source checkouts used by CI for spec extraction.
+.dll/
