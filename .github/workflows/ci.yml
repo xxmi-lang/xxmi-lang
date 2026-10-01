@@ -36,11 +36,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Build first: the binaries' entry (scripts/bin/embedded.ts) embeds packages/core/dist/spec.json.
+      - run: pnpm build
+
       - run: pnpm lint
 
       - run: pnpm typecheck
-
-      - run: pnpm build
 
       # The DLL sources spec/generated/ was extracted from (commits recorded in meta.json).
       - name: Read spec source commits
