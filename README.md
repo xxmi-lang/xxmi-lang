@@ -19,7 +19,10 @@ The language rules aren't hand-written: they're extracted from the XXMI DLL sour
 
 ## Install
 
-Download from the [latest release](https://github.com/xxmi-lang/xxmi-lang/releases/latest):
+**Step-by-step for Arch / CachyOS, other Linux distros, Windows and macOS:
+[INSTALL.md](INSTALL.md).**
+
+In short, download from the [latest release](https://github.com/xxmi-lang/xxmi-lang/releases/latest):
 
 | File                   | What it is                                                   |
 | ---------------------- | ------------------------------------------------------------ |
@@ -29,14 +32,16 @@ Download from the [latest release](https://github.com/xxmi-lang/xxmi-lang/releas
 
 Targets: `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `darwin-x64`,
 `darwin-arm64`. The binaries are self-contained (no Node needed). Rename them to `xxmi` /
-`xxmi-lsp` (`.exe` on Windows) and put them on your `PATH`. On macOS, the first run may need
-"Open anyway" in System Settings → Privacy & Security, since the binaries aren't notarized.
+`xxmi-lsp` (`.exe` on Windows) and put them on your `PATH`; INSTALL.md has copy-paste commands
+for each system.
 
 ### VS Code
 
 Install `xxmi-lang.vsix` (Extensions view → `…` → Install from VSIX). For highlighting, also
-install lupomikti's [3DMigoto INI](https://github.com/lupomikti/migoto-vscode) extension; both
-use the `migoto` language. Open your mod folder, or better, the whole XXMI game folder (the one
+install lupomikti's "3DMigoto INI" extension: from Open VSX in VSCodium/Code-OSS
+(`AGMG.migoto-ini`), or as a `.vsix` from
+[their releases](https://github.com/lupomikti/migoto-vscode/releases/latest) in Microsoft VS
+Code. Both use the `migoto` language. Open your mod folder, or better, the whole XXMI game folder (the one
 with `d3dx.ini`), so library references resolve against your installed package.
 
 ### Kate
