@@ -13,10 +13,8 @@ comes from lupomikti's `Migoto` syntax definition.
    Restart Kate. `.ini` files should open in the **Migoto** mode (Tools → Mode). If a mod's
    files open as "INI Files" instead, pick Migoto from that menu (with its default settings, Kate keeps the choice for files it has seen before).
 
-2. **Server.** Download `xxmi-lsp` for your platform from the
-   [releases](https://github.com/xxmi-lang/xxmi-lang/releases) and put it on your `PATH`
-   (on Windows the file is `xxmi-lsp-windows-x64.exe`; rename it to `xxmi-lsp.exe` or use the
-   full path below).
+2. **Server.** Install `xxmi-lsp` and put it on your `PATH`: copy-paste commands for each
+   system are in [INSTALL.md](../../INSTALL.md).
 3. **LSP client.** Enable Settings → Configure Kate → Plugins → **LSP Client**, then open
    Settings → Configure Kate → LSP Client → **User Server Settings** and paste
    [`lspclient-settings.json`](lspclient-settings.json). If `xxmi-lsp` isn't on your `PATH`,
