@@ -1,0 +1,9 @@
+**
+!dist/extension.cjs
+!dist/server.mjs
+!dist/spec.json
+!dist/zzmi.json
+!dist/*.wasm
+!package.json
+!README.md
+!LICENSE

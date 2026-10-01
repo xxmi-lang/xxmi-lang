@@ -1,5 +1,5 @@
 {
-  "name": "xxmi-lang",
+  "name": "xxmi-lang-workspace",
   "private": true,
   "description": "Language tooling for 3DMigoto / XXMI mod .ini files",
   "license": "GPL-3.0-or-later",
@@ -17,7 +17,8 @@
     "typecheck": "pnpm -r run typecheck && tsc -p scripts --noEmit",
     "grammar:update": "node scripts/update-grammar.ts",
     "spec:extract": "node packages/spec-extractor/src/cli.ts",
-    "xxmi": "node --conditions=source packages/cli/src/cli.ts"
+    "xxmi": "node --conditions=source packages/cli/src/cli.ts",
+    "build:binaries": "node scripts/build-binaries.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

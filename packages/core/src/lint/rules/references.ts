@@ -4,7 +4,7 @@
  */
 import { dirname } from 'node:path';
 import type { IniFile, Reference, SymbolKind } from '../../model/types.ts';
-import { didYouMean } from '../suggest.ts';
+import { didYouMean, replaceFix } from '../suggest.ts';
 import { explicitNamespace, globalVariableKey, type SymbolTable } from '../../workspace/symbols.ts';
 import type { Workspace } from '../../workspace/workspace.ts';
 import type { Rule, RuleContext } from '../types.ts';
@@ -64,9 +64,11 @@ function checkSectionRefs(context: RuleContext, kinds: SymbolKind[]): void {
     if (symbols.resolveSection(ref.kind, ref.text, file.namespace)) continue;
     const ns = explicitNamespace(ref.text, lookup);
     if (ns !== undefined && !symbols.hasNamespace(ns)) continue; // XM206 reports it
+    const names = localNames(symbols, ref.kind, file);
     report(
       ref.span.range,
-      `Unresolved ${describe(ref)} \`${ref.text}\`.${didYouMean(ref.text, localNames(symbols, ref.kind, file))}`,
+      `Unresolved ${describe(ref)} \`${ref.text}\`.${didYouMean(ref.text, names)}`,
+      replaceFix(ref.span.range, ref.text, names),
     );
   }
 }

@@ -30,5 +30,39 @@
         "character": 25
       }
     }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM201",
+    "severity": "error",
+    "message": "Unresolved command list `CommandListDrw`. Did you mean `CommandListDraw`?",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 6
+      },
+      "end": {
+        "line": 4,
+        "character": 20
+      }
+    },
+    "fix": {
+      "title": "Change to `CommandListDraw`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 6
+            },
+            "end": {
+              "line": 4,
+              "character": 20
+            }
+          },
+          "newText": "CommandListDraw"
+        }
+      ]
+    }
   }
 ]

@@ -45,7 +45,7 @@ ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIM
 | MCP | `@modelcontextprotocol/sdk`, Streamable HTTP transport | Remote-friendly; runs on Railway |
 | Monorepo | pnpm workspaces + turborepo (or plain pnpm scripts) | Simple |
 | Tests | vitest; golden fixtures under `fixtures/` | Fast; snapshot-friendly |
-| Binaries | `bun build --compile` for `xxmi` and `xxmi-lsp` on win-x64, linux-x64, linux-arm64, darwin-x64, darwin-arm64 (add win-arm64 if Bun supports it at build time) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
+| Binaries | `bun build --compile` for `xxmi` and `xxmi-lsp` on win-x64, win-arm64, linux-x64, linux-arm64, darwin-x64, darwin-arm64 (`pnpm build:binaries`; the grammar, the tree-sitter runtime, the spec and the ZZMI snapshot are embedded) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
 | Platforms | Windows, Linux, macOS are all first-class for the tooling. CI runs the test suite on all three | The game only runs on Windows/Proton, but mods are authored, fixed and reviewed anywhere. Only the DLL itself (and the `xxmi-dll-dev` skill's build steps) is Windows-only |
 | Config file | `xxmi.toml` at the mod or workspace root | Readable; lupomikti uses TOML too |
 

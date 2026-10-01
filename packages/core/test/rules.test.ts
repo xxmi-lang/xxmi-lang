@@ -26,8 +26,27 @@ async function run(id: string, path: string) {
       severity: d.severity,
       message: d.message,
       range: d.range,
+      ...(d.fix ? { fix: d.fix } : {}),
     })),
   );
+}
+
+type Edit = {
+  range: { start: { line: number; character: number }; end: { line: number; character: number } };
+  newText: string;
+};
+
+/** Applies non-overlapping edits to `text`, last first so offsets stay valid. */
+function applyEdits(text: string, edits: Edit[]): string {
+  const lineStarts = [0];
+  for (let i = 0; i < text.length; i++) if (text[i] === '\n') lineStarts.push(i + 1);
+  const offset = (p: Edit['range']['start']) => (lineStarts[p.line] ?? text.length) + p.character;
+  return [...edits]
+    .sort((a, b) => offset(b.range.start) - offset(a.range.start))
+    .reduce(
+      (out, e) => out.slice(0, offset(e.range.start)) + e.newText + out.slice(offset(e.range.end)),
+      text,
+    );
 }
 
 describe('rule fixtures', () => {
@@ -51,6 +70,17 @@ describe('rule fixtures', () => {
       if (UPDATE) writeFileSync(expectedPath, `${JSON.stringify(actual, null, 2)}\n`);
       expect(actual.length).toBeGreaterThan(0);
       expect(actual).toEqual(JSON.parse(readFileSync(expectedPath, 'utf8')));
+
+      // docs/02-diagnostics.md: applying every quick fix to bad.ini must give fixed.ini.
+      const edits = actual.flatMap((d) => d.fix?.edits ?? []);
+      const fixedPath = join(dir, 'fixed.ini');
+      if (edits.length > 0) {
+        const fixed = applyEdits(readFileSync(bad, 'utf8'), edits);
+        if (UPDATE) writeFileSync(fixedPath, fixed);
+        expect(fixed).toBe(readFileSync(fixedPath, 'utf8'));
+      } else {
+        expect(existsSync(fixedPath), `${fixedPath} without quick fixes`).toBe(false);
+      }
     });
 
     it(`${rule.id} is quiet on the good fixture`, async () => {

@@ -11,3 +11,4 @@ fixtures/
 spec/generated/
 .dll/
 packages/core/snapshots/
+.vscode-test/

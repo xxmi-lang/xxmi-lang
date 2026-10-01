@@ -15,3 +15,9 @@ corpus/
 
 # DLL source checkouts used by CI for spec extraction.
 .dll/
+
+# Single-file binaries (pnpm build:binaries).
+dist/
+
+# VS Code downloaded by @vscode/test-electron.
+.vscode-test/

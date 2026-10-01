@@ -4,7 +4,7 @@
  */
 import type { LineModel, SectionModel } from '../../model/types.ts';
 import type { SpecKey } from '../../spec/types.ts';
-import { didYouMean, editDistance } from '../suggest.ts';
+import { didYouMean, editDistance, replaceFix } from '../suggest.ts';
 import type { Rule, RuleContext } from '../types.ts';
 
 /** `x`, `y1`, `w123`: ini params (the grammar's `ini_parameter`). */
@@ -95,6 +95,7 @@ export const XM102: Rule = {
         report(
           line.key.span.range,
           `Unknown key \`${key}\` in [${section.name.text}]; the DLL ignores it.${none}`,
+          replaceFix(line.key.span.range, key, known),
         );
       }
     }
@@ -184,9 +185,11 @@ export const XM105: Rule = {
           value = value.replace(/^DXGI_FORMAT_/i, '');
         }
         if (values.some((v) => v.toLowerCase() === value.toLowerCase())) continue;
+        const prefix = line.value.text.slice(0, line.value.text.length - value.length);
         report(
           line.value.span.range,
           `Invalid ${line.key.text} "${line.value.text}".${didYouMean(value, values)}`,
+          replaceFix(line.value.span.range, value, values, prefix),
         );
       }
     }

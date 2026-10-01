@@ -16,7 +16,9 @@ import {
   displayPath,
   findPackageRoot,
   lintPaths,
-  loadSpec,
+  relaunchWithWasmFlags,
+  VERSION,
+  defaultSpec,
   type LintResult,
 } from '@xxmi-lang/core';
 
@@ -34,8 +36,9 @@ export function formatText(result: LintResult): string {
   for (const file of result.files) {
     for (const d of file.diagnostics) {
       const { line, character } = d.range.start;
+      const fix = d.fix ? '  [fix available]' : '';
       lines.push(
-        `${displayPath(file.path)}:${line + 1}:${character + 1}  ${d.severity}  ${d.id}  ${d.message}`,
+        `${displayPath(file.path)}:${line + 1}:${character + 1}  ${d.severity}  ${d.id}  ${d.message}${fix}`,
       );
     }
   }
@@ -59,6 +62,7 @@ export function formatJson(result: LintResult): string {
           severity: d.severity,
           message: d.message,
           range: d.range,
+          ...(d.fix ? { fix: d.fix } : {}),
         })),
       })),
       summary: result.summary,
@@ -152,7 +156,7 @@ globals and namespaces of d3dx.ini and every file it includes.`);
   if (!dir || !values.out) throw new UsageError('xxmi index needs a package dir and --out FILE');
   const root = findPackageRoot(resolve(dir));
   if (!root) throw new UsageError(`no d3dx.ini found at or above ${dir}`);
-  const workspace = new Workspace({ lookup: new SpecLookup(loadSpec()) });
+  const workspace = new Workspace({ lookup: new SpecLookup(defaultSpec()) });
   await workspace.loadPackage(root);
   const repository = git(root, 'remote', 'get-url', 'origin').replace(/\.git$/, '');
   const snapshot = buildSnapshot(workspace, root, {
@@ -177,6 +181,10 @@ export async function main(argv: string[]): Promise<number> {
         return await lint(rest);
       case 'index':
         return await index(rest);
+      case '--version':
+      case '-v':
+        console.log(VERSION);
+        return 0;
       case undefined:
       case '--help':
       case '-h':
@@ -203,6 +211,6 @@ export async function main(argv: string[]): Promise<number> {
   }
 }
 
-if (import.meta.main) {
+if (import.meta.main && !(await relaunchWithWasmFlags())) {
   process.exitCode = await main(process.argv.slice(2));
 }

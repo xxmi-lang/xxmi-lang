@@ -2,16 +2,15 @@
  * Runs the rules over a workspace. The LSP, CLI and MCP all lint through here
  * (docs/02-diagnostics.md).
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { IniFile } from '../model/types.ts';
 import type { TextEncoding } from '../parser/index.ts';
-import { loadSpec } from '../spec/load.ts';
+import { bundledSnapshots, defaultSpec } from '../defaults.ts';
 import { SpecLookup } from '../spec/lookup.ts';
 import type { SymbolSnapshot } from '../workspace/symbols.ts';
 import { Workspace } from '../workspace/workspace.ts';
-import { ConfigLoader } from './config.ts';
+import { ConfigLoader, type RuleSetting } from './config.ts';
 import { XM101, XM102, XM103, XM104, XM105, XM106, XM107, XM108 } from './rules/structure.ts';
 import { XM201, XM202, XM203, XM204, XM205, XM206, XM207, XM208 } from './rules/references.ts';
 import { XM001, XM002, XM109 } from './rules/syntax.ts';
@@ -40,29 +39,16 @@ export const RULES: readonly Rule[] = [
   XM208,
 ];
 
-const SNAPSHOT_DIR = fileURLToPath(new URL('../../snapshots/', import.meta.url));
-
-/** Library snapshots bundled with core (built by `xxmi index`). */
-export function bundledSnapshots(): SymbolSnapshot[] {
-  let names: string[];
-  try {
-    names = readdirSync(SNAPSHOT_DIR)
-      .filter((n) => n.endsWith('.json'))
-      .sort();
-  } catch {
-    return [];
-  }
-  return names.map(
-    (n) => JSON.parse(readFileSync(join(SNAPSHOT_DIR, n), 'utf8')) as SymbolSnapshot,
-  );
-}
-
 export interface LintOptions {
   /** Only run these rule ids. */
   rules?: string[];
   lookup?: SpecLookup;
   snapshots?: SymbolSnapshot[];
   configs?: ConfigLoader;
+  /** Rule settings that win over xxmi.toml (editor settings, docs/03-lsp.md). */
+  overrides?: Record<string, RuleSetting>;
+  /** Only run rules whose id starts with one of these (e.g. `['XM0', 'XM1']`). */
+  rulePrefixes?: string[];
 }
 
 export interface FileResult {
@@ -87,7 +73,8 @@ export function lintFile(
   const diagnostics: Diagnostic[] = [];
   for (const rule of RULES) {
     if (only && !only.has(rule.id)) continue;
-    const setting = config.rules[rule.id] ?? rule.severity;
+    if (options.rulePrefixes && !options.rulePrefixes.some((p) => rule.id.startsWith(p))) continue;
+    const setting = options.overrides?.[rule.id] ?? config.rules[rule.id] ?? rule.severity;
     if (setting === 'off') continue;
     rule.check({
       file,
@@ -96,8 +83,15 @@ export function lintFile(
       lookup: workspace.lookup,
       resolver: workspace.resolver,
       packageRoot: workspace.packageRoot(file),
-      report(range, message) {
-        diagnostics.push({ id: rule.id, severity: setting, message, path: file.path, range });
+      report(range, message, fix) {
+        diagnostics.push({
+          id: rule.id,
+          severity: setting,
+          message,
+          path: file.path,
+          range,
+          ...(fix ? { fix } : {}),
+        });
       },
     });
   }
@@ -133,7 +127,7 @@ export function collectIniFiles(path: string): string[] {
 
 /** Lints files and folders; the CLI's `xxmi lint`. */
 export async function lintPaths(paths: string[], options: LintOptions = {}): Promise<LintResult> {
-  const lookup = options.lookup ?? new SpecLookup(loadSpec());
+  const lookup = options.lookup ?? new SpecLookup(defaultSpec());
   const workspace = new Workspace({ lookup, snapshots: options.snapshots ?? bundledSnapshots() });
   const targets: IniFile[] = [];
   for (const path of paths) {

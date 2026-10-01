@@ -51,6 +51,8 @@ export interface FileParseResult extends ParseResult {
 export interface InitParserOptions {
   /** Grammar WASM as a path or bytes. Defaults to the build shipped in `grammar/`. */
   grammarWasm?: string | Uint8Array;
+  /** web-tree-sitter's own runtime WASM, for hosts that can't locate it next to its JS (binaries). */
+  runtimeWasm?: Uint8Array;
 }
 
 const BUNDLED_GRAMMAR = fileURLToPath(
@@ -66,7 +68,7 @@ let sharedParser: Promise<Parser> | undefined;
  */
 export function initParser(options: InitParserOptions = {}): Promise<Language> {
   language ??= (async () => {
-    await Parser.init();
+    await Parser.init(options.runtimeWasm ? { wasmBinary: options.runtimeWasm } : undefined);
     return Language.load(options.grammarWasm ?? BUNDLED_GRAMMAR);
   })().catch((error: unknown) => {
     language = undefined;
@@ -98,27 +100,47 @@ export interface ParseSpan {
   range: Range;
 }
 
+export interface SpanParseResult extends ParseResult {
+  /**
+   * The tree was built from the span's text alone: add these to node rows and indices to get
+   * positions in the whole file. `issues` are already shifted.
+   */
+  lineOffset: number;
+  indexOffset: number;
+}
+
 /**
- * Parses each span of `text` as if it were the whole document, keeping absolute positions
- * (tree-sitter `includedRanges`). Used to parse sections independently, so a syntax error can't
- * spill into the next section. Each returned tree must be deleted by the caller.
+ * Parses each span of `text` as if it were the whole document. Used to parse sections
+ * independently, so a syntax error can't spill into the next section. Spans must start at
+ * column 0 (section headers and the preamble do), which makes the position shift exact.
+ *
+ * Only the span's own text is handed to tree-sitter: passing the whole file for every section
+ * (tree-sitter `includedRanges`) costs memory proportional to file size × section count.
+ * Each returned tree must be deleted by the caller.
  */
-export async function parseSpans(text: string, spans: ParseSpan[]): Promise<ParseResult[]> {
+export async function parseSpans(text: string, spans: ParseSpan[]): Promise<SpanParseResult[]> {
   sharedParser ??= createParser();
   const parser = await sharedParser;
   return spans.map((span) => {
-    const tree = parser.parse(text, null, {
-      includedRanges: [
-        {
-          startIndex: span.start,
-          endIndex: span.end,
-          startPosition: { row: span.range.start.line, column: span.range.start.character },
-          endPosition: { row: span.range.end.line, column: span.range.end.character },
-        },
-      ],
-    });
+    if (span.range.start.character !== 0)
+      throw new Error('parseSpans: spans must start at column 0');
+    const tree = parser.parse(text.slice(span.start, span.end));
     if (!tree) throw new Error('tree-sitter returned no tree (grammar not loaded?)');
-    return { tree, issues: collectSyntaxIssues(tree) };
+    const lineOffset = span.range.start.line;
+    const indexOffset = span.start;
+    const issues = collectSyntaxIssues(tree).map((issue) => ({
+      ...issue,
+      range: {
+        start: {
+          line: issue.range.start.line + lineOffset,
+          character: issue.range.start.character,
+        },
+        end: { line: issue.range.end.line + lineOffset, character: issue.range.end.character },
+      },
+      startOffset: issue.startOffset + indexOffset,
+      endOffset: issue.endOffset + indexOffset,
+    }));
+    return { tree, issues, lineOffset, indexOffset };
   });
 }
 

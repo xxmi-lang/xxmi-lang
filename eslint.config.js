@@ -11,6 +11,8 @@ export default tseslint.config(
       'coverage/**',
       '.zzmi-package/**',
       '.dll/**',
+      // VS Code downloaded by @vscode/test-electron (packages/vscode/.vscode-test).
+      '**/.vscode-test/**',
     ],
   },
   js.configs.recommended,
@@ -29,7 +31,22 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', '**/*.cjs'],
     ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    // CommonJS run by VS Code's extension host (packages/vscode/test/suite.cjs).
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        require: 'readonly',
+        exports: 'writable',
+        module: 'writable',
+        __dirname: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
 );

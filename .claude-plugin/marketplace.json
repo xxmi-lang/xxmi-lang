@@ -1,0 +1,14 @@
+{
+  "name": "xxmi-lang",
+  "owner": { "name": "xxmi-lang" },
+  "metadata": {
+    "description": "Claude Code plugins for XXMI / 3DMigoto mod .ini files."
+  },
+  "plugins": [
+    {
+      "name": "xxmi",
+      "source": "./plugin",
+      "description": "Live diagnostics for XXMI mod .ini files after every edit (xxmi-lsp), plus authoring guidance."
+    }
+  ]
+}

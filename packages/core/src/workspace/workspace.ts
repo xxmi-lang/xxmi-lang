@@ -45,6 +45,13 @@ export class Workspace {
   private readonly snapshots: SymbolSnapshot[];
   private readonly loadedPackages = new Set<string>();
   private symbolTable: SymbolTable | undefined;
+  /** Text of files open in an editor; wins over the file on disk. */
+  private readonly overlays = new Map<string, string>();
+  /** How each file was loaded, so it can be re-lowered with the same namespace. */
+  private readonly origins = new Map<
+    string,
+    { namespaceRoot: string; packageRoot: string | undefined; namespace?: string }
+  >();
 
   constructor(options: WorkspaceOptions) {
     this.lookup = options.lookup;
@@ -76,6 +83,51 @@ export class Workspace {
     await this.followIncludes(main, root, root);
   }
 
+  /**
+   * Opens (or updates) a file from an editor buffer: the text is used instead of the disk
+   * contents until `closeDocument`. Re-lowers the file and follows any new includes.
+   */
+  async openDocument(path: string, text: string, fallbackRoot: string): Promise<IniFile> {
+    const full = resolve(path);
+    this.overlays.set(full, text);
+    if (this.files.has(full)) {
+      const file = await this.reload(full);
+      this.targets.add(full);
+      if (file) return file;
+    }
+    return this.addTarget(full, fallbackRoot);
+  }
+
+  /** Drops the editor buffer; the file is re-read from disk (or removed if it's gone). */
+  async closeDocument(path: string): Promise<void> {
+    const full = resolve(path);
+    this.overlays.delete(full);
+    await this.reload(full);
+  }
+
+  /**
+   * Re-lowers a loaded file from its overlay or from disk (after a file-watcher event). A file
+   * that no longer exists is removed. Returns the new model, or undefined if removed/not loaded.
+   */
+  async reload(path: string): Promise<IniFile | undefined> {
+    const full = resolve(path);
+    const origin = this.origins.get(full);
+    if (!origin) return undefined;
+    this.files.delete(full);
+    this.symbolTable = undefined;
+    let file: IniFile;
+    try {
+      file = await this.load(full, origin.namespaceRoot, origin.packageRoot, origin.namespace);
+    } catch {
+      this.origins.delete(full);
+      this.targets.delete(full);
+      this.packageRoots.delete(full);
+      return undefined;
+    }
+    await this.followIncludes(file, origin.namespaceRoot, origin.packageRoot);
+    return file;
+  }
+
   get symbols(): SymbolTable {
     if (!this.symbolTable) {
       const table = new SymbolTable(this.lookup);
@@ -101,7 +153,11 @@ export class Workspace {
     const existing = this.files.get(path);
     if (existing) return existing;
     this.symbolTable = undefined;
-    const { text, encoding } = decodeText(await readFile(path));
+    const overlay = this.overlays.get(path);
+    const { text, encoding } =
+      overlay !== undefined
+        ? { text: overlay, encoding: 'utf8' as const }
+        : decodeText(await readFile(path));
     const file = await lowerIni({
       path,
       text,
@@ -110,6 +166,12 @@ export class Workspace {
       lookup: this.lookup,
     });
     this.files.set(path, file);
+    this.origins.set(
+      path,
+      namespace === undefined
+        ? { namespaceRoot, packageRoot }
+        : { namespaceRoot, packageRoot, namespace },
+    );
     if (packageRoot) this.packageRoots.set(path, packageRoot);
     return file;
   }

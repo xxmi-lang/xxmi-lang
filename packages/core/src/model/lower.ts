@@ -119,12 +119,12 @@ export async function lowerIni(options: LowerOptions): Promise<IniFile> {
     try {
       if (sectionIndex < 0) {
         file.preambleIssues = result.issues;
-        collect(result.tree.rootNode, file, -1, file.preamble);
+        collect(result.tree.rootNode, file, -1, file.preamble, result);
       } else {
         const section = file.sections[sectionIndex];
         if (section) {
           section.syntaxIssues = result.issues;
-          collect(result.tree.rootNode, file, sectionIndex, section.lines);
+          collect(result.tree.rootNode, file, sectionIndex, section.lines, result);
         }
       }
     } finally {
@@ -151,20 +151,28 @@ function lineModel(line: ScannedLine, isCommandList: boolean): LineModel {
 }
 
 /** Walks one section's tree for statements, references and variable declarations. */
-function collect(root: SyntaxNode, file: IniFile, section: number, lines: LineModel[]): void {
+function collect(
+  root: SyntaxNode,
+  file: IniFile,
+  section: number,
+  lines: LineModel[],
+  offset: { lineOffset: number; indexOffset: number },
+): void {
+  const { lineOffset, indexOffset } = offset;
   const byLine = new Map(lines.map((l) => [l.line, l]));
+  // Trees are built from the section's text alone; shift to whole-file positions.
   const spanOf = (n: SyntaxNode): TextSpan => ({
-    start: n.startIndex,
-    end: n.endIndex,
+    start: n.startIndex + indexOffset,
+    end: n.endIndex + indexOffset,
     range: {
-      start: { line: n.startPosition.row, character: n.startPosition.column },
-      end: { line: n.endPosition.row, character: n.endPosition.column },
+      start: { line: n.startPosition.row + lineOffset, character: n.startPosition.column },
+      end: { line: n.endPosition.row + lineOffset, character: n.endPosition.column },
     },
   });
 
   const visit = (node: SyntaxNode): void => {
     if (node.isError) return; // text inside an ERROR is reported as XM001, not interpreted
-    const line = byLine.get(node.startPosition.row);
+    const line = byLine.get(node.startPosition.row + lineOffset);
     if (line && line.statement === undefined && isStatement(node.type)) line.statement = node.type;
 
     if (DECLARATIONS.has(node.type)) {
