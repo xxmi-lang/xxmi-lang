@@ -32,7 +32,27 @@
                 "severity": { "enum": ["error", "warning", "info", "hint"] },
                 "message": { "type": "string", "minLength": 1 },
                 "range": { "$ref": "#/$defs/range" },
-                "fix": { "type": "object", "description": "Quick fix (from later milestones)." }
+                "fix": {
+                  "type": "object",
+                  "description": "A quick fix: edits to this file.",
+                  "required": ["title", "edits"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "title": { "type": "string" },
+                    "edits": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["range", "newText"],
+                        "additionalProperties": false,
+                        "properties": {
+                          "range": { "$ref": "#/$defs/range" },
+                          "newText": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }

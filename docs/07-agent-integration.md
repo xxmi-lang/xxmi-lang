@@ -35,6 +35,13 @@ Claude Code plugins support LSP servers natively. With `diagnostics` on (the def
 - **Scope:** mapping all `.ini` files is fine because users enable the plugin per project (mod or package folders). The README recommends project-scope enablement.
 - Validate with `claude plugin validate ./plugin` in CI.
 
+### As built (M3)
+
+- **Shipped:** `plugin/.claude-plugin/plugin.json`, `plugin/.lsp.json` (as above) and the `xxmi-ini-authoring` skill. `.claude-plugin/marketplace.json` at the repo root makes the repo a marketplace: `claude plugin marketplace add xxmi-lang/xxmi-lang`, then `claude plugin install xxmi@xxmi-lang`. CI runs `claude plugin validate` on both.
+- **Not shipped yet:** `.mcp.json` (M6), the fallback hook and the other skills (M4/M5). The authoring skill only names commands that exist (`xxmi lint`, `--version`); `xxmi query` arrives with the MCP work.
+- **Verified 2026-10-01:** a headless session (`claude -p --plugin-dir ./plugin`, `xxmi-lsp` on PATH) edited `run = CommandListLocal` to `CommandListLocl`, and the agent reported "XM201, line 5:7, Unresolved command list `CommandListLocl`. Did you mean `CommandListLocal`?"
+- **Timing:** Claude Code starts plugin LSP servers lazily, on the first edit to a matching file, and attaches diagnostics to the agent's *next* turn. If the agent answers immediately after its first edit, the diagnostic can arrive after it has answered. Any further step delivers it.
+
 ### `.mcp.json`
 
 ```json

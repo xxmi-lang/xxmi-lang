@@ -13,6 +13,24 @@
         "line": 1,
         "character": 16
       }
+    },
+    "fix": {
+      "title": "Change to `Texture1D`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 7
+            },
+            "end": {
+              "line": 1,
+              "character": 16
+            }
+          },
+          "newText": "Texture1D"
+        }
+      ]
     }
   },
   {
@@ -29,6 +47,24 @@
         "line": 2,
         "character": 21
       }
+    },
+    "fix": {
+      "title": "Change to `R8G8B8A8_UNORM`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 9
+            },
+            "end": {
+              "line": 2,
+              "character": 21
+            }
+          },
+          "newText": "R8G8B8A8_UNORM"
+        }
+      ]
     }
   }
 ]

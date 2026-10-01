@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "migoto": {
+      "command": ["xxmi-lsp", "--stdio"],
+      "highlightingModeRegex": "^Migoto$",
+      "rootIndicationFileNames": ["d3dx.ini", "xxmi.toml"]
+    }
+  }
+}

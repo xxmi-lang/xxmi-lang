@@ -70,6 +70,20 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 **Accept:** in VS Code and Kate on a real ZZZ mod: diagnostics appear, go-to-definition into ZZMI libraries works, and renaming a CommandList updates all references across files. In Claude Code, an edit that introduces an unresolved `run =` produces an XM201 diagnostic in the agent's context. `claude plugin validate ./plugin` passes. The performance targets in `03-lsp.md` hold.
 
+**Status (2026-10-01):** built and verified, except the Kate check and the release itself.
+
+- **VS Code:** a real VS Code test (`packages/vscode/test`, also in CI under xvfb) opens a mod in a package fixture and checks four things: diagnostics after an edit, go-to-definition into the library, renaming a CommandList across both files of the mod, and hover.
+  - On real data: in a ZZMI install with the SunnaKfc mod under `Mods/`, `run = CommandList\ZZMI\SetTextures` resolves to `Core/ZZMI/Libraries/SlotFix/Resources/Resources.ini:3`.
+- **Claude Code:** with the plugin and `xxmi-lsp` on PATH, an agent that typed `run = CommandListLocl` was shown the XM201 diagnostic. See 07-agent-integration.md for the first-edit timing caveat.
+- **Plugin:** `claude plugin validate` passes for `./plugin` and the repo marketplace, and CI runs it.
+- **Performance targets:** all pass: 89 ms cold index, 44 ms per edit on 5,048 lines, 177 MB for the package plus 50 mods. Getting there meant working around a web-tree-sitter native-memory leak under Node with `--liftoff-only` (03-lsp.md).
+- **Binaries:** `pnpm build:binaries` builds every target, now including win-arm64. The WASM, spec and snapshot are embedded, and the protocol suite runs against the compiled binary in CI on all three OSes and against the release binaries in `release.yml`.
+- **Still to do:**
+  - **Kate:** nobody has checked it in Kate yet (the config and guide are in `clients/kate/`).
+  - **Release:** tagging `v0.1.0` runs the release workflow.
+  - **Publishing:** the Marketplace and Open VSX need publisher accounts.
+  - **Formatting:** LSP formatting moved to M4 with `xxmi fmt`.
+
 ## M4: Formatting and normalization
 
 - `xxmi fmt` plus LSP formatting.

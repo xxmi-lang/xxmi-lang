@@ -1,0 +1,8 @@
+{
+  "xxmi": {
+    "command": "xxmi-lsp",
+    "args": ["--stdio"],
+    "extensionToLanguage": { ".ini": "migoto" },
+    "startupTimeout": 10000
+  }
+}

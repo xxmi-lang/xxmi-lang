@@ -34,3 +34,16 @@ export function didYouMean(word: string, candidates: Iterable<string>): string {
   const match = nearest(word, candidates);
   return match ? ` Did you mean \`${match}\`?` : '';
 }
+
+/** A "replace with the suggestion" quick fix, if there is a suggestion. */
+export function replaceFix(
+  range: import('../parser/index.ts').Range,
+  word: string,
+  candidates: Iterable<string>,
+  prefix = '',
+): import('./types.ts').Fix | undefined {
+  const match = nearest(word, candidates);
+  return match
+    ? { title: `Change to \`${prefix}${match}\``, edits: [{ range, newText: prefix + match }] }
+    : undefined;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "xxmi",
+  "version": "0.1.0",
+  "description": "Language tooling for XXMI / 3DMigoto mod .ini files: live diagnostics after every edit (xxmi-lsp), plus authoring guidance for ZZMI and other XXMI mods.",
+  "author": { "name": "xxmi-lang" },
+  "homepage": "https://github.com/xxmi-lang/xxmi-lang",
+  "repository": "https://github.com/xxmi-lang/xxmi-lang",
+  "license": "GPL-3.0-or-later",
+  "keywords": ["3dmigoto", "xxmi", "zzmi", "lsp", "ini"]
+}

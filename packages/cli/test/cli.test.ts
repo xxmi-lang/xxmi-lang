@@ -31,7 +31,7 @@ describe('xxmi lint', () => {
     expect(out).toMatch(
       /XM201\/bad\.ini:3:7 {2}error {2}XM201 {2}Unresolved command list `CommandListMissing`\./,
     );
-    expect(out).toMatch(/1 file: 2 errors, 0 warnings, 0 info, 0 hints$/);
+    expect(out).toMatch(/1 file: 3 errors, 0 warnings, 0 info, 0 hints$/);
   });
 
   it('exits 0 with only warnings, 1 once --max-warnings is exceeded', async () => {
@@ -57,6 +57,12 @@ describe('xxmi lint', () => {
     expect((await run('lint', '--bogus')).code).toBe(2);
     expect((await run('frobnicate')).code).toBe(2);
     expect((await run()).code).toBe(2);
+  });
+
+  it('prints its version', async () => {
+    const { code, out } = await run('--version');
+    expect(code).toBe(0);
+    expect(out).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('lists the rules in --help', async () => {

@@ -11,3 +11,8 @@ export * from './lint/types.ts';
 export * from './lint/config.ts';
 export * from './lint/engine.ts';
 export * from './workspace/snapshot.ts';
+export * from './navigation/navigation.ts';
+export * from './navigation/assist.ts';
+export * from './defaults.ts';
+export * from './runtime.ts';
+export * from './version.ts';

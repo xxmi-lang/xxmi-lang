@@ -1,5 +1,10 @@
 packages:
   - 'packages/*'
+# Dependency build scripts: esbuild verifies its platform binary; vsce-sign is only needed to
+# sign extensions, which `vsce package` doesn't do.
+allowBuilds:
+  '@vscode/vsce-sign': false
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@vitest/mocker@5.0.3'
   - '@vitest/spy@5.0.3'
