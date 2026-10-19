@@ -161,6 +161,18 @@ public class LanguageServiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_service_works_through_the_interface()
+    {
+        IXxmiLanguageService service = _service;
+
+        await service.OpenDocumentAsync(TestEnvironment.ModIni);
+
+        Assert.Empty(await service.GetDiagnosticsAsync(TestEnvironment.ModIni));
+        Assert.Contains("**run**", (await service.GetHoverAsync(TestEnvironment.ModIni, 4, 1))!.Markdown);
+        Assert.Empty(await service.GetCodeActionsAsync(TestEnvironment.ModIni, 4)); // the line overload
+    }
+
+    [Fact]
     public async Task Reports_the_server_version()
     {
         Assert.Matches(@"^\d+\.\d+\.\d+", _service.ServerVersion);

@@ -3,55 +3,44 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace XxmiLang
 {
     /// <summary>
-    /// Lints .ini files and folders by running <c>xxmi lint --format json</c>. Nothing about the language is
-    /// implemented here; the result is the CLI's, typed.
+    /// Lints .ini files, folders and in-memory text by running <c>xxmi lint --format json</c> once per call. Nothing about
+    /// the language is implemented here; the result is the CLI's, typed. Stateless and thread-safe.
     /// </summary>
-    public static class XxmiLinter
+    public sealed class XxmiLinter : IXxmiLinter
     {
         // Windows allows 32,767 characters on a command line.
         private const int MaxCommandLine = 24_000;
 
-        private static readonly JsonSerializerOptions Json = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() },
-        };
+        private readonly XxmiOptions _options;
 
-        /// <summary>Lints one file or folder.</summary>
-        public static Task<LintResult> LintAsync(string path, LintOptions? options = null, CancellationToken cancellationToken = default)
+        /// <param name="options">Where the binary is and the working directory; null: find it as <see cref="XxmiBinaryLocator"/> does.</param>
+        public XxmiLinter(XxmiOptions? options = null)
         {
-            if (path is null) throw new ArgumentNullException(nameof(path));
-            return LintAsync(new[] { path }, options, cancellationToken);
+            _options = options ?? new XxmiOptions();
         }
 
         /// <summary>
         /// Lints files and folders (folders recursively, skipping what the package excludes, such as <c>DISABLED*</c>).
-        /// Findings are not an error: the returned <see cref="LintResult"/> carries them, even when xxmi exits with code 1.
+        /// Relative paths are resolved against <see cref="XxmiOptions.WorkingDirectory"/>. Findings are not an error:
+        /// the returned <see cref="LintResult"/> carries them, even when xxmi exits with code 1.
         /// </summary>
         /// <exception cref="XxmiBinaryNotFoundException">There is no xxmi executable.</exception>
         /// <exception cref="XxmiProcessException">xxmi failed (exit code 2 or higher), for example because a path doesn't exist.</exception>
-        public static async Task<LintResult> LintAsync(
-            IEnumerable<string> paths,
-            LintOptions? options = null,
-            CancellationToken cancellationToken = default)
+        public async Task<LintResult> LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (paths is null) throw new ArgumentNullException(nameof(paths));
-            options ??= new LintOptions();
-            var workingDirectory = Path.GetFullPath(string.IsNullOrEmpty(options.WorkingDirectory) ? Environment.CurrentDirectory : options.WorkingDirectory!);
-            var executable = XxmiBinaryLocator.Resolve(options.ExecutablePath);
+            var workingDirectory = WorkingDirectory();
+            var executable = XxmiBinaryLocator.Resolve(_options.ExecutablePath);
             var targets = paths.ToList();
             if (targets.Count == 0) targets.Add(".");
 
-            var flags = new List<string> { "lint", "--format", "json" };
-            if (options.Rules is { Count: > 0 }) flags.AddRange(new[] { "--rules", string.Join(",", options.Rules) });
-
+            var flags = Flags(options);
             var files = new List<LintFile>();
             foreach (var batch in Batches(targets, flags.Sum(f => f.Length + 3)))
             {
@@ -59,26 +48,66 @@ namespace XxmiLang
                 arguments.Add("--"); // a path that starts with "-" is still a path
                 arguments.AddRange(batch);
                 var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken).ConfigureAwait(false);
-                if (output.ExitCode > 1)
-                {
-                    var detail = output.StandardError.Trim();
-                    throw new XxmiProcessException(
-                        $"xxmi lint failed with exit code {output.ExitCode}: {(detail.Length > 0 ? detail : "(no error output)")}",
-                        output.ExitCode,
-                        output.StandardError);
-                }
                 files.AddRange(Parse(output, workingDirectory));
             }
             // The same file can come back from several batches.
             return Summarize(files.GroupBy(f => f.Path, StringComparer.Ordinal).Select(g => g.First()).ToList());
         }
 
+        /// <summary>Lints one file. A folder is refused (use <see cref="LintAsync"/>).</summary>
+        /// <exception cref="ArgumentException"><paramref name="path"/> is a folder.</exception>
+        public async Task<LintResult> LintFileAsync(string path, LintOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            if (path is null) throw new ArgumentNullException(nameof(path));
+            var full = Path.GetFullPath(Path.Combine(WorkingDirectory(), path));
+            if (Directory.Exists(full)) throw new ArgumentException($"{full} is a folder; LintFileAsync lints one file. Use LintAsync for folders.", nameof(path));
+            return await LintAsync(new[] { full }, options, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Lints <paramref name="text"/> as if it were the file at <paramref name="path"/> (<c>xxmi lint --stdin --stdin-path</c>):
+        /// the namespace and the package come from the path, which doesn't have to exist, and the text wins over the disk.
+        /// </summary>
+        public async Task<LintResult> LintTextAsync(string path, string text, LintOptions? options = null, CancellationToken cancellationToken = default)
+        {
+            if (path is null) throw new ArgumentNullException(nameof(path));
+            if (text is null) throw new ArgumentNullException(nameof(text));
+            var workingDirectory = WorkingDirectory();
+            var executable = XxmiBinaryLocator.Resolve(_options.ExecutablePath);
+            var full = Path.GetFullPath(Path.Combine(workingDirectory, path));
+
+            var arguments = Flags(options);
+            arguments.Add("--stdin");
+            arguments.Add("--stdin-path");
+            arguments.Add(full);
+            var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken, text).ConfigureAwait(false);
+            return Summarize(Parse(output, workingDirectory).ToList());
+        }
+
+        private string WorkingDirectory() =>
+            Path.GetFullPath(string.IsNullOrEmpty(_options.WorkingDirectory) ? Environment.CurrentDirectory : _options.WorkingDirectory!);
+
+        private static List<string> Flags(LintOptions? options)
+        {
+            var flags = new List<string> { "lint", "--format", "json" };
+            if (options?.Rules is { Count: > 0 } rules) flags.AddRange(new[] { "--rules", string.Join(",", rules) });
+            return flags;
+        }
+
         internal static IReadOnlyList<LintFile> Parse(ProcessOutput output, string workingDirectory)
         {
-            LintJson? json;
+            if (output.ExitCode > 1)
+            {
+                var detail = output.StandardError.Trim();
+                throw new XxmiProcessException(
+                    $"xxmi lint failed with exit code {output.ExitCode}: {(detail.Length > 0 ? detail : "(no error output)")}",
+                    output.ExitCode,
+                    output.StandardError);
+            }
+            LintOutputJson? json;
             try
             {
-                json = JsonSerializer.Deserialize<LintJson>(output.StandardOutput, Json);
+                json = JsonSerializer.Deserialize(output.StandardOutput, WireJsonContext.Default.LintOutputJson);
             }
             catch (JsonException ex)
             {
@@ -125,10 +154,5 @@ namespace XxmiLang
             }
             if (batch.Count > 0) yield return batch;
         }
-
-        // The wire shape of packages/cli/schema/lint-output.v1.json.
-        private sealed record LintJson(int Version, List<LintFileJson> Files);
-
-        private sealed record LintFileJson(string Path, string Encoding, List<XxmiDiagnostic>? Diagnostics);
     }
 }

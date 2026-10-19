@@ -6,8 +6,8 @@ Add XXMI / 3DMigoto `.ini` linting and analysis to your own C# project. This is 
 
 A thin, typed client over the `xxmi` binary. It does not parse, resolve or lint anything itself (`CLAUDE.md`: "One core, many frontends"): it starts `xxmi lint --format json` or `xxmi lsp --stdio`, speaks their protocols and gives you C# types. Results are identical to the CLI and the editors, and a new rule or spec update reaches your app by updating the runtime package.
 
-- **`XxmiLinter`**: lint files and folders, one process per call. Use it for batch work and CI-like checks.
-- **`XxmiLanguageService`**: one long-lived language server. Use it for an editor-like experience: diagnostics for text you hold in memory, hover, go to definition, references, completion, outline, rename, quick fixes.
+- **`XxmiLinter`** (`IXxmiLinter`): lint files and folders in a batch (`LintAsync`), one file (`LintFileAsync`) or text you hold in memory (`LintTextAsync`); one process per call. Use it for batch work and CI-like checks.
+- **`XxmiLanguageService`** (`IXxmiLanguageService`): one long-lived language server. Use it for an editor-like experience: diagnostics for text you hold in memory, hover, go to definition, references, completion, outline, rename, quick fixes.
 
 Not included: a `XxmiQuery` wrapper. `xxmi query` is not implemented yet (`04-cli.md`, "Implemented so far"); it will get one when it exists.
 
@@ -15,11 +15,12 @@ Not included: a `XxmiQuery` wrapper. `xxmi query` is not implemented yet (`04-cl
 
 | Package | Contents |
 |---|---|
-| `XxmiLang` | The managed library. Targets `netstandard2.0` (covers .NET Framework 4.7.2+ and .NET Core 2.0+) and `net8.0`. Depends on `System.Text.Json` (and `Microsoft.Bcl.AsyncInterfaces`) on `netstandard2.0` only |
+| `XxmiLang.Core` | The definitions, with no process or file access: result types (`XxmiDiagnostic`, `LintResult`, `TextRange`, `QuickFix`, `TextEdit`, `HoverResult`, `XxmiLocation`, `CompletionItem`, `OutlineSymbol`, `RenameCheck`, `WorkspaceEdit`, `XxmiCodeAction`), `TextEdits.Apply`, the interfaces `IXxmiLinter` and `IXxmiLanguageService`, and `XxmiJsonContext` (System.Text.Json source generation). Reference it alone to write code or fakes against the interfaces |
+| `XxmiLang` | The implementation, depending on `XxmiLang.Core`: `XxmiLinter`, `XxmiLanguageService`, the JSON-RPC client, `XxmiBinaryLocator`, `XxmiOptions` and the exceptions |
 | `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (65 to 100 MB; 24 to 38 MB as a package; no Node or Bun needed). Each package is far below nuget.org's 250 MB limit |
-| `XxmiLang.All` | Meta package: `XxmiLang` plus all six runtime packages |
+| `XxmiLang.All` | Meta package: `XxmiLang` (and so `XxmiLang.Core`) plus all six runtime packages |
 
-All have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later.
+All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later.
 
 ## Install
 
@@ -39,7 +40,7 @@ Every GitHub release has the `.nupkg` files attached.
 ```bash
 mkdir ~/xxmi-nupkgs && cd ~/xxmi-nupkgs
 gh release download --repo xxmi-lang/xxmi-lang --pattern '*.nupkg'
-dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local     # once per machine (or put a nuget.config next to your .sln)
+dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local     # once per machine (or put a nuget.config next to your .slnx)
 cd path/to/your/project
 dotnet add package XxmiLang
 dotnet add package XxmiLang.Native.osx-arm64
@@ -49,20 +50,21 @@ From a clone of this repo, to pack what you have built:
 
 ```bash
 pnpm build && pnpm build:binaries --target host      # needs Bun
-node scripts/pack-dotnet.ts --host --out ~/xxmi-nupkgs  # XxmiLang + this machine's runtime package
+node scripts/pack-dotnet.ts --host --out ~/xxmi-nupkgs  # XxmiLang.Core, XxmiLang + this machine's runtime package
 node scripts/smoke-dotnet.ts --feed ~/xxmi-nupkgs       # optional: installs them in a fresh app and lints a fixture
 ```
 
 (`node scripts/pack-dotnet.ts` without `--host` packs all six runtime packages and `XxmiLang.All` from the binaries of `pnpm build:binaries`. NuGet caches packages by id and version: if you repack the same version, delete `~/.nuget/packages/xxmilang*` first.)
 
-Or skip NuGet and reference the project: `<ProjectReference Include="…/xxmi-lang/dotnet/src/XxmiLang/XxmiLang.csproj" />` plus `XXMI_PATH` pointing at `dist/bin/xxmi`.
+Or skip NuGet and reference the project: `<ProjectReference Include="…/xxmi-lang/dotnet/src/XxmiLang/XxmiLang.csproj" />` (it brings `XxmiLang.Core`) plus `XXMI_PATH` pointing at `dist/bin/xxmi`.
 
 ## Lint
 
 ```csharp
 using XxmiLang;
 
-LintResult result = await XxmiLinter.LintAsync(new[] { @"C:\XXMI\ZZMI\Mods\MyMod" });
+IXxmiLinter linter = new XxmiLinter();                         // XxmiOptions: ExecutablePath, WorkingDirectory
+LintResult result = await linter.LintAsync(new[] { @"C:\XXMI\ZZMI\Mods\MyMod" });
 
 foreach (var (path, d) in result.AllDiagnostics)
     Console.WriteLine($"{path}:{d.Range.Start.Line + 1}:{d.Range.Start.Character + 1}  {d.Severity}  {d.Id}  {d.Message}");
@@ -70,10 +72,12 @@ foreach (var (path, d) in result.AllDiagnostics)
 Console.WriteLine($"{result.Summary.Files} files, {result.ErrorCount} errors, {result.WarningCount} warnings");
 ```
 
-- `LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken ct = default)`, plus an overload for one path. Files and folders; folders are walked like the DLL does (`DISABLED*` is skipped unless named directly).
+- `LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken ct = default)`: a batch of files and folders in one process; folders are walked like the DLL does (`DISABLED*` is skipped unless named directly).
+- `LintFileAsync(path)`: one file from disk.
+- `LintTextAsync(path, text)`: lints `text` as if it were the file at `path`, in one process that reads the text from stdin (`xxmi lint --stdin --stdin-path <path>`, `04-cli.md`). The path decides the namespace and the package, so `[TextureOverrideBody]` in `…\Mods\MyMod\mod.ini` is the same symbol as when linting the file; it need not exist and the text wins over the disk.
 - `LintResult`: `Files` (`LintFile`: absolute `Path`, `Encoding`, `Diagnostics`), `Summary` (`Files`, `Error`, `Warning`, `Info`, `Hint`), `HasErrors`, `AllDiagnostics`.
 - `XxmiDiagnostic`: `Id` (`XM201`), `Severity`, `Message`, `Range` (0-based line and UTF-16 column, `End` exclusive), `Fix` (`Title` and `Edits`, or null). Apply fixes with `TextEdits.Apply(text, fix.Edits)`.
-- `LintOptions`: `Rules` (only these rule ids), `WorkingDirectory`, `ExecutablePath`.
+- `LintOptions`: `Rules` (only these rule ids). Where the binary is and the working directory are `XxmiOptions` (constructor of `XxmiLinter`).
 - **Findings are not an error.** Exit code 1 (errors found) still returns a `LintResult`. Exit codes 2 and up (a path that doesn't exist, an internal error) throw `XxmiProcessException` with `ExitCode` and `StandardError`. A command line too long for Windows is split over several runs and merged.
 
 ## Language service
@@ -137,37 +141,40 @@ NuGet does the copying; there is no custom MSBuild targets file.
 
 ## Platform notes
 
-- **Linux and macOS: the exec bit.** NuGet doesn't restore Unix permissions reliably. Before the first run of a packaged binary the library sets the execute bit (`chmod u+x`; it needs to own the file, which it does in `~/.nuget/packages` and in your output folder). If you copy `xxmi` around yourself, `chmod +x` it. A failure to start produces an `XxmiProcessException` that says so.
+- **Linux and macOS: the exec bit.** NuGet doesn't restore Unix permissions reliably. Before the first run of a packaged binary the library sets the execute bit (`File.SetUnixFileMode`; it needs to own the file, which it does in `~/.nuget/packages` and in your output folder). If you copy `xxmi` around yourself, `chmod +x` it. A failure to start produces an `XxmiProcessException` that says so.
 - **macOS: Gatekeeper.** The binary is not signed or notarized. Files that arrive through NuGet aren't quarantined, so the packages work as is. A binary you download in a browser gets `com.apple.quarantine`, and macOS refuses to run it ("cannot be opened because the developer cannot be verified"): run `xattr -d com.apple.quarantine /path/to/xxmi` (or right-click, Open once). The same applies to the `.nupkg` files if you unzip one yourself from a browser download.
 - **Windows.** `xxmi.exe` is unsigned, so SmartScreen may warn on a file downloaded in a browser ("Unblock" in Properties), and some antivirus products scan the first launch slowly. NuGet-delivered files aren't marked. Keep the app out of folders your antivirus watches closely if the first lint is slow.
 - **Linux libc.** The binaries are built for glibc. Alpine (musl) isn't supported; use a glibc image.
 - **Architectures.** x64 and arm64 only. On another machine `XxmiBinaryLocator.CurrentRuntimeIdentifier()` is null and the lookup reports "no xxmi build".
-- **.NET Framework.** `netstandard2.0` works on .NET Framework 4.7.2+. SDK-style projects copy the runtime package like above; old `packages.config` projects don't copy `runtimes/` at all, so use `XXMI_PATH` or `ExecutablePath`.
-- **Trimming and Native AOT** are not supported (the library uses reflection-based `System.Text.Json`). The binary is external anyway, so this rarely matters.
-- **.NET 8 end of support** is November 2026. The `netstandard2.0` build keeps working on newer runtimes; add a `net10.0` target when it matters.
+- **.NET 10 only.** The packages target `net10.0`; there is no `netstandard2.0` or older-.NET build.
+- **Trimming and Native AOT** are supported. Both managed libraries set `IsAotCompatible` with the trim, AOT and single-file analyzer warnings (IL2xxx, IL3xxx) as errors. All JSON goes through `XxmiJsonContext` (System.Text.Json source generation, covering the lint output, the JSON-RPC envelopes and the LSP parameters and results); there is no reflection-based serialization, `dynamic` or `Activator`. The sample publishes with `dotnet publish -c Release -r <rid> -p:PublishAot=true` with zero warnings, and CI runs the native executable on all three OSes. The `xxmi` binary stays a separate file: a `-r <rid>` publish puts it next to the executable. If you serialize the result types yourself, use `XxmiJsonContext.Default` rather than reflection.
 
 ## Design choices
 
 - **A thin client, not a port.** All language logic stays in `packages/core`. The library only builds command lines, parses the stable JSON (`packages/cli/schema/lint-output.v1.json`; `XxmiLinter` refuses a `version` it doesn't know) and speaks LSP.
-- **A hand-written JSON-RPC client** (about 300 lines: `Content-Length` framing, requests with cancellation, notifications, answering server requests) instead of StreamJsonRpc. The surface needed is tiny, and StreamJsonRpc pulls in Nerdbank.Streams, Newtonsoft.Json and more, which is heavy for a library whose job is to be easy to add. It is covered by in-memory pipe tests.
+- **A hand-written JSON-RPC client** (a few hundred lines: `Content-Length` framing, requests with cancellation, notifications, answering server requests) instead of StreamJsonRpc. The surface needed is tiny, and StreamJsonRpc pulls in Nerdbank.Streams, Newtonsoft.Json and more, which is heavy for a library whose job is to be easy to add. It is covered by in-memory pipe tests.
 - **The LSP over the CLI binary.** `xxmi lsp --stdio` (the CLI's subcommand; `xxmi-lsp` still exists for editors) means one 65 MB binary per platform instead of two.
 - **No long-lived lint server for `XxmiLinter`.** One process per call costs a few hundred milliseconds of startup, and keeps the linter stateless. Use the language service when you lint repeatedly.
 
 ## Testing
 
-`dotnet/` holds the solution `XxmiLang.sln`: the library, the packaging projects, `XxmiLang.Tests` (xUnit; lint, every language service request, crash and restart, binary resolution, the JSON-RPC layer) and `samples/XxmiLang.Sample`.
+`dotnet/` holds the solution `XxmiLang.slnx`: `XxmiLang.Core`, `XxmiLang`, the packaging projects, `XxmiLang.Core.Tests` (xUnit; JSON round-trips through the source-generated context, text edits, interface contracts), `XxmiLang.Tests` (lint, every language service request, crash and restart, binary resolution, the JSON-RPC layer) and `samples/XxmiLang.Sample`.
 
 ```bash
 pnpm build && pnpm build:binaries --target host
-XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/                             # XxmiLang built for net8.0
-XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/ -p:XxmiLibraryTfm=netstandard2.0   # and for netstandard2.0
+XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx
+dotnet build dotnet/XxmiLang.slnx -warnaserror                                  # trim/AOT analyzers included
 
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet run --project dotnet/samples/XxmiLang.Sample -- lint fixtures/lsp/package/Mods/MyMod
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet run --project dotnet/samples/XxmiLang.Sample -- hover fixtures/lsp/package/Mods/MyMod/mod.ini 5 2
+
+# Native AOT: one native executable, no .NET runtime needed
+dotnet publish dotnet/samples/XxmiLang.Sample -c Release -r osx-arm64 -p:PublishAot=true -o /tmp/xxmi-aot
+XXMI_PATH=$PWD/dist/bin/xxmi /tmp/xxmi-aot/XxmiLang.Sample lint fixtures/rules/XM201/bad.ini
 ```
 
-Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs both test passes on Linux, Windows and macOS, then packs this machine's runtime package and installs it in a fresh app with no `XXMI_PATH` (`scripts/smoke-dotnet.ts`).
+Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tests, the warnings-as-errors build and the Native AOT publish of the sample (running the native executable for lint and hover) on Linux, Windows and macOS, then packs this machine's runtime package and installs it in a fresh app with no `XXMI_PATH` (`scripts/smoke-dotnet.ts`).
 
 ## Releasing
 
-`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built, smoke-tests the packages on all three OSes, and attaches the `.nupkg` files to the GitHub release. If the repository has a `NUGET_API_KEY` secret, the last step also pushes them to nuget.org (the runtime packages and `XxmiLang` first, `XxmiLang.All` last); without it that step is skipped.
+`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built, smoke-tests the packages on all three OSes, and attaches the `.nupkg` files to the GitHub release. If the repository has a `NUGET_API_KEY` secret, the last step also pushes them to nuget.org (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last); without it that step is skipped.

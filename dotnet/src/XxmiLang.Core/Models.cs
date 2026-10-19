@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace XxmiLang
 {
@@ -16,13 +17,14 @@ namespace XxmiLang
     /// <summary>A suggested fix for one diagnostic: edits to the same file.</summary>
     public sealed record QuickFix(string Title, IReadOnlyList<TextEdit> Edits);
 
-    /// <summary>Same numbers as the LSP DiagnosticSeverity.</summary>
+    /// <summary>Same numbers as the LSP DiagnosticSeverity. In JSON: <c>"error"</c>, <c>"warning"</c>, <c>"info"</c>, <c>"hint"</c> (the CLI's words).</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter<DiagnosticSeverity>))]
     public enum DiagnosticSeverity
     {
-        Error = 1,
-        Warning = 2,
-        Info = 3,
-        Hint = 4,
+        [JsonStringEnumMemberName("error")] Error = 1,
+        [JsonStringEnumMemberName("warning")] Warning = 2,
+        [JsonStringEnumMemberName("info")] Info = 3,
+        [JsonStringEnumMemberName("hint")] Hint = 4,
     }
 
     /// <summary>One finding: a rule id such as <c>XM201</c>, where it is and what to do about it.</summary>
@@ -42,17 +44,21 @@ namespace XxmiLang
     /// <summary>How many files were linted and how many diagnostics of each severity there are.</summary>
     public sealed record LintSummary(int Files, int Error, int Warning, int Info, int Hint);
 
-    /// <summary>The result of <see cref="XxmiLinter"/>: one entry per linted file, plus counts.</summary>
+    /// <summary>The result of <see cref="IXxmiLinter"/>: one entry per linted file, plus counts.</summary>
     public sealed record LintResult(IReadOnlyList<LintFile> Files, LintSummary Summary)
     {
+        [JsonIgnore]
         public int ErrorCount => Summary.Error;
 
+        [JsonIgnore]
         public int WarningCount => Summary.Warning;
 
         /// <summary>True if any file has an error-severity diagnostic (the CLI's exit code 1).</summary>
+        [JsonIgnore]
         public bool HasErrors => Summary.Error > 0;
 
         /// <summary>Every diagnostic of every file, with its file.</summary>
+        [JsonIgnore]
         public IEnumerable<(string Path, XxmiDiagnostic Diagnostic)> AllDiagnostics =>
             Files.SelectMany(f => f.Diagnostics.Select(d => (f.Path, d)));
     }
@@ -109,7 +115,7 @@ namespace XxmiLang
     /// <param name="Changes">Local file path to the edits for that file.</param>
     public sealed record WorkspaceEdit(IReadOnlyDictionary<string, IReadOnlyList<TextEdit>> Changes);
 
-    /// <summary>Result of <see cref="XxmiLanguageService.PrepareRenameAsync"/>.</summary>
+    /// <summary>Result of <see cref="IXxmiLanguageService.PrepareRenameAsync"/>.</summary>
     /// <param name="CanRename">False for symbols declared in the package or the bundled library, and for non-symbols.</param>
     /// <param name="Range">The name that would change (when <see cref="CanRename"/>).</param>
     /// <param name="Placeholder">The current name (when <see cref="CanRename"/>).</param>
@@ -119,7 +125,7 @@ namespace XxmiLang
     /// <summary>A quick fix offered by the server.</summary>
     public sealed record XxmiCodeAction(string Title, string? Kind, bool IsPreferred, WorkspaceEdit? Edit);
 
-    /// <summary>Passed to <see cref="XxmiLanguageService.DiagnosticsPublished"/>.</summary>
+    /// <summary>Passed to <see cref="IXxmiLanguageService.DiagnosticsPublished"/>.</summary>
     public sealed class DiagnosticsPublishedEventArgs : EventArgs
     {
         public DiagnosticsPublishedEventArgs(string path, IReadOnlyList<XxmiDiagnostic> diagnostics)
@@ -134,7 +140,7 @@ namespace XxmiLang
         public IReadOnlyList<XxmiDiagnostic> Diagnostics { get; }
     }
 
-    /// <summary>Passed to <see cref="XxmiLanguageService.ServerExited"/>.</summary>
+    /// <summary>Passed to <see cref="IXxmiLanguageService.ServerExited"/>.</summary>
     public sealed class ServerExitedEventArgs : EventArgs
     {
         public ServerExitedEventArgs(int? exitCode, string standardError)
@@ -149,7 +155,7 @@ namespace XxmiLang
         public string StandardError { get; }
     }
 
-    /// <summary>Passed to <see cref="XxmiLanguageService.LogMessage"/>.</summary>
+    /// <summary>Passed to <see cref="IXxmiLanguageService.LogMessage"/>.</summary>
     public sealed class ServerLogEventArgs : EventArgs
     {
         public ServerLogEventArgs(string message, bool isError)

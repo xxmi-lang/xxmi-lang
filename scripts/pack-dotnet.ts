@@ -1,11 +1,12 @@
 /**
- * Packs the .NET library (docs/10-dotnet.md): XxmiLang, one XxmiLang.Native.<rid> per platform
- * (each carries the single-file `xxmi` for that platform) and the XxmiLang.All meta package.
+ * Packs the .NET library (docs/10-dotnet.md): XxmiLang.Core (the definitions), one XxmiLang.Native.<rid>
+ * per platform (each carries the single-file `xxmi` for that platform), XxmiLang (the implementation) and
+ * the XxmiLang.All meta package. Packed in that order, which is also the nuget.org push order (All last).
  *
  *   pnpm build:binaries                      # first: dist/bin/xxmi-<os>-<arch>[.exe]
  *   node scripts/pack-dotnet.ts [--bin dist/bin] [--out dist/nupkg] [--version X.Y.Z]
  *
- * `--host` packs XxmiLang and only this machine's runtime package, from dist/bin/xxmi (what
+ * `--host` packs XxmiLang.Core, XxmiLang and only this machine's runtime package, from dist/bin/xxmi (what
  * `pnpm build:binaries --target host` writes), for trying the packages locally.
  */
 import { execFileSync } from 'node:child_process';
@@ -70,6 +71,7 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 const staging = mkdtempSync(join(tmpdir(), 'xxmi-pack-'));
 try {
+  dotnet('pack', 'src/XxmiLang.Core', '-c', 'Release', '-o', out, ...version);
   for (const rid of rids) {
     const exe = rid.startsWith('win-') ? 'xxmi.exe' : 'xxmi';
     const suffix = RUNTIMES[rid] as string;

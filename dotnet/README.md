@@ -7,7 +7,7 @@ binary (the same one the CLI, VS Code and Kate use), so results always match wha
 ## Install
 
 ```bash
-dotnet add package XxmiLang
+dotnet add package XxmiLang                    # net10.0; trim and Native AOT compatible (brings XxmiLang.Core)
 dotnet add package XxmiLang.Native.win-x64      # the xxmi binary for your platform, or:
 dotnet add package XxmiLang.All                 # every platform (about 500 MB of binaries in bin/)
 ```
@@ -21,7 +21,9 @@ environment variable, or put `xxmi` on `PATH`.
 ```csharp
 using XxmiLang;
 
-LintResult result = await XxmiLinter.LintAsync(new[] { @"C:\XXMI\ZZMI\Mods\MyMod" });
+IXxmiLinter linter = new XxmiLinter();
+LintResult result = await linter.LintAsync(new[] { @"C:\XXMI\ZZMI\Mods\MyMod" });
+// also LintFileAsync(path) and LintTextAsync(path, text) for unsaved text
 foreach (var (path, d) in result.AllDiagnostics)
     Console.WriteLine($"{path}:{d.Range.Start.Line + 1}  {d.Severity}  {d.Id}  {d.Message}");
 ```

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
+using System.Buffers;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,8 +35,8 @@ namespace XxmiLang
             _output = output;
         }
 
-        /// <summary>Answers a request from the server. Return the JSON-serializable result; throw to send an error.</summary>
-        public Func<string, JsonElement, Task<object?>>? RequestHandler { get; set; }
+        /// <summary>Answers a request from the server. Return the result (an undefined <see cref="JsonElement"/> sends <c>null</c>); throw to send an error.</summary>
+        public Func<string, JsonElement, Task<JsonElement>>? RequestHandler { get; set; }
 
         /// <summary>Called on the read loop for every notification, in order. Must be quick and must not keep the element.</summary>
         public Action<string, JsonElement>? NotificationHandler { get; set; }
@@ -54,7 +56,13 @@ namespace XxmiLang
             Completion = Task.Run(ReadLoopAsync);
         }
 
-        public async Task<JsonElement> RequestAsync(string method, object? parameters, CancellationToken cancellationToken)
+        public Task<JsonElement> RequestAsync(string method, CancellationToken cancellationToken) =>
+            RequestAsync(method, (w, id) => WriteRequest(w, id, method, null), cancellationToken);
+
+        public Task<JsonElement> RequestAsync<TParams>(string method, TParams parameters, JsonTypeInfo<TParams> parametersInfo, CancellationToken cancellationToken) =>
+            RequestAsync(method, (w, id) => WriteRequest(w, id, method, () => JsonSerializer.Serialize(w, parameters, parametersInfo)), cancellationToken);
+
+        private async Task<JsonElement> RequestAsync(string method, Action<Utf8JsonWriter, long> write, CancellationToken cancellationToken)
         {
             ThrowIfClosed();
             var id = Interlocked.Increment(ref _nextId);
@@ -71,13 +79,13 @@ namespace XxmiLang
                 if (_pending.TryRemove(id, out var removed))
                 {
                     removed.TrySetCanceled(cancellationToken);
-                    _ = NotifyAsync("$/cancelRequest", new { id }, CancellationToken.None).ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                    _ = NotifyAsync("$/cancelRequest", new CancelParams(id), WireJsonContext.Default.CancelParams, CancellationToken.None).ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
                 }
             }))
             {
                 try
                 {
-                    await SendAsync(new { jsonrpc = "2.0", id, method, @params = parameters }, cancellationToken).ConfigureAwait(false);
+                    await SendAsync(w => write(w, id), cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -88,22 +96,82 @@ namespace XxmiLang
             }
         }
 
-        public Task NotifyAsync(string method, object? parameters, CancellationToken cancellationToken)
+        public Task NotifyAsync(string method, CancellationToken cancellationToken)
         {
             ThrowIfClosed();
-            return SendAsync(new { jsonrpc = "2.0", method, @params = parameters }, cancellationToken);
+            return SendAsync(w => WriteNotification(w, method, null), cancellationToken);
         }
 
-        private async Task SendAsync(object message, CancellationToken cancellationToken)
+        public Task NotifyAsync<TParams>(string method, TParams parameters, JsonTypeInfo<TParams> parametersInfo, CancellationToken cancellationToken)
         {
-            var body = JsonSerializer.SerializeToUtf8Bytes(message);
+            ThrowIfClosed();
+            return SendAsync(w => WriteNotification(w, method, () => JsonSerializer.Serialize(w, parameters, parametersInfo)), cancellationToken);
+        }
+
+        // The envelope is written by hand; the params go through the caller's source-generated JsonTypeInfo.
+        private static void WriteRequest(Utf8JsonWriter writer, long id, string method, Action? writeParams)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("jsonrpc", "2.0");
+            writer.WriteNumber("id", id);
+            writer.WriteString("method", method);
+            WriteParams(writer, writeParams);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteNotification(Utf8JsonWriter writer, string method, Action? writeParams)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("jsonrpc", "2.0");
+            writer.WriteString("method", method);
+            WriteParams(writer, writeParams);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteParams(Utf8JsonWriter writer, Action? writeParams)
+        {
+            writer.WritePropertyName("params");
+            if (writeParams is null) writer.WriteNullValue();
+            else writeParams();
+        }
+
+        private static void WriteResult(Utf8JsonWriter writer, JsonElement id, JsonElement result)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("jsonrpc", "2.0");
+            writer.WritePropertyName("id");
+            id.WriteTo(writer);
+            writer.WritePropertyName("result");
+            if (result.ValueKind == JsonValueKind.Undefined) writer.WriteNullValue();
+            else result.WriteTo(writer);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteError(Utf8JsonWriter writer, JsonElement id, int code, string message)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("jsonrpc", "2.0");
+            writer.WritePropertyName("id");
+            id.WriteTo(writer);
+            writer.WriteStartObject("error");
+            writer.WriteNumber("code", code);
+            writer.WriteString("message", message);
+            writer.WriteEndObject();
+            writer.WriteEndObject();
+        }
+
+        private async Task SendAsync(Action<Utf8JsonWriter> write, CancellationToken cancellationToken)
+        {
+            var buffer = new ArrayBufferWriter<byte>();
+            using (var writer = new Utf8JsonWriter(buffer)) write(writer);
+            var body = buffer.WrittenMemory;
             var header = Encoding.ASCII.GetBytes("Content-Length: " + body.Length + "\r\n\r\n");
             await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 // Once the first byte is out the message must be complete: no cancellation from here on.
-                await _output.WriteAsync(header, 0, header.Length).ConfigureAwait(false);
-                await _output.WriteAsync(body, 0, body.Length).ConfigureAwait(false);
+                await _output.WriteAsync(header, CancellationToken.None).ConfigureAwait(false);
+                await _output.WriteAsync(body, CancellationToken.None).ConfigureAwait(false);
                 await _output.FlushAsync().ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException || ex is ObjectDisposedException || ex is InvalidOperationException)
@@ -233,14 +301,14 @@ namespace XxmiLang
                 var handler = RequestHandler;
                 if (handler is null) throw new XxmiRequestException("Method not found: " + method, -32601);
                 var result = await handler(method, parameters).ConfigureAwait(false);
-                await SendAsync(new { jsonrpc = "2.0", id, result }, CancellationToken.None).ConfigureAwait(false);
+                await SendAsync(w => WriteResult(w, id, result), CancellationToken.None).ConfigureAwait(false);
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {
                 try
                 {
                     var code = ex is XxmiRequestException request ? request.Code : -32603;
-                    await SendAsync(new { jsonrpc = "2.0", id, error = new { code, message = ex.Message } }, CancellationToken.None).ConfigureAwait(false);
+                    await SendAsync(w => WriteError(w, id, code, ex.Message), CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception)
                 {

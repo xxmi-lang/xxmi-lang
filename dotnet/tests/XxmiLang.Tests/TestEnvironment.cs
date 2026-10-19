@@ -31,7 +31,12 @@ internal static class TestEnvironment
         return new XxmiOptions { ExecutablePath = local };
     }
 
-    public static LintOptions LintOptions() => new LintOptions { ExecutablePath = Options().ExecutablePath };
+    public static XxmiLinter Linter(string? workingDirectory = null)
+    {
+        var options = Options();
+        options.WorkingDirectory = workingDirectory;
+        return new XxmiLinter(options);
+    }
 
     /// <summary>A throwaway folder with a mod.ini holding <paramref name="text"/>.</summary>
     public static string TempMod(string text)

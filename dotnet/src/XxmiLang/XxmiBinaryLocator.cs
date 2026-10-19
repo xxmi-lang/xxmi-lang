@@ -11,7 +11,7 @@ namespace XxmiLang
     /// <list type="number">
     /// <item><description><see cref="XxmiOptions.ExecutablePath"/>.</description></item>
     /// <item><description>The <c>XXMI_PATH</c> environment variable (a file, or a folder containing <c>xxmi</c>).</description></item>
-    /// <item><description><c>runtimes/&lt;rid&gt;/native/xxmi[.exe]</c> next to this assembly (what the <c>XxmiLang.Native.*</c> packages install). A
+    /// <item><description><c>runtimes/&lt;rid&gt;/native/xxmi[.exe]</c> in the app's folder (<see cref="AppContext.BaseDirectory"/>; what the <c>XxmiLang.Native.*</c> packages install). A
     /// RID-specific publish puts the binary straight into the output folder; that is checked too.</description></item>
     /// <item><description><c>xxmi</c> on <c>PATH</c>.</description></item>
     /// </list>
@@ -135,16 +135,8 @@ namespace XxmiLang
 
         private static IEnumerable<string> AssemblyDirectories()
         {
-            // Assembly.Location is empty in single-file apps; AppContext.BaseDirectory covers those.
-            string? location = null;
-            try
-            {
-                location = typeof(XxmiBinaryLocator).Assembly.Location;
-            }
-            catch (NotSupportedException)
-            {
-            }
-            if (!string.IsNullOrEmpty(location)) yield return Path.GetDirectoryName(location)!;
+            // The app's folder: where the runtime package puts runtimes/<rid>/native/ for a build or a framework-dependent
+            // publish, and the binary itself for a `-r <rid>` publish (single-file and Native AOT included).
             yield return AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
     }

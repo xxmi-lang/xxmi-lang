@@ -50,7 +50,7 @@ pnpm spec:extract        # regenerates spec/generated/*.json (XXMI_DLL_SRC = XXM
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
 pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
 pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Bun); no --target: every release target
-XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/           # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages
+XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx  # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages
 pnpm --filter ./packages/vscode run package                # VS Code .vsix; test:vscode runs it in a real VS Code
 XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts   # LSP performance targets (docs/03)
 ```

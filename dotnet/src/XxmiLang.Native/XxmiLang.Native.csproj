@@ -13,7 +13,6 @@
     publish -r <rid>, also single-file: next to the app), which docs/10-dotnet.md shows and the locator expects.
   -->
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <NativeRid Condition="'$(NativeRid)' == ''">osx-arm64</NativeRid>
     <NativeExe>xxmi</NativeExe>
     <NativeExe Condition="$(NativeRid.StartsWith('win-'))">xxmi.exe</NativeExe>
@@ -31,7 +30,7 @@
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />
-    <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0/_._" />
+    <None Include="_._" Pack="true" PackagePath="lib/net10.0/_._" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(XxmiBinary)' != ''">

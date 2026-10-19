@@ -4,14 +4,14 @@
     <id>XxmiLang.All</id>
     <version>$version$</version>
     <authors>xxmi-lang contributors</authors>
-    <description>XxmiLang plus the xxmi binary for Windows, Linux and macOS (x64 and arm64). One package reference for an app that runs anywhere.</description>
+    <description>XxmiLang (with XxmiLang.Core) plus the xxmi binary for Windows, Linux and macOS (x64 and arm64). One package reference for an app that runs anywhere.</description>
     <license type="expression">GPL-3.0-or-later</license>
     <projectUrl>https://github.com/xxmi-lang/xxmi-lang</projectUrl>
     <repository type="git" url="https://github.com/xxmi-lang/xxmi-lang" />
     <readme>README.md</readme>
     <tags>xxmi 3dmigoto ini linter lsp zzz modding</tags>
     <dependencies>
-      <group targetFramework=".NETStandard2.0">
+      <group targetFramework="net10.0">
         <dependency id="XxmiLang" version="$version$" />
         <dependency id="XxmiLang.Native.win-x64" version="$version$" />
         <dependency id="XxmiLang.Native.win-arm64" version="$version$" />
@@ -24,6 +24,6 @@
   </metadata>
   <files>
     <file src="$readme$" target="README.md" />
-    <file src="_._" target="lib/netstandard2.0/_._" />
+    <file src="_._" target="lib/net10.0/_._" />
   </files>
 </package>

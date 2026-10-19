@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace XxmiLang
     /// <see cref="XxmiServerExitedException"/>, and <see cref="StartAsync"/> starts a new process and re-opens
     /// every document with its latest text.
     /// </remarks>
-    public sealed class XxmiLanguageService : IAsyncDisposable, IDisposable
+    public sealed class XxmiLanguageService : IXxmiLanguageService, IDisposable
     {
         private static readonly StringComparer PathComparer =
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
@@ -36,6 +37,7 @@ namespace XxmiLang
         private string? _workspaceRoot;
         private volatile bool _disposed;
 
+        /// <param name="options">Where the binary is, the working directory and the request timeout; null: find it as <see cref="XxmiBinaryLocator"/> does.</param>
         public XxmiLanguageService(XxmiOptions? options = null)
         {
             _options = options ?? new XxmiOptions();
@@ -136,7 +138,11 @@ namespace XxmiLang
                 if (session is null || session.Connection.IsClosed) return; // gone with the process
                 var uri = FileUris.FromPath(full);
                 session.Diagnostics.TryRemove(uri, out _);
-                await session.Connection.NotifyAsync("textDocument/didClose", new { textDocument = new { uri } }, cancellationToken).ConfigureAwait(false);
+                await session.Connection.NotifyAsync(
+                    "textDocument/didClose",
+                    new DidCloseParams(new TextDocumentIdentifier(uri)),
+                    WireJsonContext.Default.DidCloseParams,
+                    cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -153,18 +159,22 @@ namespace XxmiLang
 
         /// <summary>Hover text at a position, or null.</summary>
         public async Task<HoverResult?> GetHoverAsync(string path, int line, int character, CancellationToken cancellationToken = default) =>
-            LspParsing.Hover(await PositionRequestAsync("textDocument/hover", path, line, character, null, cancellationToken).ConfigureAwait(false));
+            LspParsing.Hover(await PositionRequestAsync("textDocument/hover", path, line, character, cancellationToken).ConfigureAwait(false));
 
         /// <summary>Where the symbol at a position is declared (a library file is fine), or null.</summary>
         public async Task<XxmiLocation?> GetDefinitionAsync(string path, int line, int character, CancellationToken cancellationToken = default) =>
-            LspParsing.Location(await PositionRequestAsync("textDocument/definition", path, line, character, null, cancellationToken).ConfigureAwait(false));
+            LspParsing.Location(await PositionRequestAsync("textDocument/definition", path, line, character, cancellationToken).ConfigureAwait(false));
 
         /// <summary>Every reference to the symbol at a position across the indexed workspace.</summary>
         public async Task<IReadOnlyList<XxmiLocation>> FindReferencesAsync(
             string path, int line, int character, bool includeDeclaration = true, CancellationToken cancellationToken = default)
         {
-            var result = await PositionRequestAsync(
-                "textDocument/references", path, line, character, new { includeDeclaration }, cancellationToken).ConfigureAwait(false);
+            var uri = OpenUri(path);
+            var result = await RequestAsync(
+                "textDocument/references",
+                new ReferenceParams(new TextDocumentIdentifier(uri), new TextPosition(line, character), new ReferenceContext(includeDeclaration)),
+                WireJsonContext.Default.ReferenceParams,
+                cancellationToken).ConfigureAwait(false);
             if (result.ValueKind != JsonValueKind.Array) return Array.Empty<XxmiLocation>();
             return result.EnumerateArray().Select(LspParsing.Location).Where(l => l != null).Select(l => l!).ToList();
         }
@@ -172,7 +182,7 @@ namespace XxmiLang
         /// <summary>Completion suggestions at a position.</summary>
         public async Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(string path, int line, int character, CancellationToken cancellationToken = default)
         {
-            var result = await PositionRequestAsync("textDocument/completion", path, line, character, null, cancellationToken).ConfigureAwait(false);
+            var result = await PositionRequestAsync("textDocument/completion", path, line, character, cancellationToken).ConfigureAwait(false);
             if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("items", out var items)) result = items; // CompletionList
             if (result.ValueKind != JsonValueKind.Array) return Array.Empty<CompletionItem>();
             return result.EnumerateArray().Select(LspParsing.Completion).ToList();
@@ -182,7 +192,11 @@ namespace XxmiLang
         public async Task<IReadOnlyList<OutlineSymbol>> GetOutlineAsync(string path, CancellationToken cancellationToken = default)
         {
             var uri = OpenUri(path);
-            var result = await RequestAsync("textDocument/documentSymbol", new { textDocument = new { uri } }, cancellationToken).ConfigureAwait(false);
+            var result = await RequestAsync(
+                "textDocument/documentSymbol",
+                new DocumentSymbolParams(new TextDocumentIdentifier(uri)),
+                WireJsonContext.Default.DocumentSymbolParams,
+                cancellationToken).ConfigureAwait(false);
             if (result.ValueKind != JsonValueKind.Array) return Array.Empty<OutlineSymbol>();
             return result.EnumerateArray().Select(LspParsing.Symbol).ToList();
         }
@@ -195,7 +209,7 @@ namespace XxmiLang
             JsonElement result;
             try
             {
-                result = await PositionRequestAsync("textDocument/prepareRename", path, line, character, null, cancellationToken).ConfigureAwait(false);
+                result = await PositionRequestAsync("textDocument/prepareRename", path, line, character, cancellationToken).ConfigureAwait(false);
             }
             catch (XxmiRequestException refused)
             {
@@ -214,7 +228,8 @@ namespace XxmiLang
             var uri = OpenUri(path);
             var result = await RequestAsync(
                 "textDocument/rename",
-                new { textDocument = new { uri }, position = new { line, character }, newName },
+                new RenameParams(new TextDocumentIdentifier(uri), new TextPosition(line, character), newName),
+                WireJsonContext.Default.RenameParams,
                 cancellationToken).ConfigureAwait(false);
             return LspParsing.WorkspaceEdit(result) ?? new WorkspaceEdit(new Dictionary<string, IReadOnlyList<TextEdit>>());
         }
@@ -231,12 +246,8 @@ namespace XxmiLang
             if (raw.Count == 0) return Array.Empty<XxmiCodeAction>();
             var result = await RequestAsync(
                 "textDocument/codeAction",
-                new
-                {
-                    textDocument = new { uri = OpenUri(path) },
-                    range = new { start = new { line = range.Start.Line, character = range.Start.Character }, end = new { line = range.End.Line, character = range.End.Character } },
-                    context = new { diagnostics = raw },
-                },
+                new CodeActionParams(new TextDocumentIdentifier(OpenUri(path)), range, new CodeActionContext(raw)),
+                WireJsonContext.Default.CodeActionParams,
                 cancellationToken).ConfigureAwait(false);
             if (result.ValueKind != JsonValueKind.Array) return Array.Empty<XxmiCodeAction>();
             return result.EnumerateArray().Select(LspParsing.CodeAction).ToList();
@@ -296,35 +307,28 @@ namespace XxmiLang
                 {
                     timeout.CancelAfter(_options.RequestTimeout);
                     var rootUri = workspaceRoot is null ? null : FileUris.FromPath(workspaceRoot);
-                    var parameters = new Dictionary<string, object?>
-                    {
-                        ["processId"] = Process.GetCurrentProcess().Id,
-                        ["clientInfo"] = new { name = "XxmiLang.NET", version = typeof(XxmiLanguageService).Assembly.GetName().Version?.ToString() },
-                        ["rootUri"] = rootUri,
-                        ["workspaceFolders"] = rootUri is null ? null : new[] { new { uri = rootUri, name = Path.GetFileName(workspaceRoot!.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) } },
-                        ["capabilities"] = new
-                        {
-                            textDocument = new
-                            {
-                                publishDiagnostics = new { },
-                                hover = new { contentFormat = new[] { "markdown", "plaintext" } },
-                                documentSymbol = new { hierarchicalDocumentSymbolSupport = true },
-                                completion = new { completionItem = new { documentationFormat = new[] { "markdown", "plaintext" } } },
-                                rename = new { prepareSupport = true },
-                            },
-                        },
-                    };
+                    var parameters = new InitializeParams(
+                        Environment.ProcessId,
+                        new ClientInfo("XxmiLang.NET", typeof(XxmiLanguageService).Assembly.GetName().Version?.ToString()),
+                        rootUri,
+                        rootUri is null ? null : new[] { new WorkspaceFolder(rootUri, Path.GetFileName(workspaceRoot!.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))) },
+                        new ClientCapabilities(new TextDocumentCapabilities(
+                            new EmptyObject(),
+                            new HoverCapabilities(new[] { "markdown", "plaintext" }),
+                            new DocumentSymbolCapabilities(true),
+                            new CompletionCapabilities(new CompletionItemCapabilities(new[] { "markdown", "plaintext" })),
+                            new RenameCapabilities(true))));
                     JsonElement initialized;
                     try
                     {
-                        initialized = await session.Connection.RequestAsync("initialize", parameters, timeout.Token).ConfigureAwait(false);
+                        initialized = await session.Connection.RequestAsync("initialize", parameters, WireJsonContext.Default.InitializeParams, timeout.Token).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                     {
                         throw new TimeoutException($"The language server didn't answer 'initialize' within {_options.RequestTimeout}.");
                     }
                     if (initialized.ValueKind == JsonValueKind.Object && initialized.TryGetProperty("serverInfo", out var info)) session.Version = LspParsing.Str(info, "version");
-                    await session.Connection.NotifyAsync("initialized", new { }, timeout.Token).ConfigureAwait(false);
+                    await session.Connection.NotifyAsync("initialized", new EmptyObject(), WireJsonContext.Default.EmptyObject, timeout.Token).ConfigureAwait(false);
                 }
 
                 _workspaceRoot = workspaceRoot;
@@ -335,7 +339,8 @@ namespace XxmiLang
                     var uri = FileUris.FromPath(document.Key);
                     await session.Connection.NotifyAsync(
                         "textDocument/didOpen",
-                        new { textDocument = new { uri, languageId = "migoto", version = document.Value.Version, text = document.Value.Text } },
+                        new DidOpenParams(new TextDocumentItem(uri, "migoto", document.Value.Version, document.Value.Text)),
+                        WireJsonContext.Default.DidOpenParams,
                         cancellationToken).ConfigureAwait(false);
                 }
                 _session = session;
@@ -363,8 +368,8 @@ namespace XxmiLang
                 {
                     using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
                     {
-                        await session.Connection.RequestAsync("shutdown", null, timeout.Token).ConfigureAwait(false);
-                        await session.Connection.NotifyAsync("exit", null, timeout.Token).ConfigureAwait(false);
+                        await session.Connection.RequestAsync("shutdown", timeout.Token).ConfigureAwait(false);
+                        await session.Connection.NotifyAsync("exit", timeout.Token).ConfigureAwait(false);
                     }
                 }
                 catch (Exception)
@@ -400,14 +405,16 @@ namespace XxmiLang
                     // A change without a range replaces the whole text, whatever sync mode the server asked for.
                     await connection.NotifyAsync(
                         "textDocument/didChange",
-                        new { textDocument = new { uri, version }, contentChanges = new[] { new { text } } },
+                        new DidChangeParams(new VersionedTextDocumentIdentifier(uri, version), new[] { new FullTextChange(text) }),
+                        WireJsonContext.Default.DidChangeParams,
                         cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     await connection.NotifyAsync(
                         "textDocument/didOpen",
-                        new { textDocument = new { uri, languageId = "migoto", version, text } },
+                        new DidOpenParams(new TextDocumentItem(uri, "migoto", version, text)),
+                        WireJsonContext.Default.DidOpenParams,
                         cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -417,15 +424,12 @@ namespace XxmiLang
             }
         }
 
-        private async Task<JsonElement> PositionRequestAsync(string method, string path, int line, int character, object? context, CancellationToken cancellationToken)
-        {
-            var textDocument = new { uri = OpenUri(path) };
-            var position = new { line, character };
-            return await RequestAsync(
+        private Task<JsonElement> PositionRequestAsync(string method, string path, int line, int character, CancellationToken cancellationToken) =>
+            RequestAsync(
                 method,
-                context is null ? (object)new { textDocument, position } : new { textDocument, position, context },
-                cancellationToken).ConfigureAwait(false);
-        }
+                new PositionParams(new TextDocumentIdentifier(OpenUri(path)), new TextPosition(line, character)),
+                WireJsonContext.Default.PositionParams,
+                cancellationToken);
 
         /// <summary>The URI of a document that must be open, on a service that is running.</summary>
         private string OpenUri(string path)
@@ -447,7 +451,11 @@ namespace XxmiLang
             // The server handles messages in order and runs a request only after the document updates queued
             // before it, publishing diagnostics for them first. Any request on the document is therefore a barrier:
             // when it is answered, the last publication we saw is the one for the current text.
-            await RequestAsync("textDocument/documentSymbol", new { textDocument = new { uri } }, cancellationToken).ConfigureAwait(false);
+            await RequestAsync(
+                "textDocument/documentSymbol",
+                new DocumentSymbolParams(new TextDocumentIdentifier(uri)),
+                WireJsonContext.Default.DocumentSymbolParams,
+                cancellationToken).ConfigureAwait(false);
             if (session.Diagnostics.TryGetValue(uri, out var published)) return published;
             // Nothing published yet (the server skips files it doesn't index): give it a moment, then report none.
             using (var grace = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
@@ -464,7 +472,7 @@ namespace XxmiLang
             }
         }
 
-        private async Task<JsonElement> RequestAsync(string method, object? parameters, CancellationToken cancellationToken)
+        private async Task<JsonElement> RequestAsync<TParams>(string method, TParams parameters, JsonTypeInfo<TParams> parametersInfo, CancellationToken cancellationToken)
         {
             var session = CurrentSession();
             using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
@@ -472,7 +480,7 @@ namespace XxmiLang
                 timeout.CancelAfter(_options.RequestTimeout);
                 try
                 {
-                    return await session.Connection.RequestAsync(method, parameters, timeout.Token).ConfigureAwait(false);
+                    return await session.Connection.RequestAsync(method, parameters, parametersInfo, timeout.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                 {
@@ -664,20 +672,24 @@ namespace XxmiLang
                 }
             }
 
-            private static Task<object?> OnRequest(string method, JsonElement parameters)
+            private static Task<JsonElement> OnRequest(string method, JsonElement parameters)
             {
                 switch (method)
                 {
                     case "workspace/configuration":
+                        // One null per requested item: we have no settings.
                         var count = parameters.ValueKind == JsonValueKind.Object && parameters.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array
                             ? items.GetArrayLength()
                             : 0;
-                        return Task.FromResult<object?>(new object?[count]);
+                        using (var nulls = JsonDocument.Parse("[" + string.Join(",", Enumerable.Repeat("null", count)) + "]"))
+                        {
+                            return Task.FromResult(nulls.RootElement.Clone());
+                        }
                     case "client/registerCapability":
                     case "client/unregisterCapability":
                     case "window/workDoneProgress/create":
                     case "window/showMessageRequest":
-                        return Task.FromResult<object?>(null);
+                        return Task.FromResult(default(JsonElement));
                     default:
                         throw new XxmiRequestException("Method not found: " + method, -32601);
                 }

@@ -43,10 +43,10 @@ jobs:
 
       - run: pnpm --filter ./packages/vscode run package
 
-      # docs/10-dotnet.md: XxmiLang, XxmiLang.Native.<rid> for the six targets, XxmiLang.All.
+      # docs/10-dotnet.md: XxmiLang.Core, XxmiLang.Native.<rid> for the six targets, XxmiLang, XxmiLang.All.
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - run: node scripts/pack-dotnet.ts --out dist/nupkg
 
@@ -102,7 +102,7 @@ jobs:
       # Install the packages built above in a fresh app, with no XXMI_PATH (docs/10-dotnet.md).
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - name: The NuGet packages work from a local feed
         run: node scripts/smoke-dotnet.ts --feed release/dist/nupkg
@@ -132,11 +132,11 @@ jobs:
           sha256sum "${files[@]}" | sed 's#  .*/#  #' > SHA256SUMS
           gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}" SHA256SUMS
 
-      # nuget.org: the runtime packages and XxmiLang first, the XxmiLang.All meta package last.
+      # nuget.org: XxmiLang.Core, the runtime packages and XxmiLang first, in that order, the XxmiLang.All meta package last.
       - name: Push the packages to nuget.org
         if: ${{ env.NUGET_API_KEY != '' }}
         run: |
           cd release/dist/nupkg
-          for f in XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
+          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
             dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done

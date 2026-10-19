@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,11 +27,7 @@ namespace XxmiLang
                 StandardErrorEncoding = new UTF8Encoding(false),
                 WorkingDirectory = string.IsNullOrEmpty(workingDirectory) ? Environment.CurrentDirectory : workingDirectory!,
             };
-#if NET5_0_OR_GREATER
             foreach (var argument in arguments) start.ArgumentList.Add(argument);
-#else
-            start.Arguments = JoinArguments(arguments);
-#endif
             return start;
         }
 
@@ -53,15 +50,39 @@ namespace XxmiLang
             string executable,
             IReadOnlyList<string> arguments,
             string? workingDirectory,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            string? standardInput = null)
         {
             cancellationToken.ThrowIfCancellationRequested();
             using (var process = Start(CreateStartInfo(executable, arguments, workingDirectory)))
             using (cancellationToken.Register(() => Kill(process)))
             {
-                process.StandardInput.Close();
+                // Reading starts before the input is written, so a child that answers while it is still reading can't block.
                 var output = process.StandardOutput.ReadToEndAsync();
                 var error = process.StandardError.ReadToEndAsync();
+                try
+                {
+                    if (standardInput is { Length: > 0 })
+                    {
+                        var bytes = new UTF8Encoding(false).GetBytes(standardInput);
+                        await process.StandardInput.BaseStream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+                        await process.StandardInput.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                catch (IOException)
+                {
+                    // The process ended before it read everything; its exit code and stderr say why.
+                }
+                finally
+                {
+                    try
+                    {
+                        process.StandardInput.Close();
+                    }
+                    catch (IOException)
+                    {
+                    }
+                }
                 var text = await output.ConfigureAwait(false);
                 var errorText = await error.ConfigureAwait(false);
                 process.WaitForExit();
@@ -75,46 +96,12 @@ namespace XxmiLang
             try
             {
                 if (process.HasExited) return;
-#if NET5_0_OR_GREATER
                 process.Kill(entireProcessTree: true);
-#else
-                process.Kill();
-#endif
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception || ex is NotSupportedException)
             {
                 // Already gone.
             }
-        }
-
-        /// <summary>Quotes arguments the way CommandLineToArgvW (and .NET on Unix) reads them back.</summary>
-        internal static string JoinArguments(IEnumerable<string> arguments)
-        {
-            var result = new StringBuilder();
-            foreach (var argument in arguments)
-            {
-                if (result.Length > 0) result.Append(' ');
-                if (argument.Length > 0 && argument.IndexOfAny(new[] { ' ', '\t', '\n', '\v', '"' }) < 0)
-                {
-                    result.Append(argument);
-                    continue;
-                }
-                result.Append('"');
-                var backslashes = 0;
-                foreach (var c in argument)
-                {
-                    if (c == '\\')
-                    {
-                        backslashes++;
-                        continue;
-                    }
-                    if (c == '"') result.Append('\\', backslashes * 2 + 1).Append('"');
-                    else result.Append('\\', backslashes).Append(c);
-                    backslashes = 0;
-                }
-                result.Append('\\', backslashes * 2).Append('"');
-            }
-            return result.ToString();
         }
     }
 }

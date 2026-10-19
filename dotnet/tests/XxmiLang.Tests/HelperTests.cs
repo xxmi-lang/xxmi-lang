@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -43,50 +43,26 @@ public class FileUriTests
     }
 }
 
-public class ArgumentQuotingTests
+internal sealed record EchoParams(string Value);
+
+internal sealed record NoteParams(string Text);
+
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(EchoParams))]
+[JsonSerializable(typeof(NoteParams))]
+[JsonSerializable(typeof(string))]
+internal sealed partial class TestJsonContext : JsonSerializerContext
 {
-    [Theory]
-    [InlineData("--format", "--format")]
-    [InlineData("a b", "\"a b\"")]
-    [InlineData("", "\"\"")]
-    [InlineData("say \"hi\"", "\"say \\\"hi\\\"\"")]
-    [InlineData(@"C:\dir with space\", "\"C:\\dir with space\\\\\"")]
-    public void Arguments_are_quoted_for_CommandLineToArgv(string argument, string expected)
-    {
-        var joined = ProcessRunner.JoinArguments(new[] { argument });
-
-        Assert.Equal(expected, joined);
-    }
-}
-
-public class TextEditTests
-{
-    private static TextEdit Edit(int l1, int c1, int l2, int c2, string text) =>
-        new TextEdit(new TextRange(new TextPosition(l1, c1), new TextPosition(l2, c2)), text);
-
-    [Fact]
-    public void Edits_refer_to_the_original_text_in_any_order()
-    {
-        var result = TextEdits.Apply("one\ntwo\nthree", new[] { Edit(2, 0, 2, 5, "3"), Edit(0, 0, 0, 3, "1") });
-
-        Assert.Equal("1\ntwo\n3", result);
-    }
-
-    [Fact]
-    public void Inserts_and_CRLF_work()
-    {
-        Assert.Equal("a\r\nXb\r\n", TextEdits.Apply("a\r\nb\r\n", new[] { Edit(1, 0, 1, 0, "X") }));
-    }
-
-    [Fact]
-    public void Overlapping_edits_are_refused()
-    {
-        Assert.Throws<ArgumentException>(() => TextEdits.Apply("abcdef", new[] { Edit(0, 0, 0, 4, "x"), Edit(0, 2, 0, 5, "y") }));
-    }
 }
 
 public class JsonRpcConnectionTests
 {
+    private static JsonElement Json(string raw)
+    {
+        using var document = JsonDocument.Parse(raw);
+        return document.RootElement.Clone();
+    }
+
     /// <summary>Two connected ends; what one writes the other reads.</summary>
     private sealed class Pair : IDisposable
     {
@@ -126,14 +102,16 @@ public class JsonRpcConnectionTests
     {
         using var pair = new Pair();
         pair.B.RequestHandler = (method, parameters) =>
-            Task.FromResult<object?>(method == "echo" ? new { got = parameters.GetProperty("value").GetString() } : throw new XxmiRequestException("nope", -32601));
+            method == "echo"
+                ? Task.FromResult(Json("{\"got\":" + JsonSerializer.Serialize(parameters.GetProperty("value").GetString(), TestJsonContext.Default.String) + "}"))
+                : throw new XxmiRequestException("nope", -32601);
         pair.A.Start();
         pair.B.Start();
 
-        var result = await pair.A.RequestAsync("echo", new { value = "héllo ✓" }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        var result = await pair.A.RequestAsync("echo", new EchoParams("héllo ✓"), TestJsonContext.Default.EchoParams, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
         Assert.Equal("héllo ✓", result.GetProperty("got").GetString());
 
-        var error = await Assert.ThrowsAsync<XxmiRequestException>(() => pair.A.RequestAsync("other", null, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10)));
+        var error = await Assert.ThrowsAsync<XxmiRequestException>(() => pair.A.RequestAsync("other", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10)));
         Assert.Equal(-32601, error.Code);
         Assert.Equal("nope", error.Message);
     }
@@ -153,7 +131,7 @@ public class JsonRpcConnectionTests
         pair.B.Start();
 
         foreach (var size in new[] { 3, 300_000, 5 })
-            await pair.A.NotifyAsync("note", new { text = new string('x', size) }, CancellationToken.None);
+            await pair.A.NotifyAsync("note", new NoteParams(new string('x', size)), TestJsonContext.Default.NoteParams, CancellationToken.None);
 
         await done.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Assert.Equal(new[] { "3", "300000", "5" }, seen);
@@ -166,7 +144,7 @@ public class JsonRpcConnectionTests
         pair.A.CreateClosedException = () => Task.FromResult<Exception>(new XxmiServerExitedException("gone", 7, "boom"));
         pair.A.Start();
         // B never answers.
-        var pending = pair.A.RequestAsync("never", null, CancellationToken.None);
+        var pending = pair.A.RequestAsync("never", CancellationToken.None);
 
         pair.CloseB();
 
@@ -174,7 +152,7 @@ public class JsonRpcConnectionTests
         Assert.Equal(7, error.ExitCode);
         Assert.True(pair.A.IsClosed);
         // Later requests fail the same way, at once.
-        await Assert.ThrowsAsync<XxmiServerExitedException>(() => pair.A.RequestAsync("later", null, CancellationToken.None));
+        await Assert.ThrowsAsync<XxmiServerExitedException>(() => pair.A.RequestAsync("later", CancellationToken.None));
     }
 
     [Fact]
@@ -190,7 +168,7 @@ public class JsonRpcConnectionTests
         pair.B.Start();
         using var cts = new CancellationTokenSource();
 
-        var pending = pair.A.RequestAsync("slow", null, cts.Token);
+        var pending = pair.A.RequestAsync("slow", cts.Token);
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
