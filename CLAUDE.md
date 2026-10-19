@@ -23,7 +23,7 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 
 1. **XXMI DLL source** (`SpectrumQT/XXMI-Libs-Package`, `DirectX11/IniHandler.cpp`, `DirectX11/CommandList.cpp`). If a doc and the DLL disagree, the DLL wins. Open an issue in this repo noting the mismatch.
 2. **The game package** (for ZZZ: `leotorrez/ZZMI-Package`, `ZZMI/Core/`). This defines what libraries exist and what they export.
-3. **Our fork of tree-sitter-migoto** (based on `lupomikti/tree-sitter-migoto`). This is the parser. Where it lags the XXMI dialect, fix it in our fork (see `docs/01-language-model.md` §2). We don't send PRs to lupomikti's repos, except Kate syntax updates (see `docs/08-editor-integration.md`).
+3. **Our fork of tree-sitter-migoto** (based on `lupomikti/tree-sitter-migoto`). This is the parser. Where it lags the XXMI dialect, fix it in our fork (see `docs/01-language-model.md` §2). Highlighting fixes for lupomikti's editor grammars (VS Code, Kate, Sublime) go upstream as PRs from our org forks `xxmi-lang/3dmigoto-ini-extension` and `xxmi-lang/migoto-vscode`, after testing with each editor's own engine (see `docs/08-editor-integration.md`). The tree-sitter grammar stays in our fork.
 4. These docs.
 
 ## Hard rules

@@ -10,7 +10,7 @@ Our position: **LSP features on top of their grammars, never competing grammars.
 
 - Use their language ids and names everywhere, so the two stack.
 - Credit them in the README and the extension description.
-- **PRs to lupomikti's repos: Kate only.** We send PRs to `3dmigoto-ini-extension` for `kate-plugin/syntaxes/migoto.xml` (see "Kate syntax updates" below), since updating it is where their time is shortest. Everything else stays in our repos: the tree-sitter grammar lives in our fork (`01-language-model.md` §2), and VS Code gets our own separate extension.
+- **PRs to lupomikti's repos: highlighting fixes only.** Fixes to their editor grammars (VS Code, Kate, Sublime) go upstream as PRs from our org forks, `xxmi-lang/3dmigoto-ini-extension` and `xxmi-lang/migoto-vscode`, after testing with each editor's own engine (see "Upstream highlighting PRs" below). Everything else stays in our repos: the tree-sitter grammar lives in our fork (`01-language-model.md` §2), and VS Code gets our own separate extension. We still don't ship competing grammars.
 
 ## VS Code (`packages/vscode`)
 
@@ -58,6 +58,22 @@ As built: `clients/kate/lspclient-settings.json` (plus `rootIndicationFileNames`
 Verify the exact key names against current Kate docs when implementing; the shape above follows Kate's documented `servers` / `command` / `highlightingModeRegex` config. Also verify that `.ini` files in mod folders open in `Migoto` mode rather than generic `INI Files`. If they don't, document a per-folder `.kateconfig` or mode override.
 
 Test on Linux (KDE; both the distro Kate package and the Flatpak) and on Windows (Kate from the KDE installer or Microsoft Store). On Windows the syntax directory is `%USERPROFILE%\AppData\Local\org.kde.syntax-highlighting\syntax`, and `command` should be `["xxmi-lsp.exe", "--stdio"]` or a full path if it isn't on PATH. Kate on macOS works the same way but is lower priority.
+
+### Upstream highlighting PRs
+
+Highlighting fixes are filed as an issue in `lupomikti/migoto-vscode` (their CONTRIBUTING.md asks for that first), then one PR per repo from the org forks.
+
+- `->` property access on every operand (built-in resources, shaders, pools, longer expressions, namespaced names, `$var` arguments):
+  - Issue: https://github.com/lupomikti/migoto-vscode/issues/1
+  - PR for VS Code, Sublime and Kate grammars: https://github.com/lupomikti/3dmigoto-ini-extension/pull/1
+  - PR for the regenerated VS Code grammar: https://github.com/lupomikti/migoto-vscode/pull/2
+  - The `vscode-ext` submodule pointer is left to their usual "submod: update submodules" commit.
+- How it was tested, each with the editor's own engine and a sample file covering every form:
+  - VS Code: vscode-textmate with oniguruma, then the same result read back from a real VS Code through `_workbench.captureSyntaxTokens`.
+  - Kate: `ksyntaxhighlighter6` (KSyntaxHighlighting 6) in Docker; also checks the XML for "cannot find context" warnings.
+  - Sublime: Sublime HQ's `st_syntax_tests` with a `syntax_test_*.ini` file.
+  - Regression: old vs new grammar over the ZZMI package and the fixtures; no line may lose colour.
+- Until a PR is merged, point users at the PR branch in the org fork.
 
 ### Kate syntax updates (PRs to lupomikti)
 
