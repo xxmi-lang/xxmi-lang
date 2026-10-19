@@ -182,8 +182,13 @@ jobs:
           exe="$RUNNER_TEMP/aot/XxmiLang.Sample"
           [ "${{ matrix.os }}" = windows-latest ] && exe="$exe.exe"
           "$exe" lint fixtures/rules/XM201/good.ini
-          "$exe" text fixtures/rules/XM201/bad.ini | grep XM201
-          "$exe" hover fixtures/rules/XM201/good.ini 1 3 | grep TextureOverride
+          # bad.ini has errors, so the exit code is 1 (findings); only the output is checked.
+          out=$("$exe" text fixtures/rules/XM201/bad.ini || true)
+          echo "$out"
+          echo "$out" | grep -q XM201
+          out=$("$exe" hover fixtures/rules/XM201/good.ini 1 3)
+          echo "$out"
+          echo "$out" | grep -q TextureOverride
 
       # Packs this machine's runtime package and installs it in a fresh app (the script drops XXMI_PATH).
       - name: Packages work from a local feed
