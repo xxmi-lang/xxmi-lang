@@ -105,11 +105,23 @@ In **PowerShell** (not as admin). On Windows on ARM, replace `windows-x64` with
 ```powershell
 $dir = "$env:LOCALAPPDATA\Programs\xxmi"
 New-Item -ItemType Directory -Force $dir | Out-Null
-$version = (Invoke-WebRequest 'https://github.com/xxmi-lang/xxmi-lang/releases/latest' -MaximumRedirection 0 -SkipHttpErrorCheck).Headers.Location -replace '.*/v', ''
-$base = "https://github.com/xxmi-lang/xxmi-lang/releases/download/v$version"
-Invoke-WebRequest "$base/xxmi-$version-windows-x64.zip" -OutFile "$env:TEMP\xxmi.zip"
-Expand-Archive "$env:TEMP\xxmi.zip" -DestinationPath $dir -Force
+
+# Windows PowerShell 5.1 defaults to old TLS versions; GitHub needs TLS 1.2.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$ProgressPreference = 'SilentlyContinue'   # makes Invoke-WebRequest much faster in 5.1
+
+$release = Invoke-RestMethod 'https://api.github.com/repos/xxmi-lang/xxmi-lang/releases/latest'
+$version = $release.tag_name -replace '^v', ''
+$zip = Join-Path $env:TEMP "xxmi-$version.zip"
+$tmp = Join-Path $env:TEMP "xxmi-$version"
+Invoke-WebRequest "https://github.com/xxmi-lang/xxmi-lang/releases/download/v$version/xxmi-$version-windows-x64.zip" -OutFile $zip
+
+# Extract to a temp folder, then copy only the two programs.
+if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
+Expand-Archive $zip -DestinationPath $tmp -Force
+Copy-Item "$tmp\xxmi.exe", "$tmp\xxmi-lsp.exe" -Destination $dir -Force
 Unblock-File "$dir\xxmi-lsp.exe", "$dir\xxmi.exe"
+Remove-Item $zip, $tmp -Recurse -Force
 
 # Add the folder to your user PATH (once).
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -117,6 +129,10 @@ if (($userPath -split ';') -notcontains $dir) {
   [Environment]::SetEnvironmentVariable('Path', "$userPath;$dir", 'User')
 }
 ```
+
+These steps work in the Windows PowerShell 5.1 that ships with Windows, and in PowerShell 7. The
+GitHub API allows 60 unauthenticated requests an hour per IP address; if you hit that, put the
+version number in `$version` by hand (see the releases page).
 
 Close and reopen the terminal (and your editor), then check with `xxmi-lsp --version`.
 
@@ -155,7 +171,7 @@ cd /tmp && grep " xxmi-$version-linux-x64.zip\$" SHA256SUMS | sha256sum -c
 ```
 
 On macOS use `shasum -a 256 -c` instead of `sha256sum -c`. On Windows:
-`(Get-FileHash "$env:TEMP\xxmi.zip").Hash`, then compare it with the line in `SHA256SUMS`.
+`(Get-FileHash $zip).Hash`, then compare it with the line in `SHA256SUMS`.
 
 ## Set up your editor
 

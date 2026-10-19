@@ -208,3 +208,13 @@ jobs:
           for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
             dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done
+
+  # Mirrors the packages to GitHub Packages so they show in the repo sidebar. Independent of the
+  # nuget job: neither blocks the other.
+  github-packages:
+    needs: publish
+    permissions:
+      packages: write
+      contents: read
+      actions: read
+    uses: ./.github/workflows/github-packages.yml
