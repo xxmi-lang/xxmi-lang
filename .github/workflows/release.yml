@@ -88,6 +88,7 @@ jobs:
           "release/dist/bin/xxmi-$SUFFIX" --version
           "release/dist/bin/xxmi-$SUFFIX" lint fixtures/rules/XM201/good.ini
           XXMI_LSP_COMMAND="[\"release/dist/bin/xxmi-lsp-$SUFFIX\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"release/dist/bin/xxmi-$SUFFIX\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
 
   publish:
     needs: smoke

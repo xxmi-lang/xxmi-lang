@@ -122,11 +122,12 @@ jobs:
       - name: Build single-file binaries for this machine
         run: pnpm build:binaries --target host
 
-      - name: Protocol tests against the compiled xxmi-lsp and the bundled VS Code server
+      - name: Protocol tests against the compiled xxmi-lsp, xxmi lsp and the bundled VS Code server
         shell: bash
         run: |
           exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
           XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
           XXMI_LSP_COMMAND="[\"node\",\"--liftoff-only\",\"packages/vscode/dist/server.mjs\",\"--stdio\"]" pnpm vitest run packages/lsp
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini

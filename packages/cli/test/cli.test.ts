@@ -72,6 +72,17 @@ describe('xxmi lint', () => {
   });
 });
 
+describe('xxmi lsp', () => {
+  // The server itself is covered by packages/lsp/test/protocol.test.ts (XXMI_LSP_COMMAND runs
+  // it against `xxmi lsp` in CI); here only the wiring that doesn't start a server.
+  it('documents itself and is listed in the usage', async () => {
+    const { code, out } = await run('lsp', '--help');
+    expect(code).toBe(0);
+    expect(out).toContain('xxmi lsp [--stdio]');
+    expect((await run('--help')).out).toContain('xxmi lsp [--stdio]');
+  });
+});
+
 describe('xxmi index', () => {
   it('writes a sorted snapshot of a package', async () => {
     const out = join(mkdtempSync(join(tmpdir(), 'xxmi-index-')), 'snap.json');

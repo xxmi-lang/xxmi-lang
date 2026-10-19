@@ -25,6 +25,7 @@ import {
 const USAGE = `Usage:
   xxmi lint [paths…] [--format text|json] [--rules XM201,XM202] [--max-warnings N]
   xxmi index <package dir> --out FILE [--name NAME]
+  xxmi lsp [--stdio]
 
 Run \`xxmi <command> --help\` for details.`;
 
@@ -173,6 +174,21 @@ globals and namespaces of d3dx.ini and every file it includes.`);
   return 0;
 }
 
+/** `xxmi lsp`: the same language server as `xxmi-lsp`, so one binary can serve both. */
+async function lsp(args: string[]): Promise<number> {
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`xxmi lsp [--stdio]
+
+Starts the language server for XXMI / 3DMigoto mod .ini files on stdin/stdout, exactly like
+\`xxmi-lsp\`. stdio is the only transport, so --stdio is optional.`);
+    return 0;
+  }
+  // Loaded on demand: the server (and vscode-languageserver) isn't needed by the other commands.
+  const { main: startLsp } = await import('@xxmi-lang/lsp/main');
+  startLsp(args);
+  return 0; // the connection keeps the process alive until the client exits
+}
+
 export async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
   try {
@@ -181,6 +197,8 @@ export async function main(argv: string[]): Promise<number> {
         return await lint(rest);
       case 'index':
         return await index(rest);
+      case 'lsp':
+        return await lsp(rest);
       case '--version':
       case '-v':
         console.log(VERSION);

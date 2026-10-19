@@ -6,7 +6,10 @@ import { defineConfig } from 'vitest/config';
 // (the same thing the `source` export condition does for tsc and `node --conditions=source`).
 export default defineConfig({
   resolve: {
-    alias: { '@xxmi-lang/core': resolve(import.meta.dirname, 'packages/core/src/index.ts') },
+    alias: {
+      '@xxmi-lang/core': resolve(import.meta.dirname, 'packages/core/src/index.ts'),
+      '@xxmi-lang/lsp/main': resolve(import.meta.dirname, 'packages/lsp/src/main.ts'),
+    },
   },
   test: {
     projects: readdirSync('packages').map((name) => ({
