@@ -31,7 +31,7 @@ Claude Code plugins support LSP servers natively. With `diagnostics` on (the def
 }
 ```
 
-- **Binary:** v1 requires `xxmi-lsp` on PATH (release binary or `npm i -g @xxmi-lang/cli`). The README says so, and the `xxmi-ini-authoring` skill tells the agent to check `xxmi --version` and explain installation if it's missing. Later: a launcher that downloads the platform binary into `${CLAUDE_PLUGIN_DATA}`.
+- **Binary:** v1 requires `xxmi-lsp` on PATH (release zip or `npm i -g @xxmi-lang/cli`). The README says so, and the `xxmi-ini-authoring` skill tells the agent to check `xxmi --version` and explain installation if it's missing. Later: a launcher that downloads the platform binary into `${CLAUDE_PLUGIN_DATA}`.
 - **Scope:** mapping all `.ini` files is fine because users enable the plugin per project (mod or package folders). The README recommends project-scope enablement.
 - Validate with `claude plugin validate ./plugin` in CI.
 

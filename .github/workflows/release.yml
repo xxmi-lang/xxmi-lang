@@ -1,6 +1,8 @@
-# Release on a version tag (e.g. v0.1.0): single-file binaries for every target, the VS Code
-# extension, the .NET packages, smoke tests of the built binaries and packages on each OS, then a
-# GitHub release. The packages go to nuget.org only if the NUGET_API_KEY secret exists.
+# Release on a version tag (e.g. v0.1.0): single-file binaries for every target (one zip per
+# platform), the VS Code extension, the .NET packages, smoke tests of the built zips and packages
+# on each OS, then a GitHub release. The .NET packages are not on the GitHub release; the nuget job
+# pushes them to nuget.org with Trusted Publishing (OIDC, no API key) once the NUGET_USER
+# repository variable exists (docs/10-dotnet.md "Publishing (maintainers)").
 name: release
 
 on:
@@ -50,13 +52,24 @@ jobs:
 
       - run: node scripts/pack-dotnet.ts --out dist/nupkg
 
+      # One zip per platform (xxmi, xxmi-lsp, LICENSE, README.txt), the .vsix and SHA256SUMS.
+      - name: Bundle the release files
+        env:
+          TAG: ${{ github.ref_name }}
+        run: node scripts/bundle-release.ts --version "${TAG#v}" --vsix packages/vscode/dist/xxmi-lang.vsix --out dist/release
+
       - uses: actions/upload-artifact@v4
         with:
           name: release
-          path: |
-            dist/bin/*
-            dist/nupkg/*.nupkg
-            packages/vscode/dist/xxmi-lang.vsix
+          path: dist/release/*
+          if-no-files-found: error
+
+      # Not part of the GitHub release: the nuget job pushes these to nuget.org.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: dist/nupkg/*.nupkg
+          if-no-files-found: error
 
   smoke:
     needs: build
@@ -67,9 +80,9 @@ jobs:
           - os: ubuntu-latest
             suffix: linux-x64
           - os: windows-latest
-            suffix: windows-x64.exe
+            suffix: windows-x64
           - os: macos-latest
-            suffix: darwin-arm64
+            suffix: macos-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -88,16 +101,33 @@ jobs:
           name: release
           path: release
 
-      - name: Run the downloaded binaries
+      - uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: nupkg
+
+      - name: Run the binaries from the downloaded zip
         shell: bash
         env:
           SUFFIX: ${{ matrix.suffix }}
         run: |
-          chmod +x release/dist/bin/* || true
-          "release/dist/bin/xxmi-$SUFFIX" --version
-          "release/dist/bin/xxmi-$SUFFIX" lint fixtures/rules/XM201/good.ini
-          XXMI_LSP_COMMAND="[\"release/dist/bin/xxmi-lsp-$SUFFIX\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"release/dist/bin/xxmi-$SUFFIX\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
+          cd release
+          if command -v sha256sum > /dev/null; then sha256sum -c --ignore-missing SHA256SUMS; else shasum -a 256 -c --ignore-missing SHA256SUMS; fi
+          cd ..
+          mkdir unzipped
+          unzip -q "release/xxmi-${GITHUB_REF_NAME#v}-$SUFFIX.zip" -d unzipped
+          ls -l unzipped
+          exe=""
+          case "$SUFFIX" in windows-*) exe=".exe" ;; esac
+          xxmi="$PWD/unzipped/xxmi$exe"
+          lsp="$PWD/unzipped/xxmi-lsp$exe"
+          test -x "$xxmi" && test -x "$lsp"
+          test -f unzipped/LICENSE && test -f unzipped/README.txt
+          "$xxmi" --version
+          "$lsp" --version
+          "$xxmi" lint fixtures/rules/XM201/good.ini
+          XXMI_LSP_COMMAND="[\"$lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"$xxmi\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
 
       # Install the packages built above in a fresh app, with no XXMI_PATH (docs/10-dotnet.md).
       - uses: actions/setup-dotnet@v4
@@ -105,7 +135,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: The NuGet packages work from a local feed
-        run: node scripts/smoke-dotnet.ts --feed release/dist/nupkg
+        run: node scripts/smoke-dotnet.ts --feed nupkg
 
   publish:
     needs: smoke
@@ -125,35 +155,55 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           cd release
-          files=(dist/bin/* dist/nupkg/*.nupkg packages/vscode/dist/xxmi-lang.vsix)
-          sha256sum "${files[@]}" | sed 's#  .*/#  #' > SHA256SUMS
+          files=(xxmi-*.zip xxmi-lang-*.vsix SHA256SUMS)
           if gh release view "$TAG" --repo "$REPO" > /dev/null 2>&1; then
-            gh release upload "$TAG" --repo "$REPO" --clobber "${files[@]}" SHA256SUMS
+            gh release upload "$TAG" --repo "$REPO" --clobber "${files[@]}"
           else
-            gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}" SHA256SUMS
+            gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}"
           fi
 
   # Its own job so a failed push can be re-run without touching the GitHub release.
   nuget:
     needs: publish
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Trusted Publishing: the OIDC token NuGet/login exchanges for a short-lived key
     steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
       - uses: actions/download-artifact@v4
         with:
-          name: release
-          path: release
+          name: nupkg
+          path: nupkg
+
+      # Without the NUGET_USER variable nothing is pushed (docs/10-dotnet.md "Publishing (maintainers)").
+      - name: Check the nuget.org user
+        id: user
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo "::warning::NUGET_USER repository variable not set; skipping nuget.org push (see docs/10-dotnet.md)"
+            echo "set=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "set=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: NuGet/login@v1
+        if: steps.user.outputs.set == 'true'
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
 
       # XxmiLang.Core, the runtime packages and XxmiLang first, in that order, the XxmiLang.All meta package last.
-      # Without the NUGET_API_KEY secret the packages are only attached to the GitHub release.
       - name: Push the packages to nuget.org
+        if: steps.user.outputs.set == 'true'
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
-          if [ -z "$NUGET_API_KEY" ]; then
-            echo "::warning::NUGET_API_KEY not set, skipping nuget.org push"
-            exit 0
-          fi
-          cd release/dist/nupkg
+          cd nupkg
           for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
             dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done

@@ -16,34 +16,39 @@ Jump to: [Arch / CachyOS](#arch-linux-cachyos-manjaro-endeavouros) ·
 
 ## Which file do I need?
 
-Every release has the files at
-[github.com/xxmi-lang/xxmi-lang/releases/latest](https://github.com/xxmi-lang/xxmi-lang/releases/latest):
+Every release has one zip per system at
+[github.com/xxmi-lang/xxmi-lang/releases/latest](https://github.com/xxmi-lang/xxmi-lang/releases/latest).
+Each zip holds both programs (`xxmi-lsp` and `xxmi`, `.exe` on Windows), a `LICENSE` and a
+`README.txt`. `<version>` below is the release number, e.g. `0.1.1`.
 
-| System                                      | `xxmi-lsp` file              | `xxmi` file              |
-| ------------------------------------------- | ---------------------------- | ------------------------ |
-| Linux, Intel/AMD (`uname -m` says `x86_64`) | `xxmi-lsp-linux-x64`         | `xxmi-linux-x64`         |
-| Linux, ARM (`aarch64`)                      | `xxmi-lsp-linux-arm64`       | `xxmi-linux-arm64`       |
-| Windows, Intel/AMD                          | `xxmi-lsp-windows-x64.exe`   | `xxmi-windows-x64.exe`   |
-| Windows on ARM (Snapdragon)                 | `xxmi-lsp-windows-arm64.exe` | `xxmi-windows-arm64.exe` |
-| macOS, Apple Silicon (M1 or newer)          | `xxmi-lsp-darwin-arm64`      | `xxmi-darwin-arm64`      |
-| macOS, Intel                                | `xxmi-lsp-darwin-x64`        | `xxmi-darwin-x64`        |
+| System                                      | Zip                                |
+| ------------------------------------------- | ---------------------------------- |
+| Linux, Intel/AMD (`uname -m` says `x86_64`) | `xxmi-<version>-linux-x64.zip`     |
+| Linux, ARM (`aarch64`)                      | `xxmi-<version>-linux-arm64.zip`   |
+| Windows, Intel/AMD                          | `xxmi-<version>-windows-x64.zip`   |
+| Windows on ARM (Snapdragon)                 | `xxmi-<version>-windows-arm64.zip` |
+| macOS, Apple Silicon (M1 or newer)          | `xxmi-<version>-macos-arm64.zip`   |
+| macOS, Intel                                | `xxmi-<version>-macos-x64.zip`     |
 
-The commands below download the right file and rename it to plain `xxmi-lsp` / `xxmi`, which
-is the name editors look for.
+The commands below download the right zip and put the two programs where editors look for
+them, under their plain names `xxmi-lsp` / `xxmi`. They look up the latest version themselves.
 
 ## Arch Linux, CachyOS, Manjaro, EndeavourOS
 
 There's no AUR package yet; install into `~/.local/bin`, which needs no root.
 
-1. **Download** (Intel/AMD; on ARM replace `linux-x64` with `linux-arm64`):
+1. **Download and extract** (Intel/AMD; on ARM replace `linux-x64` with `linux-arm64`). Needs
+   `curl` and `unzip`:
 
    ```bash
    mkdir -p ~/.local/bin
-   base=https://github.com/xxmi-lang/xxmi-lang/releases/latest/download
-   curl -fL -o ~/.local/bin/xxmi-lsp "$base/xxmi-lsp-linux-x64"
-   curl -fL -o ~/.local/bin/xxmi     "$base/xxmi-linux-x64"
-   chmod +x ~/.local/bin/xxmi-lsp ~/.local/bin/xxmi
+   version=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/xxmi-lang/xxmi-lang/releases/latest | sed 's#.*/v##')
+   base=https://github.com/xxmi-lang/xxmi-lang/releases/download/v$version
+   curl -fL -o /tmp/xxmi.zip "$base/xxmi-$version-linux-x64.zip"
+   unzip -o /tmp/xxmi.zip xxmi xxmi-lsp -d ~/.local/bin
    ```
+
+   The programs keep their executable bit from the zip.
 
 2. **Put `~/.local/bin` on your PATH**, if it isn't already (`echo $PATH` shows it). This is
    for using `xxmi` in a terminal. Editors started from the desktop may not see it, so Kate gets
@@ -100,9 +105,10 @@ In **PowerShell** (not as admin). On Windows on ARM, replace `windows-x64` with
 ```powershell
 $dir = "$env:LOCALAPPDATA\Programs\xxmi"
 New-Item -ItemType Directory -Force $dir | Out-Null
-$base = 'https://github.com/xxmi-lang/xxmi-lang/releases/latest/download'
-Invoke-WebRequest "$base/xxmi-lsp-windows-x64.exe" -OutFile "$dir\xxmi-lsp.exe"
-Invoke-WebRequest "$base/xxmi-windows-x64.exe"     -OutFile "$dir\xxmi.exe"
+$version = (Invoke-WebRequest 'https://github.com/xxmi-lang/xxmi-lang/releases/latest' -MaximumRedirection 0 -SkipHttpErrorCheck).Headers.Location -replace '.*/v', ''
+$base = "https://github.com/xxmi-lang/xxmi-lang/releases/download/v$version"
+Invoke-WebRequest "$base/xxmi-$version-windows-x64.zip" -OutFile "$env:TEMP\xxmi.zip"
+Expand-Archive "$env:TEMP\xxmi.zip" -DestinationPath $dir -Force
 Unblock-File "$dir\xxmi-lsp.exe", "$dir\xxmi.exe"
 
 # Add the folder to your user PATH (once).
@@ -120,14 +126,14 @@ you run them, because they aren't code-signed. Choose "More info" → "Run anywa
 
 ## macOS
 
-Apple Silicon (M1 or newer). On an Intel Mac, replace `darwin-arm64` with `darwin-x64`.
+Apple Silicon (M1 or newer). On an Intel Mac, replace `macos-arm64` with `macos-x64`.
 
 ```bash
 mkdir -p ~/.local/bin
-base=https://github.com/xxmi-lang/xxmi-lang/releases/latest/download
-curl -fL -o ~/.local/bin/xxmi-lsp "$base/xxmi-lsp-darwin-arm64"
-curl -fL -o ~/.local/bin/xxmi     "$base/xxmi-darwin-arm64"
-chmod +x ~/.local/bin/xxmi-lsp ~/.local/bin/xxmi
+version=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/xxmi-lang/xxmi-lang/releases/latest | sed 's#.*/v##')
+base=https://github.com/xxmi-lang/xxmi-lang/releases/download/v$version
+curl -fL -o /tmp/xxmi.zip "$base/xxmi-$version-macos-arm64.zip"
+unzip -o /tmp/xxmi.zip xxmi xxmi-lsp -d ~/.local/bin
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc   # once; zsh is the macOS default
 ```
 
@@ -140,16 +146,16 @@ System Settings → Privacy & Security → "Open Anyway", or run
 
 ## Verify the download (optional)
 
-Each release has a `SHA256SUMS` file. On Linux:
+Each release has a `SHA256SUMS` file covering the zips and the `.vsix`. On Linux (run it before
+the `unzip` step, with `$base` and `$version` from above):
 
 ```bash
-cd ~/.local/bin
 curl -fsSL -o /tmp/SHA256SUMS "$base/SHA256SUMS"
-echo "$(grep ' xxmi-lsp-linux-x64$' /tmp/SHA256SUMS | cut -d' ' -f1)  xxmi-lsp" | sha256sum -c
+cd /tmp && grep " xxmi-$version-linux-x64.zip\$" SHA256SUMS | sha256sum -c
 ```
 
 On macOS use `shasum -a 256 -c` instead of `sha256sum -c`. On Windows:
-`(Get-FileHash "$dir\xxmi-lsp.exe").Hash`, then compare it with the line in `SHA256SUMS`.
+`(Get-FileHash "$env:TEMP\xxmi.zip").Hash`, then compare it with the line in `SHA256SUMS`.
 
 ## Set up your editor
 
@@ -187,10 +193,10 @@ single mod works too; library names then come from a copy bundled with the relea
 
 ### VS Code
 
-1. Download `xxmi-lang.vsix` from the
+1. Download `xxmi-lang-<version>.vsix` from the
    [latest release](https://github.com/xxmi-lang/xxmi-lang/releases/latest) and install it:
    Extensions view → `…` → "Install from VSIX…", or run
-   `code --install-extension xxmi-lang.vsix`.
+   `code --install-extension xxmi-lang-<version>.vsix`.
 2. For syntax colors, add lupomikti's "3DMigoto INI" extension:
    - **VSCodium, Code-OSS, or Arch's `code` package** (these use Open VSX): run
      `code --install-extension AGMG.migoto-ini` (`codium …` for VSCodium), or search

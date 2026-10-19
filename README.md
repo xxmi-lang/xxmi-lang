@@ -24,21 +24,20 @@ The language rules aren't hand-written: they're extracted from the XXMI DLL sour
 
 In short, download from the [latest release](https://github.com/xxmi-lang/xxmi-lang/releases/latest):
 
-| File                   | What it is                                                                  |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `xxmi-<os>-<arch>`     | the CLI (`xxmi lint`, `xxmi index`) and, as `xxmi lsp`, the language server |
-| `xxmi-lsp-<os>-<arch>` | the language server alone, for Kate, Claude Code and other editors          |
-| `*.nupkg`              | the .NET packages (`XxmiLang`, `XxmiLang.Native.<rid>`, `XxmiLang.All`)     |
-| `xxmi-lang.vsix`       | the VS Code extension (server included)                                     |
+| File                             | What it is                                                                                                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `xxmi-<version>-<os>-<arch>.zip` | `xxmi` (the CLI: `xxmi lint`, `xxmi index`, and `xxmi lsp` for the server) and `xxmi-lsp` (the language server alone, for Kate, Claude Code and other editors) |
+| `xxmi-lang-<version>.vsix`       | the VS Code extension (server included)                                                                                                                        |
+| `SHA256SUMS`                     | checksums of the files above                                                                                                                                   |
 
-Targets: `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `darwin-x64`,
-`darwin-arm64`. The binaries are self-contained (no Node needed). Rename them to `xxmi` /
-`xxmi-lsp` (`.exe` on Windows) and put them on your `PATH`; INSTALL.md has copy-paste commands
-for each system.
+Targets: `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `macos-x64`,
+`macos-arm64`. The programs are self-contained (no Node needed). Unzip and put `xxmi` and
+`xxmi-lsp` on your `PATH`; INSTALL.md has copy-paste commands for each system. The .NET
+library (`XxmiLang`) is on nuget.org only, see [docs/10-dotnet.md](docs/10-dotnet.md).
 
 ### VS Code
 
-Install `xxmi-lang.vsix` (Extensions view → `…` → Install from VSIX). For highlighting, also
+Install `xxmi-lang-<version>.vsix` (Extensions view → `…` → Install from VSIX). For highlighting, also
 install lupomikti's "3DMigoto INI" extension: from Open VSX in VSCodium/Code-OSS
 (`AGMG.migoto-ini`), or as a `.vsix` from
 [their releases](https://github.com/lupomikti/migoto-vscode/releases/latest) in Microsoft VS

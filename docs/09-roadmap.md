@@ -65,7 +65,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 - `xxmi-lsp` with the phase 1 capabilities in `03-lsp.md`.
 - VS Code client extension; Kate config snippet; Claude Code plugin with `.lsp.json` and the `xxmi-ini-authoring` skill.
-- Single-file binaries for every target listed in `00-overview.md` via `bun build --compile`, attached to GitHub releases. The grammar `.wasm` must be embedded in the binary (not loaded from a path next to it); test the compiled binary, not just `node dist/`.
+- Single-file binaries for every target listed in `00-overview.md` via `bun build --compile`, attached to GitHub releases as one zip per platform (`scripts/bundle-release.ts`). The grammar `.wasm` must be embedded in the binary (not loaded from a path next to it); test the compiled binary, not just `node dist/`.
 - README: install steps for each editor, credits to lupomikti and the XXMI/AGMG maintainers.
 
 **Accept:** in VS Code and Kate on a real ZZZ mod: diagnostics appear, go-to-definition into ZZMI libraries works, and renaming a CommandList updates all references across files. In Claude Code, an edit that introduces an unresolved `run =` produces an XM201 diagnostic in the agent's context. `claude plugin validate ./plugin` passes. The performance targets in `03-lsp.md` hold.
@@ -124,7 +124,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 ## Delivered outside the milestones
 
-- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets and `XxmiLang.All`, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release attaches the `.nupkg` files and pushes to nuget.org when `NUGET_API_KEY` exists. A `XxmiQuery` wrapper waits for `xxmi query`.
+- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets and `XxmiLang.All`, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper waits for `xxmi query`.
 
 ## Open questions (resolve with maintainers as they come up)
 
