@@ -67,7 +67,11 @@ namespace XxmiLang
 
             string Explicit(string label, string value)
             {
-                foreach (var candidate in new[] { value, Path.Combine(value, exeName) })
+                // On Windows "C:\tools\xxmi" also finds "C:\tools\xxmi.exe".
+                var candidates = windows && !value.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                    ? new[] { value, value + ".exe", Path.Combine(value, exeName) }
+                    : new[] { value, Path.Combine(value, exeName) };
+                foreach (var candidate in candidates)
                 {
                     if (fileExists(candidate)) return Path.GetFullPath(candidate);
                 }

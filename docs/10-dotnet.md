@@ -17,7 +17,7 @@ Not included: a `XxmiQuery` wrapper. `xxmi query` is not implemented yet (`04-cl
 |---|---|
 | `XxmiLang.Core` | The definitions, with no process or file access: result types (`XxmiDiagnostic`, `LintResult`, `TextRange`, `QuickFix`, `TextEdit`, `HoverResult`, `XxmiLocation`, `CompletionItem`, `OutlineSymbol`, `RenameCheck`, `WorkspaceEdit`, `XxmiCodeAction`), `TextEdits.Apply`, the interfaces `IXxmiLinter` and `IXxmiLanguageService`, and `XxmiJsonContext` (System.Text.Json source generation). Reference it alone to write code or fakes against the interfaces |
 | `XxmiLang` | The implementation, depending on `XxmiLang.Core`: `XxmiLinter`, `XxmiLanguageService`, the JSON-RPC client, `XxmiBinaryLocator`, `XxmiOptions` and the exceptions |
-| `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (65 to 100 MB; 24 to 38 MB as a package; no Node or Bun needed). Each package is far below nuget.org's 250 MB limit |
+| `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (about 60 to 95 MB; 24 to 38 MB as a package; no Node or Bun needed). Each package is far below nuget.org's 250 MB limit |
 | `XxmiLang.All` | Meta package: `XxmiLang` (and so `XxmiLang.Core`) plus all six runtime packages |
 
 All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later.
@@ -72,7 +72,7 @@ foreach (var (path, d) in result.AllDiagnostics)
 Console.WriteLine($"{result.Summary.Files} files, {result.ErrorCount} errors, {result.WarningCount} warnings");
 ```
 
-- `LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken ct = default)`: a batch of files and folders in one process; folders are walked like the DLL does (`DISABLED*` is skipped unless named directly).
+- `LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken ct = default)`: a batch of files and folders in one process; folders are walked like the DLL does (`DISABLED*` is skipped unless named directly). An empty list throws `ArgumentException` (pass `"."` to lint the working directory).
 - `LintFileAsync(path)`: one file from disk.
 - `LintTextAsync(path, text)`: lints `text` as if it were the file at `path`, in one process that reads the text from stdin (`xxmi lint --stdin --stdin-path <path>`, `04-cli.md`). The path decides the namespace and the package, so `[TextureOverrideBody]` in `…\Mods\MyMod\mod.ini` is the same symbol as when linting the file; it need not exist and the text wins over the disk.
 - `LintResult`: `Files` (`LintFile`: absolute `Path`, `Encoding`, `Diagnostics`), `Summary` (`Files`, `Error`, `Warning`, `Info`, `Hint`), `HasErrors`, `AllDiagnostics`.
@@ -122,7 +122,7 @@ IReadOnlyList<XxmiCodeAction> fixes = await service.GetCodeActionsAsync(path, di
 
 In this order; the first match wins:
 
-1. `XxmiOptions.ExecutablePath` (a file, or a folder containing `xxmi`).
+1. `XxmiOptions.ExecutablePath` (a file, or a folder containing `xxmi`; on Windows `.exe` may be left off).
 2. The `XXMI_PATH` environment variable (same).
 3. `runtimes/<rid>/native/xxmi[.exe]` next to `XxmiLang.dll` or the app (what the runtime packages install), and `xxmi[.exe]` itself next to them (what a `-r <rid>` publish produces). `<rid>` is `win`/`linux`/`osx` plus `x64`/`arm64`, from `RuntimeInformation`.
 4. `xxmi` on `PATH`.

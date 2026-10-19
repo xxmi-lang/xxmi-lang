@@ -15,6 +15,12 @@ public class LinterTests
     private const string TypoMod = "[CommandListLocal]\nhandling = skip\n\n[TextureOverrideBody]\nhash = 1a2b3c4d\nrun = CommandListLocal\nrun = CommandListLocl\n";
 
     [Fact]
+    public async Task An_empty_path_list_is_an_ArgumentException()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => Linter.LintAsync(Array.Empty<string>()));
+    }
+
+    [Fact]
     public async Task A_clean_mod_has_no_diagnostics()
     {
         var result = await Linter.LintAsync(new[] { TestEnvironment.Mod });

@@ -30,15 +30,16 @@ namespace XxmiLang
         /// Relative paths are resolved against <see cref="XxmiOptions.WorkingDirectory"/>. Findings are not an error:
         /// the returned <see cref="LintResult"/> carries them, even when xxmi exits with code 1.
         /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="paths"/> is empty.</exception>
         /// <exception cref="XxmiBinaryNotFoundException">There is no xxmi executable.</exception>
         /// <exception cref="XxmiProcessException">xxmi failed (exit code 2 or higher), for example because a path doesn't exist.</exception>
         public async Task<LintResult> LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken cancellationToken = default)
         {
             if (paths is null) throw new ArgumentNullException(nameof(paths));
+            var targets = paths.ToList();
+            if (targets.Count == 0) throw new ArgumentException("At least one path is required.", nameof(paths));
             var workingDirectory = WorkingDirectory();
             var executable = XxmiBinaryLocator.Resolve(_options.ExecutablePath);
-            var targets = paths.ToList();
-            if (targets.Count == 0) targets.Add(".");
 
             var flags = Flags(options);
             var files = new List<LintFile>();

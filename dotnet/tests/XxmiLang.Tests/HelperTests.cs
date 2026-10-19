@@ -156,6 +156,23 @@ public class JsonRpcConnectionTests
     }
 
     [Fact]
+    public async Task Cancelling_a_pending_request_while_the_connection_closes_does_not_throw_from_Cancel()
+    {
+        using var pair = new Pair();
+        pair.A.CreateClosedException = () => Task.FromResult<Exception>(new XxmiServerExitedException("gone", 7, "boom"));
+        pair.A.Start();
+        using var cts = new CancellationTokenSource();
+        var pending = pair.A.RequestAsync("never", cts.Token);
+
+        pair.CloseB();
+        pair.A.Dispose();
+        var exception = Record.Exception(() => cts.Cancel());
+
+        Assert.Null(exception);
+        await Assert.ThrowsAnyAsync<Exception>(() => pending.WaitAsync(TimeSpan.FromSeconds(10)));
+    }
+
+    [Fact]
     public async Task A_cancelled_request_throws_and_tells_the_server()
     {
         using var pair = new Pair();

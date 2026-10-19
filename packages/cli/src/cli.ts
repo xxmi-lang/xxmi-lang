@@ -9,16 +9,14 @@ import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   ConfigError,
-  ConfigLoader,
   RULES,
   SpecLookup,
   Workspace,
-  bundledSnapshots,
   buildSnapshot,
   decodeText,
   displayPath,
   findPackageRoot,
-  lintFile,
+  lintText,
   lintPaths,
   relaunchWithWasmFlags,
   VERSION,
@@ -86,28 +84,14 @@ async function readAllStdin(): Promise<Uint8Array> {
   return Buffer.concat(chunks);
 }
 
-/**
- * Lints `text` as if it were the file at `path` (`--stdin`): the text goes into the workspace the way
- * the language server opens an editor buffer, so the namespace and the package come from `path`
- * (which doesn't have to exist). Like `xxmi lint <file>`, only that file and its package's d3dx.ini
- * includes are loaded: sibling files of the mod aren't.
- */
+/** Lints the bytes on stdin as if they were the file at `path` (`--stdin`), see `lintText`. */
 async function lintStdin(
   path: string,
   bytes: Uint8Array,
   options: LintOptions,
 ): Promise<LintResult> {
-  const full = resolve(path);
   const { text, encoding } = decodeText(bytes);
-  const workspace = new Workspace({
-    lookup: new SpecLookup(defaultSpec()),
-    snapshots: bundledSnapshots(),
-  });
-  const file = await workspace.openDocument(full, text, dirname(full));
-  const diagnostics = lintFile(file, workspace, { ...options, configs: new ConfigLoader() });
-  const summary = { files: 1, error: 0, warning: 0, info: 0, hint: 0 };
-  for (const d of diagnostics) summary[d.severity]++;
-  return { files: [{ path: file.path, encoding, diagnostics }], summary };
+  return lintText(path, text, options, encoding);
 }
 
 async function lint(args: string[], readStdin: () => Promise<Uint8Array>): Promise<number> {

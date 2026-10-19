@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ConfigError, lintPaths, parseConfig } from '../src/index.ts';
+import { ConfigError, lintPaths, lintText, parseConfig } from '../src/index.ts';
 
 function modDir(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'xxmi-engine-'));
@@ -63,5 +63,33 @@ describe('xxmi.toml', () => {
     expect(() => parseConfig('[rules]\nXM201 = "loud"\n', 'x.toml')).toThrow(ConfigError);
     expect(() => parseConfig('[rules]\nnope = "off"\n', 'x.toml')).toThrow(/unknown rule id/);
     expect(parseConfig('[rules.XM402]\nmin_repeats = 4\n', 'x.toml').rules).toEqual({});
+  });
+});
+
+describe('lintText', () => {
+  it('lints text as the file at the given path (typo gives XM201, path need not exist)', async () => {
+    const dir = modDir({});
+    const path = join(dir, 'ghost.ini');
+    const text = ['[CommandListA]', 'run = CommandListMissing', ''].join('\n');
+    const result = await lintText(path, text, { snapshots: [], rules: ['XM201'] });
+    expect(result.summary).toMatchObject({ files: 1, error: 1 });
+    expect(result.files[0]?.path).toBe(path);
+    expect(result.files[0]?.diagnostics.map((d) => d.id)).toEqual(['XM201']);
+  });
+
+  it('the text wins over the file on disk', async () => {
+    const dir = modDir({ 'mod.ini': '[CommandListB]\nrun = CommandListMissing\n' });
+    const ok = ['[CommandListA]', 'post $x = 1', ''].join('\n');
+    const result = await lintText(join(dir, 'mod.ini'), ok, { snapshots: [], rules: ['XM201'] });
+    expect(result.files[0]?.diagnostics).toEqual([]);
+  });
+
+  it('reports a typo in a file with a namespace declaration', async () => {
+    const dir = modDir({});
+    const text = ['namespace = Shared', '[CommandListA]', 'run = CommandListMissing', ''].join(
+      '\n',
+    );
+    const result = await lintText(join(dir, 'mod.ini'), text, { snapshots: [], rules: ['XM201'] });
+    expect(result.files[0]?.diagnostics).toHaveLength(1);
   });
 });

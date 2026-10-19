@@ -79,7 +79,15 @@ namespace XxmiLang
                 if (_pending.TryRemove(id, out var removed))
                 {
                     removed.TrySetCanceled(cancellationToken);
-                    _ = NotifyAsync("$/cancelRequest", new CancelParams(id), WireJsonContext.Default.CancelParams, CancellationToken.None).ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                    // Runs inside CancellationTokenSource.Cancel(): must never throw, e.g. when the connection is closing.
+                    try
+                    {
+                        _ = NotifyAsync("$/cancelRequest", new CancelParams(id), WireJsonContext.Default.CancelParams, CancellationToken.None).ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                    }
+                    catch
+                    {
+                        // The server is gone; there is nobody to cancel for.
+                    }
                 }
             }))
             {

@@ -139,6 +139,29 @@ export async function lintPaths(paths: string[], options: LintOptions = {}): Pro
       targets.push(await workspace.addTarget(file, base));
     }
   }
+  return lintTargets(targets, workspace, options);
+}
+
+/**
+ * Lints `text` as if it were the file at `path` (the CLI's `--stdin`): the text goes into the workspace
+ * the way the language server opens an editor buffer, so the namespace and the package come from `path`
+ * (which doesn't have to exist). Like `lintPaths` on a file, only that file and its package's d3dx.ini
+ * includes are loaded: sibling files of the mod aren't.
+ */
+export async function lintText(
+  path: string,
+  text: string,
+  options: LintOptions = {},
+  encoding?: TextEncoding,
+): Promise<LintResult> {
+  const lookup = options.lookup ?? new SpecLookup(defaultSpec());
+  const workspace = new Workspace({ lookup, snapshots: options.snapshots ?? bundledSnapshots() });
+  const full = resolve(path);
+  const file = await workspace.openDocument(full, text, dirname(full));
+  return lintTargets([encoding ? { ...file, encoding } : file], workspace, options);
+}
+
+function lintTargets(targets: IniFile[], workspace: Workspace, options: LintOptions): LintResult {
   const configs = options.configs ?? new ConfigLoader();
   const seen = new Set<string>();
   const files: FileResult[] = [];

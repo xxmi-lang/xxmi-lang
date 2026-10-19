@@ -112,9 +112,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      # Without this secret the packages are only attached to the GitHub release.
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -130,12 +127,32 @@ jobs:
           cd release
           files=(dist/bin/* dist/nupkg/*.nupkg packages/vscode/dist/xxmi-lang.vsix)
           sha256sum "${files[@]}" | sed 's#  .*/#  #' > SHA256SUMS
-          gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}" SHA256SUMS
+          if gh release view "$TAG" --repo "$REPO" > /dev/null 2>&1; then
+            gh release upload "$TAG" --repo "$REPO" --clobber "${files[@]}" SHA256SUMS
+          else
+            gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}" SHA256SUMS
+          fi
 
-      # nuget.org: XxmiLang.Core, the runtime packages and XxmiLang first, in that order, the XxmiLang.All meta package last.
+  # Its own job so a failed push can be re-run without touching the GitHub release.
+  nuget:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+
+      # XxmiLang.Core, the runtime packages and XxmiLang first, in that order, the XxmiLang.All meta package last.
+      # Without the NUGET_API_KEY secret the packages are only attached to the GitHub release.
       - name: Push the packages to nuget.org
-        if: ${{ env.NUGET_API_KEY != '' }}
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::NUGET_API_KEY not set, skipping nuget.org push"
+            exit 0
+          fi
           cd release/dist/nupkg
           for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
             dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

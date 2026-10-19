@@ -49,6 +49,16 @@ public class BinaryLocatorTests
     }
 
     [Fact]
+    public void On_Windows_an_explicit_path_without_exe_finds_the_exe()
+    {
+        var existing = new HashSet<string> { P("/tools", "xxmi.exe") };
+
+        Assert.Equal(Path.GetFullPath(P("/tools", "xxmi.exe")), Resolve(existing, explicitPath: P("/tools", "xxmi"), rid: "win-x64", windows: true));
+        Assert.Equal(Path.GetFullPath(P("/tools", "xxmi.exe")), Resolve(existing, environment: P("/tools", "xxmi"), rid: "win-x64", windows: true));
+        Assert.Throws<XxmiBinaryNotFoundException>(() => Resolve(existing, explicitPath: P("/tools", "xxmi")));
+    }
+
+    [Fact]
     public void The_package_binary_comes_third()
     {
         var packaged = P("/app", "runtimes", "linux-x64", "native", "xxmi");

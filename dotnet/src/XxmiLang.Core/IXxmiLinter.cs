@@ -17,7 +17,7 @@ namespace XxmiLang
     {
         /// <summary>
         /// Batch: lints files and folders (folders recursively, skipping what the package excludes, such as <c>DISABLED*</c>).
-        /// An empty list lints the working directory.
+        /// An empty list is an <see cref="System.ArgumentException"/>; pass "." to lint the working directory.
         /// </summary>
         Task<LintResult> LintAsync(IEnumerable<string> paths, LintOptions? options = null, CancellationToken cancellationToken = default);
 

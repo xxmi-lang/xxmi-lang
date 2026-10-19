@@ -18,6 +18,36 @@ public class LanguageServiceTests : IAsyncLifetime
     private static TextPosition At(int line, int character) => new TextPosition(line, character);
 
     [Fact]
+    public async Task Non_ASCII_paths_and_text_round_trip_through_the_server()
+    {
+        var directory = TestEnvironment.TempMod("");
+        var cjk = System.IO.Path.Combine(directory, "模组");
+        System.IO.Directory.CreateDirectory(cjk);
+        var path = System.IO.Path.Combine(cjk, "mod.ini");
+        // Non-ASCII in the path, in comments (an emoji is two UTF-16 units) and in the framing: the typo must land on the right line.
+        var text = "; 你好 😀\n[CommandListLocal]\nhandling = skip\n\n[TextureOverrideBody]\nhash = 1a2b3c4d\n; 😀 emoji comment\nrun = CommandListLocl\n";
+        System.IO.File.WriteAllText(path, text);
+        try
+        {
+            await _service.OpenDocumentAsync(path, text);
+            var diagnostic = Assert.Single(await _service.GetDiagnosticsAsync(path), d => d.Id == "XM201");
+            Assert.Equal(At(7, 6), diagnostic.Range.Start);
+            Assert.Contains("CommandListLocl", diagnostic.Message);
+
+            var outline = await _service.GetOutlineAsync(path);
+            Assert.Contains(outline, s => s.Name == "CommandList" && s.Children.Any(c => c.Name == "CommandListLocal"));
+
+            var actions = await _service.GetCodeActionsAsync(path, diagnostic.Range);
+            var edits = Assert.Single(Assert.Single(actions).Edit!.Changes).Value;
+            Assert.Equal(text.Replace("CommandListLocl\n", "CommandListLocal\n"), TextEdits.Apply(text, edits));
+        }
+        finally
+        {
+            System.IO.Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task A_clean_mod_has_no_diagnostics_and_an_edit_introduces_XM201()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);

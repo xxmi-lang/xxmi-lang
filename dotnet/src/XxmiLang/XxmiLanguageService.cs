@@ -605,13 +605,23 @@ namespace XxmiLang
                 Process.Dispose();
             }
 
-            public Task<Published> WaitForPublicationAsync(string uri, CancellationToken cancellationToken)
+            public async Task<Published> WaitForPublicationAsync(string uri, CancellationToken cancellationToken)
             {
                 var waiter = new TaskCompletionSource<Published>(TaskCreationOptions.RunContinuationsAsynchronously);
-                lock (_waiters) _waiters.Add((uri, waiter));
-                if (Diagnostics.TryGetValue(uri, out var already)) return Task.FromResult(already);
-                cancellationToken.Register(() => waiter.TrySetCanceled(cancellationToken));
-                return waiter.Task;
+                var entry = (uri, waiter);
+                lock (_waiters) _waiters.Add(entry);
+                try
+                {
+                    if (Diagnostics.TryGetValue(uri, out var already)) return already;
+                    using (cancellationToken.Register(() => waiter.TrySetCanceled(cancellationToken)))
+                    {
+                        return await waiter.Task.ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    lock (_waiters) _waiters.Remove(entry);
+                }
             }
 
             public string StandardErrorTail()
