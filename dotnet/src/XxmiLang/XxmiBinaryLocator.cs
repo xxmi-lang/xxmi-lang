@@ -131,7 +131,7 @@ namespace XxmiLang
                 : "Could not find the xxmi executable. Tried, in order:" + Environment.NewLine
                   + string.Join(Environment.NewLine, tried.Select(t => "  - " + t)) + Environment.NewLine
                   + "Install a runtime package (for example XxmiLang.Native." + (CurrentRuntimeIdentifier() ?? "<rid>")
-                  + " or XxmiLang.All), set XxmiOptions.ExecutablePath, or set " + EnvironmentVariable + ".";
+                  + "), set XxmiOptions.ExecutablePath, or set " + EnvironmentVariable + ".";
             return new XxmiBinaryNotFoundException(message, tried);
         }
 

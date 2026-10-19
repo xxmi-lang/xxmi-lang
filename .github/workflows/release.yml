@@ -45,7 +45,7 @@ jobs:
 
       - run: pnpm --filter ./packages/vscode run package
 
-      # docs/10-dotnet.md: XxmiLang.Core, XxmiLang.Native.<rid> for the six targets, XxmiLang, XxmiLang.All.
+      # docs/10-dotnet.md: XxmiLang.Core, XxmiLang.Native.<rid> for the six targets, XxmiLang.
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
@@ -68,7 +68,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: nupkg
-          path: dist/nupkg/*.nupkg
+          path: |
+            dist/nupkg/*.nupkg
+            dist/nupkg/*.snupkg
           if-no-files-found: error
 
   smoke:
@@ -198,14 +200,14 @@ jobs:
         with:
           user: ${{ vars.NUGET_USER }}
 
-      # XxmiLang.Core, the runtime packages and XxmiLang first, in that order, the XxmiLang.All meta package last.
+      # XxmiLang.Core, the runtime packages and XxmiLang first, in that order.
       - name: Push the packages to nuget.org
         if: steps.user.outputs.set == 'true'
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           cd nupkg
-          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
+          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg; do
             dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done
 

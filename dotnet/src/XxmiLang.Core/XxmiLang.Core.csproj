@@ -5,13 +5,13 @@
   <PropertyGroup>
     <RootNamespace>XxmiLang</RootNamespace>
     <AssemblyName>XxmiLang.Core</AssemblyName>
-    <Description>The shared definitions of the xxmi-lang .NET library: diagnostics, locations, edits and the other result types, the IXxmiLinter and IXxmiLanguageService interfaces, and a source-generated System.Text.Json context for them. No process or file access; trim and Native AOT compatible. XxmiLang implements the interfaces over the xxmi binary.</Description>
+    <Description>Shared models and interfaces of the xxmi-lang .NET library for XXMI / 3DMigoto mod .ini files: diagnostics, locations, edits, IXxmiLinter and IXxmiLanguageService, and a source-generated System.Text.Json context. No I/O; trim and Native AOT safe. XxmiLang implements the interfaces.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
     <InternalsVisibleTo Include="XxmiLang.Core.Tests" />
   </ItemGroup>
 

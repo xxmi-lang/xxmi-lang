@@ -19,15 +19,29 @@
 
   <!-- NuGet metadata shared by every package. -->
   <PropertyGroup>
-    <Authors>xxmi-lang contributors</Authors>
+    <Authors>xxmi-lang</Authors>
+    <Company>xxmi-lang</Company>
+    <Product>xxmi-lang</Product>
     <Copyright>Copyright (c) xxmi-lang contributors</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/xxmi-lang/xxmi-lang</PackageProjectUrl>
     <RepositoryUrl>https://github.com/xxmi-lang/xxmi-lang</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>xxmi;3dmigoto;ini;linter;lsp;zzz;modding</PackageTags>
+    <PackageTags>xxmi;3dmigoto;migoto;zzmi;gimi;srmi;wwmi;himi;ini;mod;modding;linter;lint;lsp;language-server;analyzer</PackageTags>
+    <PackageReleaseNotes>https://github.com/xxmi-lang/xxmi-lang/releases/tag/v$(Version)</PackageReleaseNotes>
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts/nupkg/</PackageOutputPath>
+  </PropertyGroup>
+
+  <!-- Reproducible builds and source link for CI (the release workflow sets GITHUB_ACTIONS). -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Treat pack warnings (NU5xxx) as errors so incomplete metadata can't be published. -->
+    <WarningsAsErrors>$(WarningsAsErrors);NU5101;NU5102;NU5104;NU5105;NU5106;NU5110;NU5111;NU5112;NU5114;NU5115;NU5118;NU5119;NU5121;NU5123;NU5124;NU5125;NU5126;NU5127;NU5129;NU5130;NU5131;NU5132;NU5133;NU5134;NU5135;NU5136;NU5137;NU5138;NU5139;NU5140;NU5141;NU5142;NU5143;NU5144;NU5145;NU5146;NU5147;NU5148;NU5149;NU5150;NU5151;NU5152;NU5153;NU5154;NU5155;NU5156;NU5157;NU5158;NU5159;NU5160;NU5161;NU5162;NU5163;NU5164;NU5165;NU5166;NU5167;NU5168;NU5169;NU5170;NU5171;NU5172;NU5173;NU5174;NU5175</WarningsAsErrors>
   </PropertyGroup>
 
 </Project>

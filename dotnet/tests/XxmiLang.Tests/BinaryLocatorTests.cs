@@ -116,7 +116,7 @@ public class BinaryLocatorTests
         Assert.Contains("XXMI_PATH", error.Message);
         Assert.Contains("runtimes", error.Message);
         Assert.Contains("PATH: no xxmi in 2 folders", error.Message);
-        Assert.Contains("XxmiLang.All", error.Message);
+        Assert.Contains("XxmiLang.Native.", error.Message);
     }
 
     [Fact]
