@@ -126,8 +126,9 @@ jobs:
           "$xxmi" --version
           "$lsp" --version
           "$xxmi" lint fixtures/rules/XM201/good.ini
-          XXMI_LSP_COMMAND="[\"$lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"$xxmi\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
+          # Relative paths: Node on Windows can't spawn the MSYS-style /d/a/... path of $PWD.
+          XXMI_LSP_COMMAND="[\"unzipped/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"unzipped/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
 
       # Install the packages built above in a fresh app, with no XXMI_PATH (docs/10-dotnet.md).
       - uses: actions/setup-dotnet@v4
