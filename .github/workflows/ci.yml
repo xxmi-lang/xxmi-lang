@@ -132,6 +132,53 @@ jobs:
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
+  dotnet:
+    # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      XXMI_PATH: ${{ github.workspace }}/dist/bin/xxmi${{ runner.os == 'Windows' && '.exe' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The binaries' entry (scripts/bin/embedded.ts) embeds packages/core/dist/spec.json.
+      - run: pnpm build
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: pnpm build:binaries --target host
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Test against XXMI_PATH (XxmiLang built for net8.0)
+        run: dotnet test dotnet/ --configuration Release
+
+      - name: Test against XXMI_PATH (XxmiLang built for netstandard2.0)
+        run: dotnet test dotnet/ --configuration Release -p:XxmiLibraryTfm=netstandard2.0
+
+      # Packs this machine's runtime package and installs it in a fresh app (the script drops XXMI_PATH).
+      - name: Packages work from a local feed
+        shell: bash
+        run: |
+          node scripts/pack-dotnet.ts --host --out "$RUNNER_TEMP/nupkg"
+          node scripts/smoke-dotnet.ts --feed "$RUNNER_TEMP/nupkg"
+
   vscode:
     # A real VS Code (downloaded by @vscode/test-electron) with the bundled extension.
     runs-on: ubuntu-latest
