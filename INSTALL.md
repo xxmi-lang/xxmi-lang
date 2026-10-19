@@ -45,7 +45,9 @@ There's no AUR package yet; install into `~/.local/bin`, which needs no root.
    chmod +x ~/.local/bin/xxmi-lsp ~/.local/bin/xxmi
    ```
 
-2. **Put `~/.local/bin` on your PATH**, if it isn't already (`echo $PATH` shows it).
+2. **Put `~/.local/bin` on your PATH**, if it isn't already (`echo $PATH` shows it). This is
+   for using `xxmi` in a terminal. Editors started from the desktop may not see it, so Kate gets
+   the full path instead ([why](#what-putting-it-on-path-does-and-doesnt-do)).
    - **CachyOS uses fish by default.** Run once:
 
      ```fish
@@ -151,6 +153,34 @@ On macOS use `shasum -a 256 -c` instead of `sha256sum -c`. On Windows:
 
 ## Set up your editor
 
+### What putting it on PATH does, and doesn't do
+
+Installing the binary and adding its folder to PATH only lets programs **find** `xxmi-lsp`.
+Each editor still has to be told to **start** it for `.ini` files, which is what the steps below
+do:
+
+| Editor                | What it needs besides the binary                                                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| VS Code               | Nothing: the extension has its own copy and ignores PATH.                                                                                                                                                                      |
+| Kate                  | The LSP Client plugin enabled, the server settings pasted in, and the Migoto syntax file. The settings only start the server for files in **Migoto** mode, so a file opened as plain "INI Files" gets no errors or navigation. |
+| Claude Code           | The `xxmi` plugin. Its `.lsp.json` says "run `xxmi-lsp` for `.ini`", and the program is found through PATH.                                                                                                                    |
+| Neovim, Helix, Zed, … | An entry in that editor's LSP config.                                                                                                                                                                                          |
+
+**PATH changes reach terminals, not always desktop apps.** `fish_add_path`, `~/.bashrc` and
+`~/.zshrc` set the PATH for shells you open in a terminal. An app started from the desktop (the
+KDE menu, GNOME's overview, the macOS Dock or Finder) gets its PATH from the desktop session
+instead, which doesn't read those files. So it may not see `~/.local/bin`, even though
+`xxmi-lsp --version` works in your terminal. This trips up CachyOS in particular, where fish is
+the default shell and the desktop session never reads fish's config. A program started _from_ a
+terminal inherits the terminal's PATH, which is why the same editor can work when launched one
+way and not the other.
+
+The reliable fix is to give the editor the **full path** to `xxmi-lsp` instead of relying on
+PATH, as the Kate steps below do. Windows is the exception: the PowerShell commands above set
+the PATH for the whole user account, and apps you start afterwards see it.
+
+### Open the right folder
+
 Open your **ZZMI folder** (the one with `d3dx.ini`), not just a single mod. References like
 `run = CommandList\ZZMI\SetTextures` then resolve against your installed libraries. Opening a
 single mod works too; library names then come from a copy bundled with the release.
@@ -187,13 +217,15 @@ See [clients/kate/README.md](clients/kate/README.md) for the full steps. In shor
    On Windows the folder is `%USERPROFILE%\AppData\Local\org.kde.syntax-highlighting\syntax`.
 
 2. Enable Settings → Configure Kate → Plugins → **LSP Client**.
-3. In Settings → Configure Kate → LSP Client → **User Server Settings**, paste:
+3. In Settings → Configure Kate → LSP Client → **User Server Settings**, paste this, with the
+   **full path** to `xxmi-lsp` in `command`
+   ([why](#what-putting-it-on-path-does-and-doesnt-do)):
 
    ```json
    {
      "servers": {
        "migoto": {
-         "command": ["xxmi-lsp", "--stdio"],
+         "command": ["/home/YOUR_NAME/.local/bin/xxmi-lsp", "--stdio"],
          "highlightingModeRegex": "^Migoto$",
          "rootIndicationFileNames": ["d3dx.ini", "xxmi.toml"]
        }
@@ -201,8 +233,14 @@ See [clients/kate/README.md](clients/kate/README.md) for the full steps. In shor
    }
    ```
 
-   On Windows, if Kate doesn't find the program, use the full path:
-   `"command": ["C:\\Users\\YOU\\AppData\\Local\\Programs\\xxmi\\xxmi-lsp.exe", "--stdio"]`.
+   Get your exact path with `echo ~/.local/bin/xxmi-lsp` in a terminal (on macOS it starts with
+   `/Users/` instead of `/home/`). Write it out in full: Kate starts the program directly, not
+   through a shell, so `~` and `$HOME` aren't expanded there.
+
+   On Windows, `"command": ["xxmi-lsp.exe", "--stdio"]` works once the PATH step is done. The
+   full path also works:
+   `"command": ["C:\\Users\\YOU\\AppData\\Local\\Programs\\xxmi\\xxmi-lsp.exe", "--stdio"]`
+   (each `\` doubled, as JSON requires).
 
 4. Restart Kate and open a mod `.ini`. If it opens as "INI Files", switch it to **Migoto** in
    Tools → Mode.
@@ -214,8 +252,11 @@ claude plugin marketplace add xxmi-lang/xxmi-lang
 claude plugin install xxmi@xxmi-lang
 ```
 
-The plugin runs the `xxmi-lsp` on your PATH, so install it first (above) and start Claude Code
-from a new terminal afterwards. After each edit to an `.ini` file, the agent sees the errors.
+The plugin runs the `xxmi-lsp` it finds on PATH, so install it first (above) and start Claude
+Code from a new terminal afterwards. After each edit to an `.ini` file, the agent sees the
+errors. Starting Claude Code from a terminal also avoids the
+[desktop PATH problem](#what-putting-it-on-path-does-and-doesnt-do). If you use it from an app
+launched from the desktop instead and the errors don't show up, that's the likely cause.
 
 ### Other editors
 
@@ -238,9 +279,17 @@ haven't tested configurations for these yet.
   keep the old one, so restart them too (on Linux, log out and in).
 - **`Illegal instruction` on Linux or Windows x64.** The x64 builds need a CPU from roughly
   2013 or newer (AVX2). Please open an issue; a build for older CPUs can be added.
-- **Kate shows no errors.** Check that the file is in **Migoto** mode (Tools → Mode) and that
-  `xxmi-lsp --version` works in a terminal. Kate's "Output" tool view (LSP Client tab) shows
-  server messages.
+- **`xxmi-lsp --version` works in a terminal, but Kate (or another editor) can't start it.**
+  The editor was started from the desktop and doesn't have your terminal's PATH
+  ([explanation](#what-putting-it-on-path-does-and-doesnt-do)). Put the full path in its config,
+  e.g. `"command": ["/home/YOUR_NAME/.local/bin/xxmi-lsp", "--stdio"]` in Kate.
+- **Kate shows no errors.** Check, in order:
+  1. The file is in **Migoto** mode (Tools → Mode). If it says "INI Files", the server isn't
+     started for it.
+  2. The `command` in the LSP settings is a full path that exists. Check with
+     `ls -l /home/YOUR_NAME/.local/bin/xxmi-lsp`.
+  3. Kate's **Output** tool view (LSP Client messages) says whether the server started or why it
+     failed.
 - **"Unresolved … CommandList\ZZMI\…" errors.** Open the ZZMI folder (with `d3dx.ini`) rather
   than only the mod. The tools then read your installed libraries instead of the copy bundled with
   the release, which may be older than your ZZMI.
