@@ -24,11 +24,12 @@ The language rules aren't hand-written: they're extracted from the XXMI DLL sour
 
 In short, download from the [latest release](https://github.com/xxmi-lang/xxmi-lang/releases/latest):
 
-| File                   | What it is                                                   |
-| ---------------------- | ------------------------------------------------------------ |
-| `xxmi-<os>-<arch>`     | the CLI (`xxmi lint`, `xxmi index`)                          |
-| `xxmi-lsp-<os>-<arch>` | the language server, for Kate, Claude Code and other editors |
-| `xxmi-lang.vsix`       | the VS Code extension (server included)                      |
+| File                   | What it is                                                                  |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `xxmi-<os>-<arch>`     | the CLI (`xxmi lint`, `xxmi index`) and, as `xxmi lsp`, the language server |
+| `xxmi-lsp-<os>-<arch>` | the language server alone, for Kate, Claude Code and other editors          |
+| `*.nupkg`              | the .NET packages (`XxmiLang`, `XxmiLang.Native.<rid>`, `XxmiLang.All`)     |
+| `xxmi-lang.vsix`       | the VS Code extension (server included)                                     |
 
 Targets: `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `darwin-x64`,
 `darwin-arm64`. The binaries are self-contained (no Node needed). Rename them to `xxmi` /
@@ -62,12 +63,24 @@ The plugin starts `xxmi-lsp` (it must be on your `PATH`) for `.ini` files and ad
 `xxmi-ini-authoring` skill. Enable it per project, in your mod or package folder. Diagnostics
 reach the agent after its edits.
 
+### .NET
+
+```bash
+dotnet add package XxmiLang
+dotnet add package XxmiLang.Native.win-x64      # or linux-x64, osx-arm64, …; XxmiLang.All has all six
+```
+
+A typed C# client over the same binary: `XxmiLinter.LintAsync(paths)` and a long-lived
+`XxmiLanguageService` (diagnostics, hover, definition, references, completion, outline, rename,
+quick fixes). See [docs/10-dotnet.md](docs/10-dotnet.md).
+
 ### Command line
 
 ```bash
 xxmi lint path/to/mod                  # text output; exit 1 if there are errors
 xxmi lint path/to/mod --format json    # schema: packages/cli/schema/lint-output.v1.json
 xxmi lint --help                       # every rule, with its default severity
+xxmi lsp --stdio                       # the language server (same as xxmi-lsp)
 ```
 
 A mod linted on its own still resolves `CommandList\ZZMI\…`: the release bundles the ZZMI

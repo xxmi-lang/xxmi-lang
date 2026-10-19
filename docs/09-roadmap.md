@@ -122,6 +122,10 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 - Additional game profiles (GIMI, SRMI, WWMI, HIMI) as data.
 - Plugin evals (`07-agent-integration.md`).
 
+## Delivered outside the milestones
+
+- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets and `XxmiLang.All`, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release attaches the `.nupkg` files and pushes to nuget.org when `NUGET_API_KEY` exists. A `XxmiQuery` wrapper waits for `xxmi query`.
+
 ## Open questions (resolve with maintainers as they come up)
 
 1. Official names: `xxmi-lang` / `xxmi` OK? npm scope? Domain for the MCP server?

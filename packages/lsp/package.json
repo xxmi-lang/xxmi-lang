@@ -12,6 +12,11 @@
       "source": "./src/server.ts",
       "types": "./dist/server.d.ts",
       "default": "./dist/server.js"
+    },
+    "./main": {
+      "source": "./src/main.ts",
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
     }
   },
   "files": [

@@ -193,6 +193,9 @@ importers:
       '@xxmi-lang/core':
         specifier: workspace:*
         version: link:../core
+      '@xxmi-lang/lsp':
+        specifier: workspace:*
+        version: link:../lsp
     devDependencies:
       ajv:
         specifier: ^8.20.0

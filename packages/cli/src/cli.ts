@@ -13,18 +13,23 @@ import {
   SpecLookup,
   Workspace,
   buildSnapshot,
+  decodeText,
   displayPath,
   findPackageRoot,
+  lintText,
   lintPaths,
   relaunchWithWasmFlags,
   VERSION,
   defaultSpec,
+  type LintOptions,
   type LintResult,
 } from '@xxmi-lang/core';
 
 const USAGE = `Usage:
   xxmi lint [paths…] [--format text|json] [--rules XM201,XM202] [--max-warnings N]
+  xxmi lint --stdin --stdin-path <path> [--format text|json] [--rules …] [--max-warnings N]
   xxmi index <package dir> --out FILE [--name NAME]
+  xxmi lsp [--stdio]
 
 Run \`xxmi <command> --help\` for details.`;
 
@@ -72,7 +77,24 @@ export function formatJson(result: LintResult): string {
   );
 }
 
-async function lint(args: string[]): Promise<number> {
+/** Everything of stdin as bytes. */
+async function readAllStdin(): Promise<Uint8Array> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  return Buffer.concat(chunks);
+}
+
+/** Lints the bytes on stdin as if they were the file at `path` (`--stdin`), see `lintText`. */
+async function lintStdin(
+  path: string,
+  bytes: Uint8Array,
+  options: LintOptions,
+): Promise<LintResult> {
+  const { text, encoding } = decodeText(bytes);
+  return lintText(path, text, options, encoding);
+}
+
+async function lint(args: string[], readStdin: () => Promise<Uint8Array>): Promise<number> {
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
@@ -80,15 +102,21 @@ async function lint(args: string[]): Promise<number> {
       format: { type: 'string', default: 'text' },
       rules: { type: 'string' },
       'max-warnings': { type: 'string' },
+      stdin: { type: 'boolean', default: false },
+      'stdin-path': { type: 'string' },
       help: { type: 'boolean', default: false },
     },
   });
   if (values.help) {
     console.log(`xxmi lint [paths…]  Lint .ini files and folders (default: .)
+xxmi lint --stdin --stdin-path <path>  Lint the text on stdin as if it were the file <path>
 
   --format text|json   output format (default text)
   --rules XM201,XM202  run only these rules
   --max-warnings N     exit 1 if there are more than N warnings
+  --stdin              read one file's text from stdin instead of from disk
+  --stdin-path <path>  with --stdin: the file the text stands for. Its namespace and package come
+                       from this path, which doesn't need to exist; paths in the output are this one
 
 Rules:
 ${RULES.map((r) => `  ${r.id}  ${r.severity.padEnd(7)}  ${r.description}`).join('\n')}`);
@@ -108,16 +136,24 @@ ${RULES.map((r) => `  ${r.id}  ${r.severity.padEnd(7)}  ${r.description}`).join(
     if (!Number.isInteger(maxWarnings) || maxWarnings < 0)
       throw new UsageError('--max-warnings must be a non-negative integer');
   }
-  const paths = positionals.length > 0 ? positionals : ['.'];
-  for (const p of paths) {
-    try {
-      statSync(p);
-    } catch {
-      throw new UsageError(`no such file or directory: ${p}`);
+  const options: LintOptions = rules ? { rules } : {};
+  let result: LintResult;
+  if (values.stdin) {
+    if (!values['stdin-path']) throw new UsageError('--stdin needs --stdin-path <path>');
+    if (positionals.length > 0) throw new UsageError('--stdin lints stdin only; drop the paths');
+    result = await lintStdin(values['stdin-path'], await readStdin(), options);
+  } else {
+    if (values['stdin-path'] !== undefined) throw new UsageError('--stdin-path needs --stdin');
+    const paths = positionals.length > 0 ? positionals : ['.'];
+    for (const p of paths) {
+      try {
+        statSync(p);
+      } catch {
+        throw new UsageError(`no such file or directory: ${p}`);
+      }
     }
+    result = await lintPaths(paths, options);
   }
-
-  const result = await lintPaths(paths, rules ? { rules } : {});
   console.log(values.format === 'json' ? formatJson(result) : formatText(result));
   if (result.summary.error > 0) return 1;
   if (maxWarnings !== undefined && result.summary.warning > maxWarnings) return 1;
@@ -173,14 +209,35 @@ globals and namespaces of d3dx.ini and every file it includes.`);
   return 0;
 }
 
-export async function main(argv: string[]): Promise<number> {
+/** `xxmi lsp`: the same language server as `xxmi-lsp`, so one binary can serve both. */
+async function lsp(args: string[]): Promise<number> {
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`xxmi lsp [--stdio]
+
+Starts the language server for XXMI / 3DMigoto mod .ini files on stdin/stdout, exactly like
+\`xxmi-lsp\`. stdio is the only transport, so --stdio is optional.`);
+    return 0;
+  }
+  // Loaded on demand: the server (and vscode-languageserver) isn't needed by the other commands.
+  const { main: startLsp } = await import('@xxmi-lang/lsp/main');
+  startLsp(args);
+  return 0; // the connection keeps the process alive until the client exits
+}
+
+/** `readStdin` is replaceable for tests. */
+export async function main(
+  argv: string[],
+  readStdin: () => Promise<Uint8Array> = readAllStdin,
+): Promise<number> {
   const [command, ...rest] = argv;
   try {
     switch (command) {
       case 'lint':
-        return await lint(rest);
+        return await lint(rest, readStdin);
       case 'index':
         return await index(rest);
+      case 'lsp':
+        return await lsp(rest);
       case '--version':
       case '-v':
         console.log(VERSION);

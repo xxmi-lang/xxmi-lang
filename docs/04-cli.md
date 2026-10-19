@@ -10,6 +10,7 @@ xxmi lint [paths…]            Lint files/folders. Default path: .
     --rules XM201,XM202       only these
     --fix                     apply safe quick fixes in place
     --max-warnings N          exit 1 if exceeded
+    --stdin --stdin-path P    lint the text on stdin as if it were the file P
 
 xxmi fmt [paths…]             Format in place
     --check                   exit 1 if anything would change (CI)
@@ -35,6 +36,8 @@ xxmi query <kind> [name]      Read-only lookups (used by skills and MCP)
 
 xxmi index [dir] --out FILE   Build a symbol index snapshot (used for the bundled library snapshot and MCP)
 
+xxmi lsp [--stdio]            The language server (same as `xxmi-lsp`; stdio is the only transport)
+
 xxmi spec extract --dll DIR   Same as `pnpm spec:extract`, for maintainers
 ```
 
@@ -42,7 +45,9 @@ xxmi spec extract --dll DIR   Same as `pnpm spec:extract`, for maintainers
 
 - `xxmi lint` with `--format text|json`, `--rules` and `--max-warnings`. Not yet: `sarif`, `--fix`, and the `--json` alias. `xxmi lint --help` lists every rule.
 - A folder is linted like the DLL walks `include_recursive`: files and folders matching the package's `exclude_recursive` globs (`DISABLED*`, `desktop.ini` in ZZMI) are skipped. Name a disabled file or folder directly to lint it anyway.
+- `xxmi lint --stdin --stdin-path <path>` lints one file's text from stdin as if it were the file at `<path>`. The path decides the namespace and the package (the nearest `d3dx.ini` above it), exactly as for `xxmi lint <path>`, and does not have to exist; the text wins over what is on disk. The output is the usual text or JSON for that one path. Like linting a single file, it loads that file and the package's `d3dx.ini` includes, not the other files of the mod folder. Combining `--stdin` with paths, `--stdin` without `--stdin-path`, or `--stdin-path` alone is a usage error (exit 2). The text may be UTF-8 with or without a BOM. It uses the workspace's editor-buffer overlay (`Workspace.openDocument`), the same as the language server, so editors and the .NET library (`10-dotnet.md`, `LintTextAsync`) can check unsaved text with one process.
 - `xxmi index <package dir> --out FILE [--name NAME]`.
+- `xxmi lsp [--stdio]`: starts the same language server as `xxmi-lsp` (`03-lsp.md`) on stdin/stdout, so one binary can serve both; the server code is loaded only for this command. `xxmi-lsp` keeps working. The .NET library (`10-dotnet.md`) uses it. CI runs the LSP protocol tests against `xxmi lsp` of the compiled binary (`XXMI_LSP_COMMAND`).
 - `xxmi spec extract` is still `pnpm spec:extract`. From the repo: `pnpm xxmi …` runs the CLI from source.
 
 ## Output

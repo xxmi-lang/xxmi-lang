@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../AotLibrary.props" />
+
+  <PropertyGroup>
+    <RootNamespace>XxmiLang</RootNamespace>
+    <AssemblyName>XxmiLang</AssemblyName>
+    <Description>Typed .NET client for the xxmi-lang tooling: lint and analyse XXMI / 3DMigoto mod .ini files, and talk to the xxmi language server. Implements the interfaces of XxmiLang.Core. Add an XxmiLang.Native.* package (or XxmiLang.All) for the xxmi binary. Trim and Native AOT compatible.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Missing XML docs on internals are fine; public API is documented. -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../XxmiLang.Core/XxmiLang.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <InternalsVisibleTo Include="XxmiLang.Tests" />
+  </ItemGroup>
+
+</Project>

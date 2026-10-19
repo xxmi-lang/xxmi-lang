@@ -20,7 +20,8 @@
     "dev": "node --conditions=source src/cli.ts"
   },
   "dependencies": {
-    "@xxmi-lang/core": "workspace:*"
+    "@xxmi-lang/core": "workspace:*",
+    "@xxmi-lang/lsp": "workspace:*"
   },
   "devDependencies": {
     "ajv": "^8.20.0"

@@ -1,0 +1,5 @@
+[*.cs]
+indent_size = 4
+
+[*.nuspec]
+indent_size = 2

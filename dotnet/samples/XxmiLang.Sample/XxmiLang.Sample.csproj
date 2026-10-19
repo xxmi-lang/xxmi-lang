@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- Native AOT: dotnet publish -c Release -r <rid> gives a single native executable (no .NET runtime needed).
+         The XxmiLang libraries are trim and AOT compatible, so this publishes without warnings. Any trim or AOT
+         warning is an error here. -->
+    <PublishAot>true</PublishAot>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- To use the NuGet packages instead: replace the project reference with
+         <PackageReference Include="XxmiLang" /> and <PackageReference Include="XxmiLang.Native.<rid>" />. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/XxmiLang/XxmiLang.csproj" />
+  </ItemGroup>
+
+</Project>

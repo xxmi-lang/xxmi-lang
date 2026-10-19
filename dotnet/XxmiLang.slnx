@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/XxmiLang.All/XxmiLang.All.csproj" />
+    <Project Path="src/XxmiLang.Core/XxmiLang.Core.csproj" />
+    <Project Path="src/XxmiLang.Native/XxmiLang.Native.csproj" />
+    <Project Path="src/XxmiLang/XxmiLang.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/XxmiLang.Core.Tests/XxmiLang.Core.Tests.csproj" />
+    <Project Path="tests/XxmiLang.Tests/XxmiLang.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/XxmiLang.Sample/XxmiLang.Sample.csproj" />
+  </Folder>
+</Solution>
