@@ -69,7 +69,7 @@ reach the agent after its edits.
 
 ```bash
 dotnet add package XxmiLang
-dotnet add package XxmiLang.Native.win-x64      # or linux-x64, osx-arm64, …; XxmiLang.All has all six
+dotnet add package XxmiLang.Native.win-x64      # or linux-x64, osx-arm64, …: the platform(s) you ship
 ```
 
 A typed C# client over the same binary: `XxmiLinter.LintAsync(paths)` and a long-lived

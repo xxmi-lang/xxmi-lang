@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/XxmiLang.All/XxmiLang.All.csproj" />
     <Project Path="src/XxmiLang.Core/XxmiLang.Core.csproj" />
     <Project Path="src/XxmiLang.Native/XxmiLang.Native.csproj" />
     <Project Path="src/XxmiLang/XxmiLang.csproj" />

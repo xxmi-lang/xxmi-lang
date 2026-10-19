@@ -18,9 +18,8 @@ Not included: a `XxmiQuery` wrapper. `xxmi query` is not implemented yet (`04-cl
 | `XxmiLang.Core` | The definitions, with no process or file access: result types (`XxmiDiagnostic`, `LintResult`, `TextRange`, `QuickFix`, `TextEdit`, `HoverResult`, `XxmiLocation`, `CompletionItem`, `OutlineSymbol`, `RenameCheck`, `WorkspaceEdit`, `XxmiCodeAction`), `TextEdits.Apply`, the interfaces `IXxmiLinter` and `IXxmiLanguageService`, and `XxmiJsonContext` (System.Text.Json source generation). Reference it alone to write code or fakes against the interfaces |
 | `XxmiLang` | The implementation, depending on `XxmiLang.Core`: `XxmiLinter`, `XxmiLanguageService`, the JSON-RPC client, `XxmiBinaryLocator`, `XxmiOptions` and the exceptions |
 | `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (about 60 to 95 MB; 24 to 38 MB as a package; no Node or Bun needed). Each package is far below nuget.org's 250 MB limit |
-| `XxmiLang.All` | Meta package: `XxmiLang` (and so `XxmiLang.Core`) plus all six runtime packages |
 
-All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later.
+All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later. Each package has its own README, description and tags, and release notes pointing at the GitHub release. `XxmiLang` and `XxmiLang.Core` also publish symbol packages (`.snupkg`, source-linked to GitHub) so you can step into them.
 
 ## Install
 
@@ -30,14 +29,10 @@ All target `net10.0` and have the repo's release version (`packages/core/src/ver
 
 ```bash
 dotnet add package XxmiLang
-dotnet add package XxmiLang.Native.win-x64        # the platform(s) you run on
-# or, for an app that must run anywhere:
-dotnet add package XxmiLang.All
+dotnet add package XxmiLang.Native.win-x64        # the platform(s) you ship
 ```
 
-`XxmiLang.All` copies all six binaries (about 500 MB) into a framework-dependent app's `bin/` and publish folder. If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one, so prefer the single runtime package for a shipped app and keep `XxmiLang.All` for development tools and prototypes.
-
-Pick your platform's `XxmiLang.Native.<rid>` (`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`) or `XxmiLang.All`.
+Add `XxmiLang` plus one `XxmiLang.Native.<rid>` per platform your app runs on (`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`). Each adds one binary (24 to 38 MB as a package). If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one. There is no meta package that pulls in all six (`XxmiLang.All` existed in 0.1.1 only and was removed in 0.1.2).
 
 GitHub Packages (the repo's "Packages" sidebar) is a mirror for visibility. Installing from it needs a source `https://nuget.pkg.github.com/xxmi-lang/index.json` and a GitHub token with `read:packages`, even for public packages; nuget.org needs nothing, so prefer it.
 
@@ -54,7 +49,7 @@ node scripts/pack-dotnet.ts --host --out ~/xxmi-nupkgs  # XxmiLang.Core, XxmiLan
 node scripts/smoke-dotnet.ts --feed ~/xxmi-nupkgs       # optional: installs them in a fresh app and lints a fixture
 ```
 
-(`node scripts/pack-dotnet.ts` without `--host` packs all six runtime packages and `XxmiLang.All` from the binaries of `pnpm build:binaries`. NuGet caches packages by id and version: if you repack the same version, delete `~/.nuget/packages/xxmilang*` first.)
+(`node scripts/pack-dotnet.ts` without `--host` packs all six runtime packages from the binaries of `pnpm build:binaries`. NuGet caches packages by id and version: if you repack the same version, delete `~/.nuget/packages/xxmilang*` first.)
 
 Or skip NuGet and reference the project: `<ProjectReference Include="…/xxmi-lang/dotnet/src/XxmiLang/XxmiLang.csproj" />` (it brings `XxmiLang.Core`) plus `XXMI_PATH` pointing at `dist/bin/xxmi`.
 
@@ -177,7 +172,7 @@ Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tes
 
 ## Releasing
 
-`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last). The `nuget` job is separate, so a failed push can be re-run on its own. The `github-packages` job (the reusable `github-packages.yml`) pushes the same artifact, in the same order, to GitHub Packages; it is independent of the `nuget` job, so neither blocks the other.
+`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang`, in that order). The `nuget` job is separate, so a failed push can be re-run on its own. The `github-packages` job (the reusable `github-packages.yml`) pushes the same artifact, in the same order, to GitHub Packages; it is independent of the `nuget` job, so neither blocks the other.
 
 ### Publishing (maintainers)
 
@@ -199,7 +194,7 @@ nuget.org push` as a warning and succeeds without pushing.
 
 ### GitHub Packages mirror (maintainers)
 
-`github-packages.yml` downloads the `nupkg` artifact of a release run and pushes it to `https://nuget.pkg.github.com/xxmi-lang/index.json` with the workflow's `GITHUB_TOKEN` (`packages: write`; no secret to set up) and `--skip-duplicate`. The packages carry `RepositoryUrl` (`dotnet/Directory.Build.props`, and the `XxmiLang.All` nuspec), which is how GitHub links them to this repo and lists them in its sidebar. Release runs call it from the `github-packages` job automatically.
+`github-packages.yml` downloads the `nupkg` artifact of a release run and pushes it to `https://nuget.pkg.github.com/xxmi-lang/index.json` with the workflow's `GITHUB_TOKEN` (`packages: write`; no secret to set up) and `--skip-duplicate`. The packages carry `RepositoryUrl` (`dotnet/Directory.Build.props`), which is how GitHub links them to this repo and lists them in its sidebar. Release runs call it from the `github-packages` job automatically.
 
 To backfill a release that was published before the mirror existed (or to re-push), pass its release run id:
 

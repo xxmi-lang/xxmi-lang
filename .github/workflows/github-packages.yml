@@ -39,12 +39,12 @@ jobs:
           run-id: ${{ inputs.run-id || inputs.run_id || github.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Same order as nuget.org: XxmiLang.Core, the runtime packages and XxmiLang, then XxmiLang.All.
+      # Same order as nuget.org: XxmiLang.Core, the runtime packages and XxmiLang.
       - name: Push the packages to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd nupkg
-          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
+          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg; do
             dotnet nuget push "$f" --api-key "$GITHUB_TOKEN" --source https://nuget.pkg.github.com/xxmi-lang/index.json --skip-duplicate
           done

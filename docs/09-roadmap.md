@@ -124,7 +124,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 ## Delivered outside the milestones
 
-- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets and `XxmiLang.All`, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper waits for `xxmi query`.
+- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper waits for `xxmi query`.
 
 ## Open questions (resolve with maintainers as they come up)
 

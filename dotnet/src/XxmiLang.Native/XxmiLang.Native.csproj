@@ -18,7 +18,8 @@
     <NativeExe Condition="$(NativeRid.StartsWith('win-'))">xxmi.exe</NativeExe>
     <PackageId>XxmiLang.Native.$(NativeRid)</PackageId>
     <AssemblyName>$(PackageId)</AssemblyName>
-    <Description>The xxmi command-line tool and language server for $(NativeRid), for the XxmiLang package. Self-contained single-file binary, no Node or Bun needed.</Description>
+    <Description>The xxmi binary for $(NativeRid) (self-contained single file, no Node or Bun needed), used by the XxmiLang package: a linter and language service client for XXMI / 3DMigoto mod .ini files.</Description>
+    <PackageTags>$(PackageTags);$(NativeRid)</PackageTags>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IncludeSymbols>false</IncludeSymbols>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
@@ -29,7 +30,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="_._" Pack="true" PackagePath="lib/net10.0/_._" />
   </ItemGroup>
 

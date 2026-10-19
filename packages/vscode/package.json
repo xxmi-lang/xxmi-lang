@@ -2,7 +2,7 @@
   "name": "xxmi-lang",
   "displayName": "XXMI Language Tools",
   "description": "Diagnostics, go to definition, references, rename, hover and completion for XXMI / 3DMigoto mod .ini files. Highlighting comes from lupomikti's 3DMigoto INI extension.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "xxmi-lang",
   "license": "GPL-3.0-or-later",
   "private": true,

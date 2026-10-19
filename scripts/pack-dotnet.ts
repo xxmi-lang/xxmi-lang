@@ -1,7 +1,7 @@
 /**
  * Packs the .NET library (docs/10-dotnet.md): XxmiLang.Core (the definitions), one XxmiLang.Native.<rid>
- * per platform (each carries the single-file `xxmi` for that platform), XxmiLang (the implementation) and
- * the XxmiLang.All meta package. Packed in that order, which is also the nuget.org push order (All last).
+ * per platform (each carries the single-file `xxmi` for that platform), XxmiLang (the implementation) and XxmiLang
+ * (the implementation). Packed in that order, which is also the nuget.org push order.
  *
  *   pnpm build:binaries                      # first: dist/bin/xxmi-<os>-<arch>[.exe]
  *   node scripts/pack-dotnet.ts [--bin dist/bin] [--out dist/nupkg] [--version X.Y.Z]
@@ -95,8 +95,6 @@ try {
     );
   }
   dotnet('pack', 'src/XxmiLang', '-c', 'Release', '-o', out, ...version);
-  // The meta package needs all six runtime packages to be installable.
-  if (!values.host) dotnet('pack', 'src/XxmiLang.All', '-c', 'Release', '-o', out, ...version);
 } finally {
   rmSync(staging, { recursive: true, force: true });
 }

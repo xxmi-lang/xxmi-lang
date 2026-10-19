@@ -8,8 +8,7 @@ binary (the same one the CLI, VS Code and Kate use), so results always match wha
 
 ```bash
 dotnet add package XxmiLang                    # net10.0; trim and Native AOT compatible (brings XxmiLang.Core)
-dotnet add package XxmiLang.Native.win-x64      # the xxmi binary for your platform, or:
-dotnet add package XxmiLang.All                 # every platform (about 500 MB of binaries in bin/)
+dotnet add package XxmiLang.Native.win-x64      # the xxmi binary; add one per platform you ship
 ```
 
 Runtime packages: `XxmiLang.Native.` + `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`,
