@@ -18,6 +18,7 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 | `docs/07-agent-integration.md` | Claude Code plugin, skills, other agents |
 | `docs/08-editor-integration.md` | VS Code, Kate, HLSL, lupomikti compatibility |
 | `docs/09-roadmap.md` | What to build next, milestones, acceptance criteria |
+| `docs/10-dotnet.md` | The .NET library (`dotnet/`, NuGet packages `XxmiLang*`), or anything under `dotnet/` |
 
 ## Ground truth, in priority order
 
@@ -49,6 +50,7 @@ pnpm spec:extract        # regenerates spec/generated/*.json (XXMI_DLL_SRC = XXM
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
 pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
 pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Bun); no --target: every release target
+XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/           # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages
 pnpm --filter ./packages/vscode run package                # VS Code .vsix; test:vscode runs it in a real VS Code
 XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts   # LSP performance targets (docs/03)
 ```
