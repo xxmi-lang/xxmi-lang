@@ -107,4 +107,44 @@ describe('completion contexts', () => {
     const labels = await complete('namespace = Lib\n[CommandListA]\n$', 2, 1);
     expect(labels).toContain('$alpha');
   });
+
+  it('offers flow keywords and declarations at the start of a command-list line', async () => {
+    const labels = await complete('[CommandListA]\n', 1, 0);
+    expect(labels).toEqual(expect.arrayContaining(['if', 'elif', 'else', 'endif', 'local']));
+  });
+
+  it('offers variables in conditions', async () => {
+    const labels = await complete('namespace = Lib\n[CommandListA]\nif $', 2, 4);
+    expect(labels).toContain('$alpha');
+    const text = '[CommandListA]\nlocal $x = 1\nif $x == 1 && $';
+    expect(await complete(text, 2, 16)).toContain('$x');
+  });
+
+  it('offers references while the prefix is still being typed', async () => {
+    const labels = await complete('[ResourceTex]\n[CommandListA]\nps-t0 = Res', 2, 11);
+    expect(labels).toContain('ResourceTex');
+  });
+
+  it('offers resources for any resource copy, before anything is typed', async () => {
+    const labels = await complete('[ResourceTex]\n[CommandListA]\nps-t0 = ', 2, 8);
+    expect(labels).toContain('ResourceTex');
+    expect(labels).not.toContain('CommandListA');
+  });
+
+  it('offers nothing inside comments', async () => {
+    expect(await complete('[CommandListA]\n; ha', 1, 4)).toEqual([]);
+  });
+
+  it('inserts ` = ` after a key unless the line already has one', async () => {
+    const insert = async (text: string, line: number, character: number, label: string) => {
+      const file = await workspace.openDocument(join(MOD, 'scratch.ini'), text, MOD);
+      const item = completions(workspace, file, at(line, character)).find((c) => c.label === label);
+      await workspace.closeDocument(join(MOD, 'scratch.ini'));
+      return item?.insertText ?? item?.label;
+    };
+    expect(await insert('[TextureOverrideX]\nha', 1, 2, 'hash')).toBe('hash = ');
+    expect(await insert('[TextureOverrideX]\nha = 1', 1, 2, 'hash')).toBe('hash');
+    expect(await insert('[CommandListA]\ni', 1, 1, 'if')).toBe('if ');
+    expect(await insert('[CommandListA]\nend', 1, 3, 'endif')).toBe('endif');
+  });
 });

@@ -77,4 +77,38 @@ exports.run = async () => {
   );
   assert.equal(diagnostics.find((x) => code(x) === 'XM201').range.start.line, 9);
   await vscode.commands.executeCommand('workbench.action.files.revert');
+
+  // Completion: resources while `Res` is still being typed, with no word-based noise.
+  const typing = new vscode.WorkspaceEdit();
+  typing.insert(doc.uri, new vscode.Position(10, 0), 'ps-t0 = Res\n');
+  assert.ok(await vscode.workspace.applyEdit(typing));
+  const list = await vscode.commands.executeCommand(
+    'vscode.executeCompletionItemProvider',
+    doc.uri,
+    new vscode.Position(10, 11),
+  );
+  const labels = list.items.map((i) => (typeof i.label === 'string' ? i.label : i.label.label));
+  assert.ok(labels.includes('CommandList\\Lib\\Draw'), labels.join(', '));
+  assert.ok(!labels.includes('handling'), labels.join(', '));
+  await vscode.commands.executeCommand('workbench.action.files.revert');
+
+  // The server keeps answering after a save (it used to deadlock on the first one).
+  const original = require('node:fs').readFileSync(MOD, 'utf8');
+  try {
+    const touch = new vscode.WorkspaceEdit();
+    touch.insert(doc.uri, new vscode.Position(10, 0), '; saved\n');
+    assert.ok(await vscode.workspace.applyEdit(touch));
+    assert.ok(await doc.save());
+    const after = new vscode.WorkspaceEdit();
+    after.insert(doc.uri, new vscode.Position(10, 0), 'run = CommandListAfterSave\n');
+    assert.ok(await vscode.workspace.applyEdit(after));
+    await waitFor(
+      'diagnostics after a save',
+      () => vscode.languages.getDiagnostics(doc.uri),
+      (d) => d.some((x) => x.message.includes('CommandListAfterSave')),
+    );
+  } finally {
+    require('node:fs').writeFileSync(MOD, original);
+    await vscode.commands.executeCommand('workbench.action.files.revert');
+  }
 };

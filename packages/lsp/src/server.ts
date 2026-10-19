@@ -109,13 +109,18 @@ export function startServer(connection: Connection, options: ServerOptions): voi
   /** Serializes workspace mutations; requests wait for it so they see a consistent model. */
   let queue: Promise<unknown> = Promise.resolve();
 
-  const enqueue = <T>(work: () => Promise<T>): Promise<T> => {
-    const next = queue.then(work, work);
-    queue = next.catch((error: unknown) => {
+  /**
+   * Runs `work` after everything queued before it. Never rejects: a failure is logged, so a
+   * `void enqueue(…)` can't become an unhandled rejection that ends the process. Work must not
+   * await another `enqueue` (it would wait for itself); call the un-queued helpers instead.
+   */
+  const enqueue = (work: () => Promise<void>): Promise<void> => {
+    const next = queue.then(work).catch((error: unknown) => {
       connection.console.error(
         `xxmi-lsp: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
       );
     });
+    queue = next;
     return next;
   };
 
@@ -144,16 +149,21 @@ export function startServer(connection: Connection, options: ServerOptions): voi
     }
   };
 
+  /** Re-reads an open document into the workspace. Only call it from queued work. */
+  const refresh = async (uri: string): Promise<void> => {
+    const timer = pending.get(uri);
+    if (timer) clearTimeout(timer);
+    pending.delete(uri);
+    const document = documents.get(uri);
+    if (!document) return;
+    const path = toPath(uri);
+    uriByPath.set(path, uri);
+    await workspace.openDocument(path, document.getText(), fallbackRoot(path));
+  };
+
   const update = (uri: string): Promise<void> =>
     enqueue(async () => {
-      const timer = pending.get(uri);
-      if (timer) clearTimeout(timer);
-      pending.delete(uri);
-      const document = documents.get(uri);
-      if (!document) return;
-      const path = toPath(uri);
-      uriByPath.set(path, uri);
-      await workspace.openDocument(path, document.getText(), fallbackRoot(path));
+      await refresh(uri);
       publish();
     });
 
@@ -231,7 +241,8 @@ export function startServer(connection: Connection, options: ServerOptions): voi
   });
 
   connection.onInitialized(() => {
-    void fetchSettings().then(() => {
+    void enqueue(async () => {
+      await fetchSettings();
       publish();
     });
     // docs/01-language-model.md §4: open files first, then the rest of the opened folders in
@@ -254,6 +265,7 @@ export function startServer(connection: Connection, options: ServerOptions): voi
           }
           if (workspace.files.has(path)) continue;
           try {
+            if (await workspace.excluded(path, root)) continue; // DISABLED folders and the like
             await workspace.addTarget(path, root);
             indexed++;
           } catch (error) {
@@ -281,7 +293,7 @@ export function startServer(connection: Connection, options: ServerOptions): voi
   documents.onDidSave(
     (e) =>
       void enqueue(async () => {
-        await update(e.document.uri);
+        await refresh(e.document.uri);
         publish(true);
       }),
   );
@@ -362,7 +374,7 @@ export function startServer(connection: Connection, options: ServerOptions): voi
         ...(item.documentation
           ? { documentation: { kind: 'markdown' as const, value: item.documentation } }
           : {}),
-        textEdit: { range: item.range, newText: item.label },
+        textEdit: { range: item.range, newText: item.insertText ?? item.label },
       })),
     ),
   );

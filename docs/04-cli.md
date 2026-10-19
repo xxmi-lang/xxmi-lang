@@ -41,6 +41,7 @@ xxmi spec extract --dll DIR   Same as `pnpm spec:extract`, for maintainers
 ### Implemented so far (M2)
 
 - `xxmi lint` with `--format text|json`, `--rules` and `--max-warnings`. Not yet: `sarif`, `--fix`, and the `--json` alias. `xxmi lint --help` lists every rule.
+- A folder is linted like the DLL walks `include_recursive`: files and folders matching the package's `exclude_recursive` globs (`DISABLED*`, `desktop.ini` in ZZMI) are skipped. Name a disabled file or folder directly to lint it anyway.
 - `xxmi index <package dir> --out FILE [--name NAME]`.
 - `xxmi spec extract` is still `pnpm spec:extract`. From the repo: `pnpm xxmi …` runs the CLI from source.
 
