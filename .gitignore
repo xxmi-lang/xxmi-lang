@@ -21,3 +21,6 @@ dist/
 
 # VS Code downloaded by @vscode/test-electron.
 .vscode-test/
+
+# .NET build output and packages (dotnet/, scripts/pack-dotnet.ts).
+dotnet/artifacts/

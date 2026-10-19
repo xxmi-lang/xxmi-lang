@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <RootNamespace>XxmiLang</RootNamespace>
+    <AssemblyName>XxmiLang</AssemblyName>
+    <Description>Typed .NET client for the xxmi-lang tooling: lint and analyse XXMI / 3DMigoto mod .ini files, and talk to the xxmi language server. Add an XxmiLang.Native.* package (or XxmiLang.All) for the xxmi binary.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Missing XML docs on internals are fine; public API is documented. -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <InternalsVisibleTo Include="XxmiLang.Tests" />
+  </ItemGroup>
+
+</Project>

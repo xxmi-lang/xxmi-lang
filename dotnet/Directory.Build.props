@@ -1,0 +1,32 @@
+<Project>
+
+  <!-- The version of every package is the repo's release version (packages/core/src/version.ts).
+       Override with -p:Version=... (e.g. for a prerelease build). -->
+  <PropertyGroup>
+    <XxmiVersionFile>$(MSBuildThisFileDirectory)../packages/core/src/version.ts</XxmiVersionFile>
+    <Version Condition="'$(Version)' == '' And Exists('$(XxmiVersionFile)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(XxmiVersionFile)')), "VERSION = '([^']+)'").Groups[1].Value)</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts/bin/$(MSBuildProjectName)/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <!-- NuGet metadata shared by every package. -->
+  <PropertyGroup>
+    <Authors>xxmi-lang contributors</Authors>
+    <Copyright>Copyright (c) xxmi-lang contributors</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/xxmi-lang/xxmi-lang</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/xxmi-lang/xxmi-lang</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>xxmi;3dmigoto;ini;linter;lsp;zzz;modding</PackageTags>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts/nupkg/</PackageOutputPath>
+  </PropertyGroup>
+
+</Project>

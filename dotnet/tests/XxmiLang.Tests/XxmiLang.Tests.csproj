@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net8.0 is the oldest supported runtime; RollForward lets machines with only a newer one run the tests too. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- By default the tests use XxmiLang's net8.0 build. -p:XxmiLibraryTfm=netstandard2.0 runs them against the
+       netstandard2.0 build instead (what .NET Framework and older runtimes get). -->
+  <ItemGroup>
+    <ProjectReference Include="../../src/XxmiLang/XxmiLang.csproj" Condition="'$(XxmiLibraryTfm)' == ''" />
+    <ProjectReference Include="../../src/XxmiLang/XxmiLang.csproj" Condition="'$(XxmiLibraryTfm)' != ''" SetTargetFramework="TargetFramework=$(XxmiLibraryTfm)" />
+  </ItemGroup>
+
+  <!-- Restore ignores SetTargetFramework, so the netstandard2.0 build's dependencies are repeated here. -->
+  <ItemGroup Condition="'$(XxmiLibraryTfm)' == 'netstandard2.0'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

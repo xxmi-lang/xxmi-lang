@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    One project, six packages. Pack it once per runtime (scripts/pack-dotnet.ts does):
+
+      dotnet pack -p:NativeRid=osx-arm64 -p:XxmiBinary=/path/to/xxmi
+
+    The file must already be called xxmi (xxmi.exe on Windows): the release names it xxmi-darwin-arm64 and
+    so on, which is why the script copies it first.
+
+    The package carries nothing but runtimes/<rid>/native/xxmi[.exe]. No buildTransitive targets: NuGet already
+    copies runtimes/<rid>/native/* to the output of build and publish (framework-dependent: runtimes/<rid>/native/;
+    publish -r <rid>, also single-file: next to the app), which docs/10-dotnet.md shows and the locator expects.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <NativeRid Condition="'$(NativeRid)' == ''">osx-arm64</NativeRid>
+    <NativeExe>xxmi</NativeExe>
+    <NativeExe Condition="$(NativeRid.StartsWith('win-'))">xxmi.exe</NativeExe>
+    <PackageId>XxmiLang.Native.$(NativeRid)</PackageId>
+    <AssemblyName>$(PackageId)</AssemblyName>
+    <Description>The xxmi command-line tool and language server for $(NativeRid), for the XxmiLang package. Self-contained single-file binary, no Node or Bun needed.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- The package has no assembly: a placeholder lib/ folder makes it installable on any TFM. -->
+    <NoWarn>$(NoWarn);NU5128;NU5100;CS2008</NoWarn>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+    <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0/_._" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(XxmiBinary)' != ''">
+    <None Include="$(XxmiBinary)" Pack="true" PackagePath="runtimes/$(NativeRid)/native/" />
+  </ItemGroup>
+
+  <Target Name="XxmiCheckBinary" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(XxmiBinary)' == ''" Text="Pass -p:XxmiBinary=&lt;path to the xxmi single-file binary for $(NativeRid)&gt; when packing." />
+    <Error Condition="'$(XxmiBinary)' != '' And '$([System.IO.Path]::GetFileName($(XxmiBinary)))' != '$(NativeExe)'" Text="The binary must be named $(NativeExe) (it is: $([System.IO.Path]::GetFileName($(XxmiBinary)))). Copy it first." />
+    <Error Condition="'$(XxmiBinary)' != '' And !Exists('$(XxmiBinary)')" Text="$(XxmiBinary) doesn't exist." />
+  </Target>
+
+</Project>

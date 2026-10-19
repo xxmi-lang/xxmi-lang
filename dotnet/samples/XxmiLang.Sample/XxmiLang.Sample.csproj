@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <IsPackable>false</IsPackable>
+    <!-- To use the NuGet packages instead: replace the project reference with
+         <PackageReference Include="XxmiLang" /> and <PackageReference Include="XxmiLang.Native.<rid>" />. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/XxmiLang/XxmiLang.csproj" />
+  </ItemGroup>
+
+</Project>

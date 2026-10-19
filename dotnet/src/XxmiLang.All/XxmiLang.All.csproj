@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Meta package: XxmiLang plus the xxmi binary for every platform. Dependencies are written in the nuspec so
+       restoring this project doesn't need the other packages to exist yet. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>XxmiLang.All</PackageId>
+    <Description>XxmiLang plus the xxmi binary for Windows, Linux and macOS (x64 and arm64). One package reference for an app that runs anywhere.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NuspecFile>$(MSBuildThisFileDirectory)XxmiLang.All.nuspec</NuspecFile>
+    <NuspecProperties>version=$(Version);readme=$(MSBuildThisFileDirectory)../../README.md</NuspecProperties>
+    <NoWarn>$(NoWarn);NU5128;NU5100;CS2008</NoWarn>
+  </PropertyGroup>
+
+</Project>
