@@ -87,7 +87,7 @@ An overlay entry for a name the generated spec doesn't have is an error, unless 
 
 ## 2. Parser: tree-sitter-migoto
 
-Use **our fork** of lupomikti's grammar (`lupomikti/tree-sitter-migoto`, MIT, v0.9.3 as of 2026-09-28) through `web-tree-sitter`. Ship the `.wasm` inside `@xxmi-lang/core`.
+Use **our fork** of lupomikti's grammar (`lupomikti/tree-sitter-migoto`, MIT, v0.9.4 as of 2026-10-19) through `web-tree-sitter`. Ship the `.wasm` inside `@xxmi-lang/core`.
 
 Fork policy:
 
@@ -110,6 +110,8 @@ Parsing all 19 `.ini` files in ZZMI-Package with upstream v0.9.3 gave 15 clean a
 | `Core/ZZMI/Libraries/TTLib/UIPlacement.ini` | `->Offset`, `->Region`, `ref PoolX[$slot]` | only `copy vb0->Region(...)`: a member suffix on a copy source | `ResourceCopyTarget::ParseTarget` → `ParseTargetMember` | `resource_usage_expression` accepts `property_access_expression` |
 
 Minimal license-clean reproductions live in `fixtures/parser/xxmi-dialect/`.
+
+Upstream 0.9.4 (merged into the fork 2026-10-19) fixed all four on its own; the fork keeps only an alias so a bare pool is still a `resource_pool` node, which the model reads as a pool reference. The fork also adds slot expressions and slot/pool ranges (`ps-t[$i]`, `ps-t[$a:$b]`, `PoolFoo[$a:$b]`; `ResourceCopyTarget::ParseTargetSlotExpression` and `ParseRangeBounds`, XXMI-Libs-Package PR #55) as `XXMI-CHANGES.md` entry 5 (`fixtures/parser/xxmi-dialect/slot-pool-ranges.ini`).
 
 ### Error recovery
 
