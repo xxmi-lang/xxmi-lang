@@ -243,6 +243,29 @@ describe('xxmi-lsp over JSON-RPC', () => {
     ]);
   });
 
+  it('keeps working after a save (regression: saving deadlocked the work queue)', async () => {
+    await connection.sendNotification('textDocument/didSave', { textDocument: { uri: MOD_INI } });
+    await connection.sendNotification('textDocument/didChange', {
+      textDocument: { uri: MOD_INI, version: 6 },
+      contentChanges: [
+        { range: { start: pos(9, 0), end: pos(9, 0) }, text: 'run = CommandListAfterSave\n' },
+      ],
+    });
+    const result = await nextDiagnostics(MOD_INI, (d) =>
+      d.some((x) => JSON.stringify(x.message).includes('CommandListAfterSave')),
+    );
+    expect(result.some((d) => d.code === 'XM201')).toBe(true);
+    const symbols = await connection.sendRequest<unknown[]>('textDocument/documentSymbol', {
+      textDocument: { uri: MOD_INI },
+    });
+    expect(symbols.length).toBeGreaterThan(0);
+    await connection.sendNotification('textDocument/didChange', {
+      textDocument: { uri: MOD_INI, version: 7 },
+      contentChanges: [{ range: { start: pos(9, 0), end: pos(10, 0) }, text: '' }],
+    });
+    expect(await nextDiagnostics(MOD_INI, (d) => d.length === 0)).toEqual([]);
+  });
+
   it('answers requests for unknown documents without failing', async () => {
     const unknown = { textDocument: { uri: uri(join(MOD, 'missing.ini')) }, position: pos(0, 0) };
     expect(await connection.sendRequest('textDocument/definition', unknown)).toBeNull();

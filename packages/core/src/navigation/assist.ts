@@ -219,7 +219,19 @@ export interface CompletionItem {
   documentation?: string;
   /** Range the item replaces (the word being typed). */
   range: Range;
+  /** Text to insert when it isn't the label (`hash = ` for the key `hash`). */
+  insertText?: string;
 }
+
+/** Section prefixes a reference value starts with. */
+const REFERENCE_PREFIXES = [
+  'CommandList',
+  'CustomShader',
+  'BuiltInCommandList',
+  'BuiltInCustomShader',
+  'Resource',
+  'Pool',
+];
 
 /** Completions at the cursor, from its context on the line. */
 export function completions(workspace: Workspace, file: IniFile, pos: Position): CompletionItem[] {
@@ -247,33 +259,51 @@ export function completions(workspace: Workspace, file: IniFile, pos: Position):
     }));
   }
 
+  // Comments (the DLL only treats `;` at the start of a line as one).
+  if (/^\s*;/.test(before)) return [];
+
   const offset = offsetAt(file.text, pos);
   const section = [...file.sections].reverse().find((s) => s.chunk.start <= offset);
   const spec = section?.spec;
   const eq = before.indexOf('=');
 
+  // `$name` anywhere: keys, values and conditions (`if $a == 1 && $b`).
+  if (/\$[\w\\]*$/.test(before)) return variableItems(workspace, file, section, before, pos);
+
   // Key position: keys of the section, plus commands and flow keywords in command lists.
   if (eq < 0) {
-    if (before.trimStart().startsWith('$'))
-      return variableItems(workspace, file, section, before, pos);
     if (!spec) return [];
-    const r = range(wordStart(/[\w$]*$/));
+    // A key replaces the whole word and gets ` = ` unless the line already has one.
+    const r = range(wordStart(/[\w-]*$/));
+    const assign = lineText.includes('=') ? '' : ' = ';
     const items: CompletionItem[] = spec.keys.map((k) => ({
       label: k.name,
       kind: 'key',
       detail: `${k.valueType}${k.xxmi ? ' · XXMI-only' : ''}`,
       documentation: docs(k),
       range: r,
+      ...(assign ? { insertText: k.name + assign } : {}),
     }));
     if (spec.kind === 'commandlist') {
       for (const c of lookup.spec.commands) {
-        if (c.kind === 'prefix' || c.match === 'prefix') continue;
+        const keyword = c.kind === 'flow' || c.kind === 'declaration';
+        // `pre`/`post` and the other prefixes only make sense in front of something else.
+        if (c.kind === 'prefix' || (c.match === 'prefix' && !keyword)) continue;
+        // Flow keywords and declarations are followed by an expression, not `=`.
+        const insertText = keyword
+          ? c.match === 'prefix' || c.kind === 'declaration'
+            ? `${c.name} `
+            : undefined
+          : assign
+            ? c.name + assign
+            : undefined;
         items.push({
           label: c.name,
-          kind: c.kind === 'flow' || c.kind === 'declaration' ? 'keyword' : 'command',
+          kind: keyword ? 'keyword' : 'command',
           detail: `${c.kind}${c.xxmi ? ' · XXMI-only' : ''}`,
           documentation: docs(c),
           range: r,
+          ...(insertText ? { insertText } : {}),
         });
       }
     }
@@ -287,7 +317,6 @@ export function completions(workspace: Workspace, file: IniFile, pos: Position):
     .toLowerCase()
     .replace(/^(pre|post)\s+/, '');
   const valueBefore = before.slice(eq + 1);
-  if (/\$[\w\\]*$/.test(valueBefore)) return variableItems(workspace, file, section, before, pos);
   if (spec && (key === 'filename' || key === 'include' || key === 'include_recursive')) {
     return fileItems(workspace, file, valueBefore, pos);
   }
@@ -302,16 +331,28 @@ export function completions(workspace: Workspace, file: IniFile, pos: Position):
       range: r,
     }));
   }
-  const refMatch =
-    /(CommandList|CustomShader|BuiltInCommandList|BuiltInCustomShader|Resource|Pool)[\w.\\]*$/i.exec(
-      valueBefore,
-    );
-  if (refMatch || key === 'run' || key === 'checktextureoverride') {
-    const start = refMatch ? pos.character - refMatch[0].length : wordStart(/[\w.\\]*$/);
-    return referenceItems(workspace, file, range(start), key === 'run');
+  // A reference, also while its prefix is still being typed (`Res` → `ResourceFoo`).
+  const word = /[\w.\\]*$/.exec(valueBefore)?.[0] ?? '';
+  const lower = word.toLowerCase();
+  const typingReference =
+    word !== '' &&
+    REFERENCE_PREFIXES.some((p) => {
+      const prefix = p.toLowerCase();
+      return lower.startsWith(prefix) || prefix.startsWith(lower);
+    });
+  if (typingReference || key === 'run' || key === 'checktextureoverride') {
+    return referenceItems(workspace, file, range(pos.character - word.length), key === 'run');
   }
   if (spec?.kind === 'commandlist') {
     const command = lookup.command(key);
+    // Lines that are neither keys nor commands are resource copies (`ps-t0 = ResourceFoo`,
+    // ParseCommandListResourceCopyDirective): offer resources and pools.
+    if (!command && !lookup.key(spec, key) && valueBefore.trim() === word) {
+      return referenceItems(workspace, file, range(pos.character - word.length), false, [
+        'resource',
+        'pool',
+      ]);
+    }
     if (command?.values.length) {
       const r = range(wordStart(/\w*$/));
       return command.values.map((v) => ({
@@ -367,12 +408,12 @@ function referenceItems(
   file: IniFile,
   range: Range,
   callable: boolean,
+  kinds = callable
+    ? ['commandlist', 'customshader']
+    : ['commandlist', 'customshader', 'resource', 'pool'],
 ): CompletionItem[] {
   const own = file.namespace.toLowerCase();
   const items = new Map<string, CompletionItem>();
-  const kinds = callable
-    ? ['commandlist', 'customshader']
-    : ['commandlist', 'customshader', 'resource', 'pool'];
   for (const s of workspace.symbols.allSections()) {
     if (!kinds.includes(s.kind)) continue;
     const q = s.qualifiedName;
@@ -382,7 +423,8 @@ function referenceItems(
     if (!items.has(label.toLowerCase()))
       items.set(label.toLowerCase(), { label, kind: 'reference', detail: s.kind, range });
   }
-  for (const b of workspace.lookup.spec.builtinSections) {
+  // Built-in sections are all command lists and shaders.
+  for (const b of kinds.includes('commandlist') ? workspace.lookup.spec.builtinSections : []) {
     if (!items.has(b.name.toLowerCase()))
       items.set(b.name.toLowerCase(), {
         label: b.name,

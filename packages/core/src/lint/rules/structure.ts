@@ -239,8 +239,12 @@ export const XM107: Rule = {
   description: 'Duplicate section name within the same namespace',
   check({ file, workspace, lookup, report }) {
     // The DLL keeps the first and warns for the rest, in load order (d3dx.ini, then includes).
+    // Files it never loads (`exclude_recursive`, e.g. DISABLED folders) can only clash with
+    // themselves: a disabled copy of a library isn't a duplicate of the enabled one.
     const firstByName = new Map<string, { path: string; line: number }>();
+    const excluded = workspace.isExcluded(file.path);
     for (const other of workspace.files.values()) {
+      if (other !== file && (excluded || workspace.isExcluded(other.path))) continue;
       for (const section of other.sections) {
         const prefixed = lookup.sectionPrefix(section.name.text) !== undefined;
         // Global sections from included files merge into the main one instead of duplicating.

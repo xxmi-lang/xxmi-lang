@@ -133,7 +133,11 @@ export async function lintPaths(paths: string[], options: LintOptions = {}): Pro
   for (const path of paths) {
     const full = resolve(path);
     const base = statSync(full).isDirectory() ? full : dirname(full);
-    for (const file of collectIniFiles(full)) targets.push(await workspace.addTarget(file, base));
+    for (const file of collectIniFiles(full)) {
+      // Like the DLL, skip what `exclude_recursive` skips (DISABLED folders) inside a folder.
+      if (file !== full && (await workspace.excluded(file, full))) continue;
+      targets.push(await workspace.addTarget(file, base));
+    }
   }
   const configs = options.configs ?? new ConfigLoader();
   const seen = new Set<string>();
