@@ -33,20 +33,12 @@ dotnet add package XxmiLang.All
 
 `XxmiLang.All` copies all six binaries (about 500 MB) into a framework-dependent app's `bin/` and publish folder. If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one, so prefer the single runtime package for a shipped app and keep `XxmiLang.All` for development tools and prototypes.
 
-### From a release or a build, without nuget.org
+### From a build, without nuget.org
 
-Every GitHub release has the `.nupkg` files attached.
-
-```bash
-mkdir ~/xxmi-nupkgs && cd ~/xxmi-nupkgs
-gh release download --repo xxmi-lang/xxmi-lang --pattern '*.nupkg'
-dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local     # once per machine (or put a nuget.config next to your .slnx)
-cd path/to/your/project
-dotnet add package XxmiLang
-dotnet add package XxmiLang.Native.osx-arm64
-```
-
-From a clone of this repo, to pack what you have built:
+The `.nupkg` files are published to nuget.org only; GitHub releases don't carry them. Until a
+version is on nuget.org, or to try a change, pack them from a clone of this repo and add the
+folder as a local feed (`dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local`, once per
+machine, or put a `nuget.config` next to your `.slnx`):
 
 ```bash
 pnpm build && pnpm build:binaries --target host      # needs Bun
@@ -142,7 +134,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 ## Platform notes
 
 - **Linux and macOS: the exec bit.** NuGet doesn't restore Unix permissions reliably. Before the first run of a packaged binary the library sets the execute bit (`File.SetUnixFileMode`; it needs to own the file, which it does in `~/.nuget/packages` and in your output folder). If you copy `xxmi` around yourself, `chmod +x` it. A failure to start produces an `XxmiProcessException` that says so.
-- **macOS: Gatekeeper.** The binary is not signed or notarized. Files that arrive through NuGet aren't quarantined, so the packages work as is. A binary you download in a browser gets `com.apple.quarantine`, and macOS refuses to run it ("cannot be opened because the developer cannot be verified"): run `xattr -d com.apple.quarantine /path/to/xxmi` (or right-click, Open once). The same applies to the `.nupkg` files if you unzip one yourself from a browser download.
+- **macOS: Gatekeeper.** The binary is not signed or notarized. Files that arrive through NuGet aren't quarantined, so the packages work as is. A binary you download in a browser gets `com.apple.quarantine`, and macOS refuses to run it ("cannot be opened because the developer cannot be verified"): run `xattr -d com.apple.quarantine /path/to/xxmi` (or right-click, Open once).
 - **Windows.** `xxmi.exe` is unsigned, so SmartScreen may warn on a file downloaded in a browser ("Unblock" in Properties), and some antivirus products scan the first launch slowly. NuGet-delivered files aren't marked. Keep the app out of folders your antivirus watches closely if the first lint is slow.
 - **Linux libc.** The binaries are built for glibc. Alpine (musl) isn't supported; use a glibc image.
 - **Architectures.** x64 and arm64 only. On another machine `XxmiBinaryLocator.CurrentRuntimeIdentifier()` is null and the lookup reports "no xxmi build".
@@ -177,4 +169,22 @@ Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tes
 
 ## Releasing
 
-`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built, smoke-tests the packages on all three OSes, and attaches the `.nupkg` files to the GitHub release. If the repository has a `NUGET_API_KEY` secret, the last step also pushes them to nuget.org (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last); without it that step is skipped.
+`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last). The `nuget` job is separate, so a failed push can be re-run on its own.
+
+### Publishing (maintainers)
+
+nuget.org uses Trusted Publishing (GitHub OIDC): there is no API key or secret. One-time setup:
+
+1. On nuget.org, sign in, open your account menu → **Trusted Publishing** → add a policy with
+   owner `xxmi-lang`, repository `xxmi-lang`, workflow file `release.yml`, environment empty.
+   (For package ids that don't exist yet, the policy applies to your account; the first push
+   creates them.)
+2. Set the repository variable to your nuget.org username (not the email):
+   `gh variable set NUGET_USER --body <name> --repo xxmi-lang/xxmi-lang`.
+3. Publish: for a release whose `nuget` job was skipped, re-run only that job (Actions → the
+   release run → the `nuget` job → Re-run), or push a new tag. The job requests an OIDC token
+   (`id-token: write`, on that job only), `NuGet/login@v1` exchanges it for a short-lived key,
+   and `dotnet nuget push --skip-duplicate` pushes the packages.
+
+If `NUGET_USER` is not set, the job logs `NUGET_USER repository variable not set; skipping
+nuget.org push` as a warning and succeeds without pushing.
