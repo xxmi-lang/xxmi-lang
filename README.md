@@ -33,7 +33,7 @@ In short, download from the [latest release](https://github.com/xxmi-lang/xxmi-l
 Targets: `windows-x64`, `windows-arm64`, `linux-x64`, `linux-arm64`, `macos-x64`,
 `macos-arm64`. The programs are self-contained (no Node needed). Unzip and put `xxmi` and
 `xxmi-lsp` on your `PATH`; INSTALL.md has copy-paste commands for each system. The .NET
-library (`XxmiLang`) is on nuget.org only, see [docs/10-dotnet.md](docs/10-dotnet.md).
+library (`XxmiLang`) is on [nuget.org](https://www.nuget.org/packages/XxmiLang) (mirrored to GitHub Packages), see [docs/10-dotnet.md](docs/10-dotnet.md).
 
 ### VS Code
 
@@ -63,6 +63,9 @@ The plugin starts `xxmi-lsp` (it must be on your `PATH`) for `.ini` files and ad
 reach the agent after its edits.
 
 ### .NET
+
+[![XxmiLang on nuget.org](https://img.shields.io/nuget/v/XxmiLang?label=XxmiLang&logo=nuget)](https://www.nuget.org/packages/XxmiLang)
+[![XxmiLang.Core on nuget.org](https://img.shields.io/nuget/v/XxmiLang.Core?label=XxmiLang.Core&logo=nuget)](https://www.nuget.org/packages/XxmiLang.Core)
 
 ```bash
 dotnet add package XxmiLang

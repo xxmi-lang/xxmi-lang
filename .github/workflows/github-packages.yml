@@ -1,0 +1,50 @@
+# Mirror the .NET packages of a release run to GitHub Packages (the repo's "Packages" sidebar).
+# release.yml calls this for the current run; to backfill an older release:
+#   gh workflow run github-packages.yml -f run_id=<release run id>
+# (docs/10-dotnet.md "Publishing (maintainers)").
+name: github-packages
+
+on:
+  workflow_call:
+    inputs:
+      run-id:
+        description: Release run whose nupkg artifact to push, default the calling run
+        type: string
+        required: false
+        default: ''
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Release run whose nupkg artifact to push
+        type: string
+        required: true
+
+permissions:
+  packages: write
+  contents: read
+  actions: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: nupkg
+          run-id: ${{ inputs.run-id || inputs.run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Same order as nuget.org: XxmiLang.Core, the runtime packages and XxmiLang, then XxmiLang.All.
+      - name: Push the packages to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd nupkg
+          for f in XxmiLang.Core.[0-9]*.nupkg XxmiLang.Native.*.nupkg XxmiLang.[0-9]*.nupkg XxmiLang.All.*.nupkg; do
+            dotnet nuget push "$f" --api-key "$GITHUB_TOKEN" --source https://nuget.pkg.github.com/xxmi-lang/index.json --skip-duplicate
+          done

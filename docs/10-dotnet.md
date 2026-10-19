@@ -24,6 +24,10 @@ All target `net10.0` and have the repo's release version (`packages/core/src/ver
 
 ## Install
 
+### From nuget.org
+
+[![XxmiLang](https://img.shields.io/nuget/v/XxmiLang?logo=nuget)](https://www.nuget.org/packages/XxmiLang)
+
 ```bash
 dotnet add package XxmiLang
 dotnet add package XxmiLang.Native.win-x64        # the platform(s) you run on
@@ -33,9 +37,13 @@ dotnet add package XxmiLang.All
 
 `XxmiLang.All` copies all six binaries (about 500 MB) into a framework-dependent app's `bin/` and publish folder. If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one, so prefer the single runtime package for a shipped app and keep `XxmiLang.All` for development tools and prototypes.
 
+Pick your platform's `XxmiLang.Native.<rid>` (`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`) or `XxmiLang.All`.
+
+GitHub Packages (the repo's "Packages" sidebar) is a mirror for visibility. Installing from it needs a source `https://nuget.pkg.github.com/xxmi-lang/index.json` and a GitHub token with `read:packages`, even for public packages; nuget.org needs nothing, so prefer it.
+
 ### From a build, without nuget.org
 
-The `.nupkg` files are published to nuget.org only; GitHub releases don't carry them. Until a
+The `.nupkg` files are published to nuget.org (and mirrored to GitHub Packages); GitHub releases don't carry them. Until a
 version is on nuget.org, or to try a change, pack them from a clone of this repo and add the
 folder as a local feed (`dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local`, once per
 machine, or put a `nuget.config` next to your `.slnx`):
@@ -169,7 +177,7 @@ Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tes
 
 ## Releasing
 
-`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last). The `nuget` job is separate, so a failed push can be re-run on its own.
+`release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang` first, `XxmiLang.All` last). The `nuget` job is separate, so a failed push can be re-run on its own. The `github-packages` job (the reusable `github-packages.yml`) pushes the same artifact, in the same order, to GitHub Packages; it is independent of the `nuget` job, so neither blocks the other.
 
 ### Publishing (maintainers)
 
@@ -188,3 +196,16 @@ nuget.org uses Trusted Publishing (GitHub OIDC): there is no API key or secret. 
 
 If `NUGET_USER` is not set, the job logs `NUGET_USER repository variable not set; skipping
 nuget.org push` as a warning and succeeds without pushing.
+
+### GitHub Packages mirror (maintainers)
+
+`github-packages.yml` downloads the `nupkg` artifact of a release run and pushes it to `https://nuget.pkg.github.com/xxmi-lang/index.json` with the workflow's `GITHUB_TOKEN` (`packages: write`; no secret to set up) and `--skip-duplicate`. The packages carry `RepositoryUrl` (`dotnet/Directory.Build.props`, and the `XxmiLang.All` nuspec), which is how GitHub links them to this repo and lists them in its sidebar. Release runs call it from the `github-packages` job automatically.
+
+To backfill a release that was published before the mirror existed (or to re-push), pass its release run id:
+
+```bash
+gh workflow run github-packages.yml -f run_id=<release run id>
+gh run list --workflow github-packages.yml    # then: gh run watch <id>
+```
+
+The artifact must still exist (GitHub keeps artifacts 90 days by default). A package created by the push is private or inherits the repo's visibility depending on the org settings; check `gh api /orgs/xxmi-lang/packages?package_type=nuget` (`visibility`) and, if needed, set it to public under org → Packages → package → Package settings → Danger Zone → Change visibility.
