@@ -140,7 +140,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     env:
-      XXMI_PATH: ${{ github.workspace }}/dist/bin/xxmi${{ runner.os == 'Windows' && '.exe' || '' }}
+      XXMI_PATH: ${{ github.workspace }}/dist/bin/xxmi${{ matrix.os == 'windows-latest' && '.exe' || '' }}
     steps:
       - uses: actions/checkout@v4
 
