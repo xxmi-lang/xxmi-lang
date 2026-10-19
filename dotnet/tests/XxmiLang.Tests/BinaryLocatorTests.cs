@@ -45,7 +45,7 @@ public class BinaryLocatorTests
         var existing = new HashSet<string> { P("/env", "xxmi"), P("/app", "runtimes", "linux-x64", "native", "xxmi") };
 
         Assert.Equal(Path.GetFullPath("/env/xxmi"), Resolve(existing, environment: "/env"));
-        Assert.Equal(Path.GetFullPath("/env/xxmi"), Resolve(existing, environment: "/env/xxmi"));
+        Assert.Equal(Path.GetFullPath("/env/xxmi"), Resolve(existing, environment: P("/env", "xxmi")));
     }
 
     [Fact]
