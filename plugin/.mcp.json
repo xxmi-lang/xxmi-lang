@@ -2,7 +2,7 @@
   "mcpServers": {
     "xxmi": {
       "type": "http",
-      "url": "${XXMI_MCP_URL}"
+      "url": "${XXMI_MCP_URL:-https://xxmi-mcp-production.up.railway.app/mcp}"
     }
   }
 }
