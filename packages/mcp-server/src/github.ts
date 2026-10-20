@@ -81,13 +81,15 @@ export function createGitHubClient(
   return {
     async head(repo) {
       const base = `${API}/repos/${fullName(repo)}`;
-      const info = (await getJson(base)) as { default_branch: string };
-      const commit = (await getJson(
-        `${base}/commits/${encodeURIComponent(info.default_branch)}`,
-      )) as {
+      let branch = branches.get(fullName(repo));
+      if (!branch) {
+        branch = ((await getJson(base)) as { default_branch: string }).default_branch;
+        branches.set(fullName(repo), branch);
+      }
+      const commit = (await getJson(`${base}/commits/${encodeURIComponent(branch)}`)) as {
         sha: string;
       };
-      return { name: info.default_branch, sha: commit.sha };
+      return { name: branch, sha: commit.sha };
     },
 
     async tags(repo, count) {

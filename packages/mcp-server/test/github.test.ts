@@ -12,12 +12,15 @@ function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
 describe('GitHub client', () => {
   it('reads the default branch head and revalidates with the ETag', async () => {
     const seen: (string | null)[] = [];
+    let repoInfoCalls = 0;
     const fetchFn: typeof fetch = (input, init) => {
       const url = input instanceof Request ? input.url : String(input);
       const headers = new Headers(init?.headers);
       seen.push(headers.get('if-none-match'));
-      if (url.endsWith('/ZZMI-Package'))
+      if (url.endsWith('/ZZMI-Package')) {
+        repoInfoCalls++;
         return Promise.resolve(jsonResponse({ default_branch: 'main' }));
+      }
       if (headers.get('if-none-match') === '"v1"')
         return Promise.resolve(new Response(null, { status: 304 }));
       return Promise.resolve(jsonResponse({ sha: 'abc' }, { headers: { etag: '"v1"' } }));
@@ -28,6 +31,7 @@ describe('GitHub client', () => {
     const second = await client.head(zzmi);
 
     expect(first).toEqual({ name: 'main', sha: 'abc' });
+    expect(repoInfoCalls).toBe(1);
     expect(second).toEqual(first);
     expect(seen).toContain('"v1"');
   });
