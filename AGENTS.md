@@ -25,9 +25,8 @@ put them on `PATH`.
 
 ### Hosted MCP server
 
-A read-only MCP server over Streamable HTTP (no auth): `claude mcp add --transport http xxmi <url>/mcp`;
-other clients take the same URL in their HTTP MCP config. (The public URL is not published
-yet; see `docs/06-mcp-server.md`, "As built".) Tools:
+A read-only MCP server over Streamable HTTP (no auth): `claude mcp add --transport http xxmi https://xxmi-mcp-production.up.railway.app/mcp`;
+other clients take the same URL in their HTTP MCP config. Tools:
 
 - `spec_lookup`, `spec_list`: sections, keys, commands, operators from the DLL spec, with the
   DLL source location.

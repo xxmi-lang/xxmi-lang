@@ -94,7 +94,7 @@ restartPolicyType = "ON_FAILURE"
 claude mcp add --transport http xxmi https://<your-domain>/mcp
 ```
 
-Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config. No server is deployed yet, so the README does not name a URL; fill it in after the Railway setup below.
+Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config. The public instance is `https://xxmi-mcp-production.up.railway.app/mcp` (Railway default domain; a custom domain later).
 
 ## Tests
 
@@ -104,7 +104,7 @@ Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config.
 
 ## As built (M6)
 
-Status (2026-10-20): implemented in `packages/mcp-server`, tested, and run from its Docker image locally. **Not deployed:** that needs a Railway account (see "Railway setup"). The sections above stay as the design; this one is what exists.
+Status (2026-10-20): implemented in `packages/mcp-server`, tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, auto-deploy from `main` after CI passes. The sections above stay as the design; this one is what exists.
 
 ### Endpoints
 
@@ -198,10 +198,10 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 
 1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. `railway.toml` at the repo root selects the Dockerfile, the `/healthz` health check and the restart policy; nothing to configure in the build settings.
 2. In the service: add a **volume** and mount it at `/data`.
-3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional, no scopes needed). Leave `PORT` alone; the image already sets `DATA_DIR=/data` and `TRUSTED_PROXY_HOPS=1`. Keep the service at one replica.
+3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional, no scopes needed). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`:** Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so the image default of 1 keys every request on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
 4. Settings → Networking → **Generate domain** (or add a custom domain). In Settings → Deploy, tick "Wait for CI" so a push to `main` deploys only after the checks pass.
 5. Check `https://<domain>/healthz` (`ready` turns true after about 10 seconds), then `node scripts/mcp-acceptance.ts https://<domain>/mcp`.
-6. Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
+6. (Done.) Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
 
 ### Deviations from the design above
 
