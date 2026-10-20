@@ -13,7 +13,7 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 | `docs/02-diagnostics.md` | Adding or changing a lint rule |
 | `docs/03-lsp.md` | LSP features, performance, protocol behavior |
 | `docs/04-cli.md` | CLI commands, output formats, exit codes |
-| `docs/05-transforms.md` | `fmt`, `normalize` (CN cleanup), `migrate` (format eras) |
+| `docs/05-transforms.md` | Design reference only: `fmt`, `normalize` (CN cleanup), `migrate` (format eras) moved to the maintainer's C# app |
 | `docs/06-mcp-server.md` | Hosted MCP server on Railway |
 | `docs/07-agent-integration.md` | Claude Code plugin, skills, other agents |
 | `docs/08-editor-integration.md` | VS Code, Kate, HLSL, lupomikti compatibility |
@@ -48,6 +48,8 @@ pnpm test:corpus         # parses corpus/ (local only) + $XXMI_PACKAGE_SRC; fail
 pnpm grammar:update      # rebuilds packages/core/grammar/*.wasm from a tree-sitter-migoto fork checkout (XXMI_GRAMMAR_SRC env var)
 pnpm spec:extract        # regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags); --check to verify
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
+pnpm xxmi query symbol 'CommandList\ZZMI\SetTextures'      # read-only lookups (spec, library symbols)
+node scripts/mcp-acceptance.ts http://localhost:3000/mcp   # the M6 questions against a running MCP server (docs/06)
 pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
 pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Bun); no --target: every release target
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx  # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages

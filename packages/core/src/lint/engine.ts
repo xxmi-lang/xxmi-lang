@@ -7,6 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import type { IniFile } from '../model/types.ts';
 import type { TextEncoding } from '../parser/index.ts';
 import { bundledSnapshots, defaultSpec } from '../defaults.ts';
+import type { PathResolver } from '../paths.ts';
 import { SpecLookup } from '../spec/lookup.ts';
 import type { SymbolSnapshot } from '../workspace/symbols.ts';
 import { Workspace } from '../workspace/workspace.ts';
@@ -44,6 +45,8 @@ export interface LintOptions {
   rules?: string[];
   lookup?: SpecLookup;
   snapshots?: SymbolSnapshot[];
+  /** Replaces the host file system for include and path checks (see `lintTexts`). */
+  resolver?: PathResolver;
   configs?: ConfigLoader;
   /** Rule settings that win over xxmi.toml (editor settings, docs/03-lsp.md). */
   overrides?: Record<string, RuleSetting>;
@@ -128,7 +131,7 @@ export function collectIniFiles(path: string): string[] {
 /** Lints files and folders; the CLI's `xxmi lint`. */
 export async function lintPaths(paths: string[], options: LintOptions = {}): Promise<LintResult> {
   const lookup = options.lookup ?? new SpecLookup(defaultSpec());
-  const workspace = new Workspace({ lookup, snapshots: options.snapshots ?? bundledSnapshots() });
+  const workspace = newWorkspace(lookup, options);
   const targets: IniFile[] = [];
   for (const path of paths) {
     const full = resolve(path);
@@ -155,10 +158,42 @@ export async function lintText(
   encoding?: TextEncoding,
 ): Promise<LintResult> {
   const lookup = options.lookup ?? new SpecLookup(defaultSpec());
-  const workspace = new Workspace({ lookup, snapshots: options.snapshots ?? bundledSnapshots() });
+  const workspace = newWorkspace(lookup, options);
   const full = resolve(path);
   const file = await workspace.openDocument(full, text, dirname(full));
   return lintTargets([encoding ? { ...file, encoding } : file], workspace, options);
+}
+
+/**
+ * Lints several in-memory files together (the hosted MCP server's `lint_ini`): each is opened
+ * like an editor buffer, so `include =` between them resolves. Pass `options.resolver` to keep
+ * include and path checks off the host file system. A `d3dx.ini` opens first, since it decides
+ * the package root of the rest.
+ */
+export async function lintTexts(
+  files: { path: string; text: string }[],
+  options: LintOptions = {},
+): Promise<LintResult> {
+  const lookup = options.lookup ?? new SpecLookup(defaultSpec());
+  const workspace = newWorkspace(lookup, options);
+  const ordered = [...files].sort((a, b) => Number(isD3dx(b.path)) - Number(isD3dx(a.path)));
+  for (const { path, text } of ordered) workspace.stageDocument(path, text);
+  const targets: IniFile[] = [];
+  for (const { path, text } of ordered) {
+    const full = resolve(path);
+    targets.push(await workspace.openDocument(full, text, dirname(full)));
+  }
+  return lintTargets(targets, workspace, options);
+}
+
+const isD3dx = (path: string): boolean => /(^|[\\/])d3dx\.ini$/i.test(path);
+
+function newWorkspace(lookup: SpecLookup, options: LintOptions): Workspace {
+  return new Workspace({
+    lookup,
+    snapshots: options.snapshots ?? bundledSnapshots(),
+    ...(options.resolver ? { resolver: options.resolver } : {}),
+  });
 }
 
 function lintTargets(targets: IniFile[], workspace: Workspace, options: LintOptions): LintResult {

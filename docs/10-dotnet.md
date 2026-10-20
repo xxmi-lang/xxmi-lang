@@ -9,7 +9,7 @@ A thin, typed client over the `xxmi` binary. It does not parse, resolve or lint 
 - **`XxmiLinter`** (`IXxmiLinter`): lint files and folders in a batch (`LintAsync`), one file (`LintFileAsync`) or text you hold in memory (`LintTextAsync`); one process per call. Use it for batch work and CI-like checks.
 - **`XxmiLanguageService`** (`IXxmiLanguageService`): one long-lived language server. Use it for an editor-like experience: diagnostics for text you hold in memory, hover, go to definition, references, completion, outline, rename, quick fixes.
 
-Not included: a `XxmiQuery` wrapper. `xxmi query` is not implemented yet (`04-cli.md`, "Implemented so far"); it will get one when it exists.
+Not included yet: a `XxmiQuery` wrapper. `xxmi query` exists now (`04-cli.md`, "Implemented so far"), including `--json`, so the wrapper can be added.
 
 ## Packages
 

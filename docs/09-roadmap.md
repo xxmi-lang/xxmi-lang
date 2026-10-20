@@ -70,7 +70,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 **Accept:** in VS Code and Kate on a real ZZZ mod: diagnostics appear, go-to-definition into ZZMI libraries works, and renaming a CommandList updates all references across files. In Claude Code, an edit that introduces an unresolved `run =` produces an XM201 diagnostic in the agent's context. `claude plugin validate ./plugin` passes. The performance targets in `03-lsp.md` hold.
 
-**Status (2026-10-01):** built and verified, except the Kate check and the release itself.
+**Status (2026-10-01):** built and verified, except the Kate check. `v0.1.0` was released since, and `v0.1.1` and `v0.1.2` followed.
 
 - **VS Code:** a real VS Code test (`packages/vscode/test`, also in CI under xvfb) opens a mod in a package fixture and checks four things: diagnostics after an edit, go-to-definition into the library, renaming a CommandList across both files of the mod, and hover.
   - On real data: in a ZZMI install with the SunnaKfc mod under `Mods/`, `run = CommandList\ZZMI\SetTextures` resolves to `Core/ZZMI/Libraries/SlotFix/Resources/Resources.ini:3`.
@@ -80,30 +80,36 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 - **Binaries:** `pnpm build:binaries` builds every target, now including win-arm64. The WASM, spec and snapshot are embedded, and the protocol suite runs against the compiled binary in CI on all three OSes and against the release binaries in `release.yml`.
 - **Still to do:**
   - **Kate:** nobody has checked it in Kate yet (the config and guide are in `clients/kate/`).
-  - **Release:** tagging `v0.1.0` runs the release workflow.
   - **Publishing:** the Marketplace and Open VSX need publisher accounts.
-  - **Formatting:** LSP formatting moved to M4 with `xxmi fmt`.
+  - **Formatting:** LSP formatting is not planned here any more; see M4.
 
-## M4: Formatting and normalization
+## M4: Formatting and normalization — moved
+
+**Decision (2026-10-20):** M4 and M5 will not be built in this repository. The maintainer's own C# app, built on the `XxmiLang` NuGet library (`10-dotnet.md`), will do formatting, normalization and migration, and will be released on GitHub later. Once it is public, M4 and M5 are replaced by one usage skill that describes how to drive that app. LSP formatting moves with it; the language server offers none.
+
+`05-transforms.md` stays as a design reference only. The old plan, for history:
+
+<details>
+<summary>Old M4 text</summary>
 
 - `xxmi fmt` plus LSP formatting.
-- `normalize` steps 1–5 (`05-transforms.md`), with golden fixtures per step.
-- Skills: `xxmi-normalize-mod`, `xxmi-apply-library`.
-- Rules XM4xx, XM301–XM303.
+- `normalize` steps 1–5, with golden fixtures per step; skills `xxmi-normalize-mod` and `xxmi-apply-library`; rules XM4xx and XM301–XM303.
+- Needed 3–5 CN mods, one hand-cleaned target and the ZZZ slot-name mapping from the maintainers.
+- Accept: `fmt` idempotent on the corpus; `normalize` close to the hand-cleaned target with no semantic change.
 
-**Needs from maintainers:** 3–5 CN mods for the local corpus, one hand-cleaned target, and the ZZZ slot-name mapping.
+</details>
 
-**Accept:** `fmt` is idempotent on the whole corpus. On the hand-cleaned target mod, `normalize` gets within the agreed diff of the hand-cleaned version (define "agreed" with the maintainer: e.g. all renames correct or flagged for review). No semantic change: symbol reference graph before equals after, modulo renames.
+## M5: Migration — moved
 
-## M5: Migration
+Moved to the maintainer's C# app, together with M4 (see above). Old plan, for history:
 
-- Recipe framework, era detection, `xxmi migrate`, LSP code action, XM501/XM502.
-- First real recipe, built from maintainer-provided before/after pairs.
-- Skill: `xxmi-migrate-mod`.
+<details>
+<summary>Old M5 text</summary>
 
-**Needs from maintainers:** era definitions and 3–5 before/after pairs per transition (`05-transforms.md`).
+- Recipe framework, era detection, `xxmi migrate`, LSP code action, XM501/XM502, first real recipe from maintainer-provided before/after pairs, skill `xxmi-migrate-mod`.
+- Accept: `migrate` on "before" equals "after" (or differs only in `manual` items) for every provided pair.
 
-**Accept:** for each provided pair, `migrate` on "before" equals "after", or differs only in items listed as `manual` in the report. Era detection is correct on all provided examples.
+</details>
 
 ## M6: Hosted MCP on Railway
 
@@ -111,6 +117,16 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 - `.mcp.json` added to the plugin; `AGENTS.md`.
 
 **Accept:** a fresh Claude Code session with only the MCP configured (no local clone) can answer "what inputs does `CommandList\ZZMI\SetTextures` need", "where is `store` implemented in the DLL" and "lint this ini" correctly. A new ZZMI-Package commit is indexed within 20 minutes. Rate limiting and input caps are verified by tests.
+
+**Status (2026-10-20):** built; not deployed. Deploying needs the maintainer's Railway account (steps in `06-mcp-server.md`, "Railway setup").
+
+- `packages/mcp-server` serves nine tools and the spec resources over stateless Streamable HTTP; tools, env vars and design choices are in `06-mcp-server.md`, "As built".
+- The three questions are answered by `scripts/mcp-acceptance.ts` against the Docker image running locally; CI builds the image, starts it, and runs the same script weekly.
+- The indexer polls every 15 minutes (`POLL_INTERVAL_MIN`), so a new ZZMI-Package commit is served within about 16 minutes: the check, a tarball download and the index build take under half a minute.
+- Rate limiting, input caps, the path sandbox and the indexer swap are covered by tests in `packages/mcp-server/test`.
+- Not in this milestone: the `migration_guide` tool and `xxmi://eras/…` resources (they belong to M5, which moved), spec re-extraction on the server, `XXMI_MCP_KEYS`.
+- Also delivered: `xxmi query` (`section-kinds`, `keys`, `command`, `operator`, `symbol`, `library`), which the MCP tools share their logic with (`packages/core/src/query/`). `refs` and `outline` are still open.
+- `plugin/.mcp.json` reads the server URL from `XXMI_MCP_URL`; the plugin has no default URL until a server is deployed.
 
 ## M7: Polish and ecosystem
 
@@ -124,7 +140,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 ## Delivered outside the milestones
 
-- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper waits for `xxmi query`.
+- **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper can now be added: `xxmi query` exists (M6).
 
 ## Open questions (resolve with maintainers as they come up)
 

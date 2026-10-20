@@ -1,0 +1,28 @@
+{
+  "name": "@xxmi-lang/mcp-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hosted read-only MCP server: spec, library and DLL-source lookups and ini linting for XXMI",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "bin": {
+    "xxmi-mcp": "./dist/main.js"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "node --conditions=source src/main.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@xxmi-lang/core": "workspace:*",
+    "tar": "^7.5.22",
+    "zod": "^4.6.7"
+  },
+  "files": [
+    "dist"
+  ]
+}

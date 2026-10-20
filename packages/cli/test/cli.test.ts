@@ -203,3 +203,43 @@ describe('xxmi lint --stdin', () => {
     ).toBe('utf8bom');
   });
 });
+
+describe('xxmi query', () => {
+  it('prints a command with its XXMI flag and DLL source', async () => {
+    const { code, out } = await run('query', 'command', 'store');
+
+    expect(code).toBe(0);
+    expect(out).toContain('command store  [XXMI-only]');
+    expect(out).toContain('spec source: CommandList.cpp:');
+  });
+
+  it('lists section kinds and the keys of a section as JSON', async () => {
+    expect((await run('query', 'section-kinds')).out).toContain('Resource');
+    const keys = JSON.parse((await run('query', 'keys', 'Resource', '--json')).out) as {
+      name: string;
+    }[];
+
+    expect(keys.map((k) => k.name)).toContain('filename');
+  });
+
+  it('describes a library symbol from the bundled snapshot and exits 1 for unknown names', async () => {
+    const hit = await run('query', 'symbol', 'CommandList\\ZZMI\\SetTextures');
+    const miss = await run('query', 'symbol', 'CommandList\\ZZMI\\Nope');
+
+    expect(hit.out).toContain('commandlist CommandList\\ZZMI\\SetTextures');
+    expect(hit.out).toContain('Resources.ini');
+    expect(miss.code).toBe(1);
+    expect((await run('query', 'command', 'nonsense-xyz')).code).toBe(1);
+  });
+
+  it('lists libraries and filters by namespace', async () => {
+    expect((await run('query', 'library')).out).toContain('SlotFix');
+    expect((await run('query', 'library', 'slotfix')).out).not.toContain('Healthbar');
+  });
+
+  it('rejects unknown kinds and missing names with exit 2', async () => {
+    expect((await run('query', 'bogus')).code).toBe(2);
+    expect((await run('query', 'keys')).code).toBe(2);
+    expect((await run('query', 'refs', 'x')).code).toBe(2);
+  });
+});

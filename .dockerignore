@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/dist
+**/.vscode-test
+corpus
+dotnet
+.dll
+.zzmi-package
+.xxmi-backup

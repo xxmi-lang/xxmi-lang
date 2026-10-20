@@ -12,7 +12,8 @@ What you get:
   references, rename a command list or variable across files, hover docs, completion, outline,
   quick fixes.
 - **For AI agents:** a Claude Code plugin that shows the agent these diagnostics after every
-  edit.
+  edit, `xxmi query` lookups, and a hosted MCP server (not deployed yet) so an agent can ask
+  about the DLL, the ZZMI libraries and lint text without cloning anything.
 
 The language rules aren't hand-written: they're extracted from the XXMI DLL source
 (`spec/generated/`), and anything XXMI added over vanilla 3DMigoto is marked as such.
@@ -62,6 +63,22 @@ The plugin starts `xxmi-lsp` (it must be on your `PATH`) for `.ini` files and ad
 `xxmi-ini-authoring` skill. Enable it per project, in your mod or package folder. Diagnostics
 reach the agent after its edits.
 
+### Hosted MCP server
+
+`packages/mcp-server` is a read-only MCP server over Streamable HTTP for agents without a shell
+or a local clone: spec lookups with DLL source locations, ZZMI library symbols with their docs,
+source search, and `lint_ini`. It indexes `SpectrumQT/XXMI-Libs-Package`,
+`leotorrez/ZZMI-Package` and `leotorrez/XXMITools` and follows new commits every 15 minutes.
+**No public instance exists yet**; deploying it to Railway is described in
+[docs/06-mcp-server.md](docs/06-mcp-server.md). Once you have a URL:
+
+```bash
+claude mcp add --transport http xxmi https://<your-domain>/mcp
+```
+
+Other clients take the same URL in their HTTP MCP config. The Claude Code plugin reads the URL
+from `XXMI_MCP_URL`. [AGENTS.md](AGENTS.md) lists the tools for agents.
+
 ### .NET
 
 [![XxmiLang on nuget.org](https://img.shields.io/nuget/v/XxmiLang?label=XxmiLang&logo=nuget)](https://www.nuget.org/packages/XxmiLang)
@@ -82,6 +99,9 @@ quick fixes). See [docs/10-dotnet.md](docs/10-dotnet.md).
 xxmi lint path/to/mod                  # text output; exit 1 if there are errors
 xxmi lint path/to/mod --format json    # schema: packages/cli/schema/lint-output.v1.json
 xxmi lint --help                       # every rule, with its default severity
+xxmi query command store               # docs, args and DLL source of a command
+xxmi query symbol 'CommandList\ZZMI\SetTextures'   # a library symbol: location, docs, usage
+xxmi query library                     # libraries (namespaces) with symbol counts
 xxmi lsp --stdio                       # the language server (same as xxmi-lsp)
 ```
 
@@ -107,6 +127,7 @@ follows, and [docs/](docs/) for the design.
 ```bash
 pnpm install && pnpm build && pnpm test
 pnpm xxmi lint path/to/mod             # CLI from source
+docker build -f packages/mcp-server/Dockerfile -t xxmi-mcp .   # the MCP server image
 pnpm build:binaries --target host      # single-file binaries (needs Bun)
 ```
 

@@ -15,7 +15,20 @@ import {
   buildSnapshot,
   decodeText,
   displayPath,
+  bundledSnapshots,
+  describeSnapshotSymbol,
+  describeSymbol,
   findPackageRoot,
+  formatLintText,
+  listLibraries,
+  listSpec,
+  lookupSpec,
+  renderSpecEntry,
+  renderSymbol,
+  type LoadedPackage,
+  type SpecEntryKind,
+  type SymbolSnapshot,
+  lintResultDocument,
   lintText,
   lintPaths,
   relaunchWithWasmFlags,
@@ -28,6 +41,7 @@ import {
 const USAGE = `Usage:
   xxmi lint [paths…] [--format text|json] [--rules XM201,XM202] [--max-warnings N]
   xxmi lint --stdin --stdin-path <path> [--format text|json] [--rules …] [--max-warnings N]
+  xxmi query <kind> [name] [--package DIR] [--json]
   xxmi index <package dir> --out FILE [--name NAME]
   xxmi lsp [--stdio]
 
@@ -37,44 +51,12 @@ class UsageError extends Error {}
 
 /** Diagnostics as `path:line:col  severity  XM201  message`, paths relative to the cwd. */
 export function formatText(result: LintResult): string {
-  const lines: string[] = [];
-  for (const file of result.files) {
-    for (const d of file.diagnostics) {
-      const { line, character } = d.range.start;
-      const fix = d.fix ? '  [fix available]' : '';
-      lines.push(
-        `${displayPath(file.path)}:${line + 1}:${character + 1}  ${d.severity}  ${d.id}  ${d.message}${fix}`,
-      );
-    }
-  }
-  const s = result.summary;
-  lines.push(
-    `${s.files} file${s.files === 1 ? '' : 's'}: ${s.error} error${s.error === 1 ? '' : 's'}, ${s.warning} warning${s.warning === 1 ? '' : 's'}, ${s.info} info, ${s.hint} hint${s.hint === 1 ? '' : 's'}`,
-  );
-  return lines.join('\n');
+  return formatLintText(result, displayPath);
 }
 
 /** The versioned JSON output (schema/lint-output.v1.json). Paths use `/`, relative to the cwd. */
 export function formatJson(result: LintResult): string {
-  return JSON.stringify(
-    {
-      version: 1,
-      files: result.files.map((f) => ({
-        path: displayPath(f.path),
-        encoding: f.encoding,
-        diagnostics: f.diagnostics.map((d) => ({
-          id: d.id,
-          severity: d.severity,
-          message: d.message,
-          range: d.range,
-          ...(d.fix ? { fix: d.fix } : {}),
-        })),
-      })),
-      summary: result.summary,
-    },
-    null,
-    2,
-  );
+  return JSON.stringify(lintResultDocument(result, displayPath), null, 2);
 }
 
 /** Everything of stdin as bytes. */
@@ -209,6 +191,131 @@ globals and namespaces of d3dx.ini and every file it includes.`);
   return 0;
 }
 
+/** Library data for `query symbol|library`: the package around `--package`/cwd, else the bundle. */
+async function libraryData(
+  dir: string | undefined,
+): Promise<{ snapshot: SymbolSnapshot; pkg?: LoadedPackage }> {
+  const root = findPackageRoot(resolve(dir ?? process.cwd()));
+  if (root) {
+    const workspace = new Workspace({ lookup: new SpecLookup(defaultSpec()) });
+    await workspace.loadPackage(root);
+    const snapshot = buildSnapshot(workspace, root, {
+      name: 'package',
+      repository: '',
+      commit: '',
+    });
+    return { snapshot, pkg: { workspace, root } };
+  }
+  if (dir) throw new UsageError(`no d3dx.ini found at or above ${dir}`);
+  const bundled = bundledSnapshots()[0];
+  if (!bundled) throw new UsageError('no package found and no bundled library snapshot');
+  return { snapshot: bundled };
+}
+
+const SPEC_QUERY_KINDS: Record<string, SpecEntryKind[]> = {
+  command: ['command', 'function', 'member'],
+  operator: ['operator'],
+};
+
+async function query(args: string[]): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      json: { type: 'boolean', default: false },
+      package: { type: 'string' },
+      help: { type: 'boolean', default: false },
+    },
+  });
+  if (values.help) {
+    console.log(`xxmi query <kind> [name] [--package DIR] [--json]
+
+Read-only lookups. Kinds:
+  section-kinds          every section kind the DLL knows
+  keys <section>         keys a section reads, e.g. Resource
+  command <name>         a command, function or ->member: docs, args, DLL source
+  operator <op>          an operator token with its precedence
+  symbol <qualifiedName> a library symbol, e.g. CommandList\\ZZMI\\SetTextures
+  library [name]         libraries (namespaces) of the package, with symbol counts
+
+symbol and library read the package around --package (default: the current folder), else the
+bundled ZZMI snapshot, which has locations but no doc comments. Not implemented yet: refs, outline.`);
+    return 0;
+  }
+  const [kind, name] = positionals;
+  const spec = defaultSpec();
+  const print = (data: unknown, text: string): number => {
+    console.log(values.json ? JSON.stringify(data, null, 2) : text);
+    return 0;
+  };
+  const found = (entries: ReturnType<typeof lookupSpec>): number => {
+    if (entries.length > 0)
+      return print(entries, entries.map((e) => renderSpecEntry(e)).join('\n\n'));
+    console.error(`xxmi: nothing found for ${kind ?? ''} ${name ?? ''}`);
+    return 1;
+  };
+
+  switch (kind) {
+    case 'section-kinds':
+    case 'keys': {
+      if (kind === 'keys' && !name) throw new UsageError('xxmi query keys needs a section name');
+      const items = listSpec(spec, kind === 'keys' ? 'key' : 'section', name);
+      return print(
+        items,
+        items
+          .map(
+            (i) => `${i.name}${i.xxmi ? ' [XXMI-only]' : ''}${i.summary ? ` - ${i.summary}` : ''}`,
+          )
+          .join('\n'),
+      );
+    }
+    case 'command':
+    case 'operator': {
+      if (!name) throw new UsageError(`xxmi query ${kind} needs a name`);
+      const kinds = SPEC_QUERY_KINDS[kind] ?? [];
+      return found(kinds.flatMap((k) => lookupSpec(spec, { name, kind: k })));
+    }
+    case 'symbol': {
+      if (!name) throw new UsageError('xxmi query symbol needs a qualified name');
+      const { snapshot, pkg } = await libraryData(values.package);
+      const info = pkg ? describeSymbol(pkg, name) : describeSnapshotSymbol(snapshot, name);
+      if (!info) {
+        console.error(`xxmi: no symbol ${name}`);
+        return 1;
+      }
+      return print(info, renderSymbol(info));
+    }
+    case 'library': {
+      const { snapshot, pkg } = await libraryData(values.package);
+      const libs = listLibraries(snapshot, new SpecLookup(spec), pkg).filter(
+        (l) => !name || l.namespace.toLowerCase() === name.toLowerCase(),
+      );
+      if (name && libs.length === 0) {
+        console.error(`xxmi: no library ${name}`);
+        return 1;
+      }
+      const counts = (l: (typeof libs)[number]): string =>
+        Object.entries(l.counts)
+          .map(([k, n]) => `${n} ${k}`)
+          .join(', ');
+      return print(
+        libs,
+        libs
+          .map(
+            (l) =>
+              `${l.namespace}  (${counts(l)})${l.moduleDoc ? `\n  ${l.moduleDoc.text.split('\n')[0] ?? ''}` : ''}`,
+          )
+          .join('\n'),
+      );
+    }
+    case 'refs':
+    case 'outline':
+      throw new UsageError(`xxmi query ${kind} is not implemented yet`);
+    default:
+      throw new UsageError(`unknown query kind ${kind ?? '(none)'}; see xxmi query --help`);
+  }
+}
+
 /** `xxmi lsp`: the same language server as `xxmi-lsp`, so one binary can serve both. */
 async function lsp(args: string[]): Promise<number> {
   if (args.includes('--help') || args.includes('-h')) {
@@ -236,6 +343,8 @@ export async function main(
         return await lint(rest, readStdin);
       case 'index':
         return await index(rest);
+      case 'query':
+        return await query(rest);
       case 'lsp':
         return await lsp(rest);
       case '--version':
