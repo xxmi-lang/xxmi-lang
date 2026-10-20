@@ -38,15 +38,17 @@ Claude Code plugins support LSP servers natively. With `diagnostics` on (the def
 ### As built (M3)
 
 - **Shipped:** `plugin/.claude-plugin/plugin.json`, `plugin/.lsp.json` (as above) and the `xxmi-ini-authoring` skill. `.claude-plugin/marketplace.json` at the repo root makes the repo a marketplace: `claude plugin marketplace add xxmi-lang/xxmi-lang`, then `claude plugin install xxmi@xxmi-lang`. CI runs `claude plugin validate` on both.
-- **Not shipped yet:** `.mcp.json` (M6), the fallback hook and the other skills (M4/M5). The authoring skill only names commands that exist (`xxmi lint`, `--version`); `xxmi query` arrives with the MCP work.
+- **Not shipped:** the fallback hook, and the skills for normalize, migrate and apply-library: those depend on the maintainer's C# app (M4/M5, `09-roadmap.md`), which will get one usage skill once it is public.
 - **Verified 2026-10-01:** a headless session (`claude -p --plugin-dir ./plugin`, `xxmi-lsp` on PATH) edited `run = CommandListLocal` to `CommandListLocl`, and the agent reported "XM201, line 5:7, Unresolved command list `CommandListLocl`. Did you mean `CommandListLocal`?"
 - **Timing:** Claude Code starts plugin LSP servers lazily, on the first edit to a matching file, and attaches diagnostics to the agent's *next* turn. If the agent answers immediately after its first edit, the diagnostic can arrive after it has answered. Any further step delivers it.
 
 ### `.mcp.json`
 
 ```json
-{ "mcpServers": { "xxmi": { "type": "http", "url": "https://<your-domain>/mcp" } } }
+{ "mcpServers": { "xxmi": { "type": "http", "url": "${XXMI_MCP_URL}" } } }
 ```
+
+**TODO (needs the Railway deployment, `06-mcp-server.md`):** no server is deployed yet, so the plugin has no default URL. Claude Code expands `${VAR}` in plugin `.mcp.json`; while `XXMI_MCP_URL` is unset the server shows as `failed` in `/mcp` and nothing else is affected (`claude plugin validate` passes). Use it now by exporting `XXMI_MCP_URL=https://<your-domain>/mcp` before starting Claude Code. After deploying, change the entry to `${XXMI_MCP_URL:-https://<the real domain>/mcp}` so it works out of the box.
 
 ### Fallback hook
 
@@ -96,7 +98,7 @@ Skills hold **workflow and judgment**. Facts come from the CLI, LSP or MCP, so s
 ## Other agents
 
 - Agent Skills format: other agents that support the format can load `plugin/skills/*` directly.
-- `AGENTS.md` at the repo root: a short version of `CLAUDE.md`'s rules, plus "use `xxmi` CLI and the hosted MCP", for Codex, Cursor, etc.
+- `AGENTS.md` at the repo root (written in M6): a short version of `CLAUDE.md`'s rules, plus "use `xxmi` CLI and the hosted MCP", for Codex, Cursor, etc.
 - The MCP server is the universal entry point for agents without shell access.
 
 ## Evaluation

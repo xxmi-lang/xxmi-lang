@@ -1,5 +1,7 @@
 # 05 — Transforms: `fmt`, `normalize`, `migrate`
 
+> **Status (2026-10-20): superseded, kept as a design reference.** These transforms will not be built in this repository. The maintainer's C# app (on the `XxmiLang` NuGet library, `10-dotnet.md`) takes over formatting, normalization and migration and will be released on GitHub later; a usage skill replaces milestones M4 and M5 once it is public (`09-roadmap.md`). Nothing below is implemented here.
+
 All three operate on the semantic model and emit **edits** (range + new text), never whole-file rewrites. Comments and unknown content are preserved. Each is idempotent: running it twice gives the same result as running it once.
 
 ## `fmt`

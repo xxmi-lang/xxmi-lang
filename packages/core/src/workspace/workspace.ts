@@ -172,6 +172,14 @@ export class Workspace {
     return this.addTarget(full, fallbackRoot);
   }
 
+  /**
+   * Registers buffer text without loading the file, so files given together can include each
+   * other before each is opened.
+   */
+  stageDocument(path: string, text: string): void {
+    this.overlays.set(resolve(path), text);
+  }
+
   /** Drops the editor buffer; the file is re-read from disk (or removed if it's gone). */
   async closeDocument(path: string): Promise<void> {
     const full = resolve(path);

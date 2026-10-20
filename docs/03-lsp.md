@@ -29,7 +29,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 
 ### As implemented (M3)
 
-`packages/lsp` (`xxmi-lsp`) implements phase 1 except formatting, which waits for `xxmi fmt` (M4). Navigation, hover and completion logic is in `@xxmi-lang/core` (`src/navigation/`); the server only keeps editor state and converts types.
+`packages/lsp` (`xxmi-lsp`) implements phase 1 except formatting, which is not planned here any more (M4 moved to the maintainer's C# app, `09-roadmap.md`). Navigation, hover and completion logic is in `@xxmi-lang/core` (`src/navigation/`); the server only keeps editor state and converts types.
 
 - **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after 150 ms of quiet is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted 150 ms after the last one.
 - **Definition, references, rename:** sections, variables (`$x`, `$\N\x`, locals), resources, pools, include targets and `filename =` paths. Rename edits only the name part of each reference and keeps prefixes and namespaces as written. It refuses symbols from the bundled snapshot, from the DLL's built-in sections, and from the package (`Core/`, d3dx.ini).

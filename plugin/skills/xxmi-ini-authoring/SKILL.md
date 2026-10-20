@@ -18,6 +18,12 @@ Run `xxmi-lsp --version` and `xxmi --version` (or `xxmi lint --help`).
   https://github.com/xxmi-lang/xxmi-lang/releases and put them on PATH, then restart Claude Code.
 - Without the LSP you can still lint by hand: `xxmi lint <file or folder>`.
 
+For questions about the language itself, ask the tools rather than recalling 3DMigoto:
+`xxmi query command <name>`, `xxmi query keys <section>`, `xxmi query operator <op>`. Without a
+shell or a local checkout, the hosted MCP server answers the same questions (`spec_lookup`,
+`library_symbol`) and can look up the DLL source (`find_implementation`) and lint text
+(`lint_ini`); the plugin's MCP setup is described in `docs/07-agent-integration.md`.
+
 ## 2. After every edit, fix what the tools report
 
 Diagnostics arrive after each edit (from the LSP) or from `xxmi lint`. Before moving on, fix
@@ -41,8 +47,10 @@ errors remain.
   its sections as `CommandList\<Name>\Foo` and its globals as `$\<Name>\var`; inside the same
   namespace, `CommandListFoo` and `$var` are enough.
 - **Libraries (ZZMI).** Call library code instead of copying it, e.g.
-  `run = CommandList\ZZMI\SetTextures`. Hover a library command list to read its documented
-  inputs, and set those before the `run`. Never assign to a library's `locked` globals.
+  `run = CommandList\ZZMI\SetTextures`. Read a library command list's documented inputs
+  (hover it, or `xxmi query symbol 'CommandList\ZZMI\SetTextures'`, or the MCP tool
+  `library_symbol`) and set those before the `run`. Never assign to a library's `locked`
+  globals.
 - **Variables.** Declare globals in `[Constants]` (`global $x = 0`, `global persist $x` for
   values the user toggles); use `local $tmp` for temporaries inside a command list.
 - **Docs.** Put a `;` comment block directly above every new `[CommandList…]` saying what it

@@ -238,3 +238,44 @@ jobs:
         run: |
           claude plugin validate ./plugin
           claude plugin validate .
+
+  docker:
+    # The hosted MCP server image (docs/06-mcp-server.md). Built, not pushed: Railway builds it
+    # from the repo on deploy.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the image
+        run: docker build -f packages/mcp-server/Dockerfile -t xxmi-mcp .
+
+      # No GitHub access needed: the server answers from the bundled snapshot until its first
+      # index is ready, and /healthz is up at once.
+      - name: Container starts, passes its health check and lists the tools
+        env:
+          # Runner IPs share GitHub's unauthenticated API limit; the indexer reads it from the env.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          docker run -d --name mcp -p 3000:3000 -v mcp-data:/data -e GITHUB_TOKEN xxmi-mcp
+          for _ in $(seq 1 30); do
+            curl -fsS http://localhost:3000/healthz && break
+            sleep 1
+          done
+          curl -fsS http://localhost:3000/healthz
+          curl -fsS http://localhost:3000/mcp \
+            -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q lint_ini
+          # The server process itself runs unprivileged.
+          docker exec mcp sh -c "ps | grep '[d]ist/main.js'" | grep -q ' node '
+
+      # The M6 acceptance questions against the real repos (weekly: upstream moves).
+      - name: Acceptance questions against the running container
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: node scripts/mcp-acceptance.ts http://localhost:3000/mcp
+
+      - if: always()
+        run: docker logs mcp

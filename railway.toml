@@ -1,0 +1,11 @@
+# Railway config for the hosted MCP server (docs/06-mcp-server.md "As built").
+# Attach a volume mounted at /data to the service; see the doc for the other settings.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "packages/mcp-server/Dockerfile"
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

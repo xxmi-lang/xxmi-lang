@@ -1,8 +1,15 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ConfigError, lintPaths, lintText, parseConfig } from '../src/index.ts';
+import {
+  ConfigError,
+  lintPaths,
+  lintText,
+  lintTexts,
+  parseConfig,
+  VirtualPathResolver,
+} from '../src/index.ts';
 
 function modDir(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'xxmi-engine-'));
@@ -91,5 +98,50 @@ describe('lintText', () => {
     );
     const result = await lintText(join(dir, 'mod.ini'), text, { snapshots: [], rules: ['XM201'] });
     expect(result.files[0]?.diagnostics).toHaveLength(1);
+  });
+});
+
+describe('lintTexts', () => {
+  it('lints several in-memory files together, resolving includes between them', async () => {
+    const result = await lintTexts(
+      [
+        {
+          path: '/v/mod.ini',
+          text: '[Include A]\ninclude = a.ini\n\n[CommandListMain]\nrun = CommandList\\Lib\\Thing\n',
+        },
+        { path: '/v/a.ini', text: 'namespace = Lib\n\n[CommandListThing]\n' },
+      ],
+      {
+        snapshots: [],
+        rules: ['XM201', 'XM207'],
+        resolver: new VirtualPathResolver([resolve('/v/mod.ini'), resolve('/v/a.ini')]),
+      },
+    );
+
+    expect(result.files.map((f) => f.diagnostics.length)).toEqual([0, 0]);
+  });
+
+  it('keeps include and path checks off the host file system with a virtual resolver', async () => {
+    const path = resolve('/v/mod.ini');
+    const text = '[Include Evil]\ninclude = ..\\..\\..\\..\\..\\etc\\hosts\n';
+    const virtual = await lintTexts([{ path, text }], {
+      snapshots: [],
+      rules: ['XM207'],
+      resolver: new VirtualPathResolver([path]),
+    });
+
+    expect(virtual.files[0]?.diagnostics.map((d) => d.id)).toEqual(['XM207']);
+  });
+});
+
+describe('VirtualPathResolver', () => {
+  it('lists only the virtual files and their folders, case-insensitively resolvable', () => {
+    const file = resolve('/v/Mods/A/Mod.ini');
+    const resolver = new VirtualPathResolver([file]);
+
+    expect(resolver.list(resolve('/v/Mods/A'))).toEqual(['Mod.ini']);
+    expect(resolver.isDirectory(resolve('/v/Mods'))).toBe(true);
+    expect(resolver.list(resolve('/etc'))).toBeNull();
+    expect(resolver.resolve(resolve('/v/Mods/A'), 'mod.INI')?.path).toBe(file);
   });
 });
