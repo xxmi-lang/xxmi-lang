@@ -54,6 +54,19 @@ namespace XxmiLang
             return path.Replace('/', '\\');
         }
 
+        /// <summary>A form of <paramref name="uri"/> that is equal for every spelling of the same file; compare it with the platform's path comparer.</summary>
+        public static string Key(string uri)
+        {
+            try
+            {
+                return ToPath(uri);
+            }
+            catch (ArgumentException)
+            {
+                return uri;
+            }
+        }
+
         public static string ToPath(string uri) => ToPath(uri, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
     }
 }

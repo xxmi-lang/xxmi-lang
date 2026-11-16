@@ -20,5 +20,14 @@ namespace XxmiLang
 
         /// <summary>How long a language service request may take before it fails with <see cref="TimeoutException"/>. Default: 60 seconds.</summary>
         public TimeSpan RequestTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        /// <summary>How long the language service waits for the server to shut down (the handshake and the exit together) before it kills the process tree. Default: 10 seconds.</summary>
+        public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// How long one <see cref="XxmiLinter"/> process may run before it is killed and <see cref="XxmiProcessException"/> is thrown;
+        /// each batch of a <c>LintAsync</c> call gets this much. Default: 2 minutes.
+        /// </summary>
+        public TimeSpan ProcessTimeout { get; set; } = TimeSpan.FromMinutes(2);
     }
 }

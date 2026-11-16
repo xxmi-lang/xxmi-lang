@@ -48,7 +48,7 @@ namespace XxmiLang
                 var arguments = new List<string>(flags);
                 arguments.Add("--"); // a path that starts with "-" is still a path
                 arguments.AddRange(batch);
-                var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken).ConfigureAwait(false);
+                var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken, timeout: _options.ProcessTimeout).ConfigureAwait(false);
                 files.AddRange(Parse(output, workingDirectory));
             }
             // The same file can come back from several batches.
@@ -81,7 +81,7 @@ namespace XxmiLang
             arguments.Add("--stdin");
             arguments.Add("--stdin-path");
             arguments.Add(full);
-            var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken, text).ConfigureAwait(false);
+            var output = await ProcessRunner.RunAsync(executable, arguments, workingDirectory, cancellationToken, text, _options.ProcessTimeout).ConfigureAwait(false);
             return Summarize(Parse(output, workingDirectory).ToList());
         }
 

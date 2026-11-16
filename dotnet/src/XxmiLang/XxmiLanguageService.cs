@@ -27,6 +27,8 @@ namespace XxmiLang
         private static readonly StringComparer PathComparer =
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
+        private static readonly TimeSpan MaxShutdownWait = TimeSpan.FromMilliseconds(int.MaxValue);
+
         private readonly XxmiOptions _options;
         private readonly SemaphoreSlim _lifecycle = new SemaphoreSlim(1, 1);
         private readonly SemaphoreSlim _documentLock = new SemaphoreSlim(1, 1);
@@ -137,7 +139,7 @@ namespace XxmiLang
                 var session = _session;
                 if (session is null || session.Connection.IsClosed) return; // gone with the process
                 var uri = FileUris.FromPath(full);
-                session.Diagnostics.TryRemove(uri, out _);
+                session.Forget(uri);
                 await session.Connection.NotifyAsync(
                     "textDocument/didClose",
                     new DidCloseParams(new TextDocumentIdentifier(uri)),
@@ -362,11 +364,12 @@ namespace XxmiLang
             }
             if (session is null) return;
             session.Stopping = true;
+            var deadline = Stopwatch.StartNew();
             if (!session.Connection.IsClosed)
             {
                 try
                 {
-                    using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+                    using (var timeout = new CancellationTokenSource(ShutdownWait(_options.ShutdownTimeout, TimeSpan.Zero)))
                     {
                         await session.Connection.RequestAsync("shutdown", timeout.Token).ConfigureAwait(false);
                         await session.Connection.NotifyAsync("exit", timeout.Token).ConfigureAwait(false);
@@ -377,7 +380,18 @@ namespace XxmiLang
                     // Not answering is what the kill below is for.
                 }
             }
-            await session.WaitForExitOrKillAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+            await session.WaitForExitOrKillAsync(ShutdownWait(_options.ShutdownTimeout, deadline.Elapsed)).ConfigureAwait(false);
+        }
+
+        // Infinite stays infinite; anything else is what is left of the budget, kept within what a timer accepts.
+        private static TimeSpan ShutdownWait(TimeSpan configured, TimeSpan elapsed)
+        {
+            if (configured == Timeout.InfiniteTimeSpan) return Timeout.InfiniteTimeSpan;
+
+            var remaining = configured - elapsed;
+            if (remaining <= TimeSpan.Zero) return TimeSpan.Zero;
+
+            return remaining > MaxShutdownWait ? MaxShutdownWait : remaining;
         }
 
         // ---- requests -----------------------------------------------------------------------------------------
@@ -456,7 +470,7 @@ namespace XxmiLang
                 new DocumentSymbolParams(new TextDocumentIdentifier(uri)),
                 WireJsonContext.Default.DocumentSymbolParams,
                 cancellationToken).ConfigureAwait(false);
-            if (session.Diagnostics.TryGetValue(uri, out var published)) return published;
+            if (session.TryGetPublished(uri, out var published)) return published;
             // Nothing published yet (the server skips files it doesn't index): give it a moment, then report none.
             using (var grace = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
@@ -568,6 +582,8 @@ namespace XxmiLang
                     NotificationHandler = OnNotification,
                     RequestHandler = OnRequest,
                     CreateClosedException = CreateExitedExceptionAsync,
+                    WriteTimeout = owner._options.RequestTimeout,
+                    WriteStalled = OnWriteStalled,
                 };
                 Connection.Closed += OnClosed;
                 process.ErrorDataReceived += (_, e) => OnStderr(e.Data);
@@ -581,7 +597,8 @@ namespace XxmiLang
 
             public JsonRpcConnection Connection { get; }
 
-            public ConcurrentDictionary<string, Published> Diagnostics { get; } = new ConcurrentDictionary<string, Published>(StringComparer.Ordinal);
+            // Keyed by path, not by the URI text: the server may echo a document's URI with another drive-letter case or percent-encoding.
+            public ConcurrentDictionary<string, Published> Diagnostics { get; } = new ConcurrentDictionary<string, Published>(PathComparer);
 
             public string? Version { get; set; }
 
@@ -599,14 +616,29 @@ namespace XxmiLang
 
             public async Task WaitForExitOrKillAsync(TimeSpan timeout)
             {
-                var exited = await Task.Run(() => Process.WaitForExit((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
-                if (!exited) ProcessRunner.Kill(Process);
+                using (var limit = new CancellationTokenSource(timeout))
+                {
+                    try
+                    {
+                        await Process.WaitForExitAsync(limit.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Out of time: the check below decides whether the process made it.
+                    }
+                }
+                if (!Process.HasExited) ProcessRunner.Kill(Process);
                 Connection.Abort(new XxmiServerExitedException("The language server was stopped.", null, StandardErrorTail()));
                 Process.Dispose();
             }
 
+            public bool TryGetPublished(string uri, out Published published) => Diagnostics.TryGetValue(FileUris.Key(uri), out published!);
+
+            public void Forget(string uri) => Diagnostics.TryRemove(FileUris.Key(uri), out _);
+
             public async Task<Published> WaitForPublicationAsync(string uri, CancellationToken cancellationToken)
             {
+                uri = FileUris.Key(uri);
                 var waiter = new TaskCompletionSource<Published>(TaskCreationOptions.RunContinuationsAsynchronously);
                 var entry = (uri, waiter);
                 lock (_waiters) _waiters.Add(entry);
@@ -646,15 +678,16 @@ namespace XxmiLang
                 {
                     case "textDocument/publishDiagnostics":
                     {
-                        var uri = LspParsing.Str(parameters, "uri");
-                        if (uri is null || !parameters.TryGetProperty("diagnostics", out var list) || list.ValueKind != JsonValueKind.Array) return;
+                        var rawUri = LspParsing.Str(parameters, "uri");
+                        if (rawUri is null || !parameters.TryGetProperty("diagnostics", out var list) || list.ValueKind != JsonValueKind.Array) return;
+                        var uri = FileUris.Key(rawUri);
                         var raw = list.EnumerateArray().Select(d => d.Clone()).ToList();
                         var parsed = raw.Select(LspParsing.Diagnostic).ToList();
                         var published = new Published(parsed, raw);
                         Diagnostics[uri] = published;
                         lock (_waiters)
                         {
-                            foreach (var (waitUri, waiter) in _waiters.Where(w => w.Uri == uri).ToList())
+                            foreach (var (waitUri, waiter) in _waiters.Where(w => PathComparer.Equals(w.Uri, uri)).ToList())
                             {
                                 waiter.TrySetResult(published);
                                 _waiters.Remove((waitUri, waiter));
@@ -663,7 +696,7 @@ namespace XxmiLang
                         string path;
                         try
                         {
-                            path = FileUris.ToPath(uri);
+                            path = FileUris.ToPath(rawUri);
                         }
                         catch (ArgumentException)
                         {
@@ -719,6 +752,16 @@ namespace XxmiLang
                     + (tail.Length > 0 ? Environment.NewLine + "Last stderr output:" + Environment.NewLine + tail : string.Empty);
                 ExitedException = new XxmiServerExitedException(message, exitCode, tail);
                 return ExitedException;
+            }
+
+            // Aborting first makes the blocked writer report this exception instead of a bare broken pipe.
+            private void OnWriteStalled()
+            {
+                Connection.Abort(new XxmiServerExitedException(
+                    $"The language server stopped reading its input for {_owner._options.RequestTimeout}; it was killed.",
+                    null,
+                    StandardErrorTail()));
+                ProcessRunner.Kill(Process);
             }
 
             private void OnClosed(Exception exception)
