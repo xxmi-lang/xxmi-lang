@@ -1,17 +1,20 @@
-/** Test scaffolding: fixture repos served as tarballs through a fake GitHub client. */
-import { mkdtempSync, readdirSync } from 'node:fs';
+/** Test scaffolding: fixture repos served as extracted trees through a fake source client. */
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { create } from 'tar';
+import { afterAll } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createApp, type App } from '../src/app.ts';
 import { createMcpServer } from '../src/tools/index.ts';
 import { loadConfig, type ServerConfig } from '../src/config.ts';
-import { GitHubError, type GitHubClient, type RemoteRef } from '../src/github.ts';
+import { extractTar } from '../src/extract.ts';
 import { silentLogger } from '../src/logger.ts';
+import type { ReleaseInfo } from '../src/releases.ts';
 import { TRACKED_REPOS, type TrackedRepo } from '../src/repos.ts';
+import type { SourceClient } from '../src/upstream.ts';
 
 export const FIXTURES = resolve(import.meta.dirname, 'fixtures');
 
@@ -22,57 +25,84 @@ export const SHA_A = 'a'.repeat(40);
 export const SHA_B = 'b'.repeat(40);
 export const TAG_SHA = 'c'.repeat(40);
 
-export const tempDir = (): string => mkdtempSync(join(tmpdir(), 'xxmi-mcp-'));
+export const TEMP_PREFIX = 'xxmi-mcp-';
+
+const tempDirs: string[] = [];
+
+afterAll(() => {
+  for (const dir of tempDirs.splice(0))
+    rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+});
+
+/** A fresh directory that is removed when the test file finishes. */
+export function tempDir(): string {
+  const dir = mkdtempSync(join(tmpdir(), TEMP_PREFIX));
+  tempDirs.push(dir);
+  return dir;
+}
 
 export const FIXTURE_DIRS: Record<string, string> = {
   dll: join(FIXTURES, 'dll'),
   zzmi: join(FIXTURES, 'zzmi-package'),
   xxmitools: join(FIXTURES, 'xxmitools'),
+  migoto: join(FIXTURES, 'dll'),
 };
 
+export interface FakeRef {
+  name: string;
+  sha: string;
+}
+
 export interface FakeRemote {
-  head: RemoteRef;
-  tags: RemoteRef[];
+  head: FakeRef;
+  tags: FakeRef[];
+  /** What the releases lookup answers; none by default. */
+  releases?: ReleaseInfo[];
 }
 
-export interface FakeGitHub extends GitHubClient {
+export interface FakeSources extends SourceClient {
   remotes: Record<string, FakeRemote>;
-  tarballRequests: string[];
-  /** Makes the next tarball downloads of this repo fail. */
-  failTarballs: Set<string>;
+  /** `alias@sha` of every materialized commit. */
+  materialized: string[];
+  /** `alias` of every releases lookup. */
+  releaseCalls: string[];
+  /** Makes the next materializations of this repo fail. */
+  failMaterialize: Set<string>;
 }
 
-export function fakeGitHub(remotes: Record<string, FakeRemote>): FakeGitHub {
-  const client: FakeGitHub = {
+export function fakeSources(remotes: Record<string, FakeRemote>): FakeSources {
+  const client: FakeSources = {
     remotes,
-    tarballRequests: [],
-    failTarballs: new Set(),
-    head(repo) {
+    materialized: [],
+    releaseCalls: [],
+    failMaterialize: new Set(),
+    listRefs(repo) {
       const remote = client.remotes[repo.alias];
-      return remote
-        ? Promise.resolve(remote.head)
-        : Promise.reject(new GitHubError(404, 'no repo'));
+      if (!remote) return Promise.reject(new Error('no repo'));
+      return Promise.resolve({
+        defaultBranch: remote.head.name,
+        head: remote.head.sha,
+        tags: remote.tags,
+      });
     },
-    tags(repo, count) {
-      return Promise.resolve(client.remotes[repo.alias]?.tags.slice(0, count) ?? []);
+    commitInfo(_repo, sha) {
+      return Promise.resolve({
+        date: '2026-01-01T00:00:00Z',
+        subject: `commit ${sha.slice(0, 7)}`,
+      });
     },
-    tarball(repo, sha) {
-      client.tarballRequests.push(`${repo.alias}@${sha}`);
-      if (client.failTarballs.has(repo.alias)) {
-        return Promise.reject(new GitHubError(502, 'bad gateway'));
-      }
+    async materialize(repo, sha, destDir) {
+      client.materialized.push(`${repo.alias}@${sha}`);
+      if (client.failMaterialize.has(repo.alias)) throw new Error('bad gateway');
       const dir = FIXTURE_DIRS[repo.alias];
-      if (!dir) return Promise.reject(new GitHubError(404, 'no fixture'));
-      // GitHub wraps the tree in a `<owner>-<repo>-<sha>/` folder.
-      return Promise.resolve(
-        Readable.from(
-          create(
-            { gzip: true, cwd: dir, prefix: `${repo.owner}-${repo.name}-${sha}` },
-            readdirSync(dir),
-          ),
-        ),
-      );
+      if (!dir) throw new Error('no fixture');
+      return extractTar(Readable.from(create({ cwd: dir }, readdirSync(dir))), destDir, repo.role);
     },
+    releases(repo) {
+      client.releaseCalls.push(repo.alias);
+      return Promise.resolve(client.remotes[repo.alias]?.releases ?? []);
+    },
+    trimCache: () => Promise.resolve(false),
   };
   return client;
 }
@@ -81,6 +111,7 @@ export const defaultRemotes = (): Record<string, FakeRemote> => ({
   dll: { head: { name: 'master', sha: SHA_A }, tags: [] },
   zzmi: { head: { name: 'main', sha: SHA_A }, tags: [{ name: 'v1.0.0', sha: TAG_SHA }] },
   xxmitools: { head: { name: 'main', sha: SHA_A }, tags: [] },
+  migoto: { head: { name: 'master', sha: SHA_A }, tags: [] },
 });
 
 export function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
@@ -98,21 +129,24 @@ export { silentLogger };
 
 export interface TestApp {
   app: App;
-  github: FakeGitHub;
+  sources: FakeSources;
 }
 
 /** An app over a freshly indexed fixture volume; the indexer ran once and does not poll. */
-export async function indexedApp(overrides: Partial<ServerConfig> = {}): Promise<TestApp> {
-  const github = fakeGitHub(defaultRemotes());
-  const app = await createApp(testConfig(overrides), { github, logger: silentLogger });
+export async function indexedApp(
+  overrides: Partial<ServerConfig> = {},
+  remotes: Record<string, FakeRemote> = defaultRemotes(),
+): Promise<TestApp> {
+  const sources = fakeSources(remotes);
+  const app = await createApp(testConfig(overrides), { sources, logger: silentLogger });
   await app.indexer.runOnce();
-  return { app, github };
+  return { app, sources };
 }
 
 /** An app that has not indexed anything: tools answer from the bundled snapshot. */
 export function coldApp(overrides: Partial<ServerConfig> = {}): Promise<App> {
   return createApp(testConfig(overrides), {
-    github: fakeGitHub(defaultRemotes()),
+    sources: fakeSources(defaultRemotes()),
     logger: silentLogger,
   });
 }

@@ -3,7 +3,6 @@ import type { Server } from 'node:http';
 import { bundledSnapshots, defaultSpec, SpecLookup } from '@xxmi-lang/core';
 import { Catalog } from './catalog.ts';
 import type { ServerConfig } from './config.ts';
-import { createGitHubClient, type GitHubClient } from './github.ts';
 import { createHttpServer } from './http.ts';
 import { Indexer } from './indexer.ts';
 import { createLogger, type Logger } from './logger.ts';
@@ -12,9 +11,10 @@ import { RateLimiter } from './ratelimit.ts';
 import { TRACKED_REPOS, type TrackedRepo } from './repos.ts';
 import { Store } from './store.ts';
 import type { ToolContext } from './tools/shared.ts';
+import { createSourceClient, type SourceClient } from './upstream.ts';
 
 export interface AppOptions {
-  github?: GitHubClient;
+  sources?: SourceClient;
   logger?: Logger;
   repos?: readonly TrackedRepo[];
   now?: () => number;
@@ -51,10 +51,13 @@ export async function createApp(config: ServerConfig, options: AppOptions = {}):
   const indexer = new Indexer({
     store,
     catalog,
-    github: options.github ?? createGitHubClient({ token: config.githubToken }),
+    sources:
+      options.sources ??
+      createSourceClient({ dataDir: config.dataDir, token: config.githubToken, logger }),
     logger,
     repos,
-    indexedTags: config.indexedTags,
+    limits: { releases: config.indexedReleases, prereleases: config.indexedPrereleases },
+    gitCacheMaxMb: config.gitCacheMaxMb,
     pollIntervalMin: config.pollIntervalMin,
   });
   const limiter = new RateLimiter(config.rateLimitPerMin, config.rateLimitBurst, options.now);
