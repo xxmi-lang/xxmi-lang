@@ -31,10 +31,13 @@ const TEXT_EXTENSIONS = new Set([
   '.bat',
 ]);
 
+/** What the spec extractor reads (packages/spec-extractor/src/dll.ts), next to root-level files. */
+const SPEC_DIRS = ['directx11', 'd3dcompiler', 'injector'];
+
 /** Top-level folders worth keeping per role; third-party code in the others is skipped. */
 const ROLE_DIRS: Partial<Record<RepoRole, ReadonlySet<string>>> = {
-  dll: new Set(['directx11', 'd3dcompiler', 'injector', 'injectorlib', 'docs']),
-  baseline: new Set(['directx11']),
+  dll: new Set([...SPEC_DIRS, 'injectorlib', 'docs']),
+  baseline: new Set(SPEC_DIRS),
 };
 
 export const MAX_FILE_BYTES = 2_000_000;

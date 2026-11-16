@@ -19,6 +19,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@xxmi-lang/core": "workspace:*",
+    "@xxmi-lang/spec-extractor": "workspace:*",
     "tar": "^7.5.22",
     "zod": "^4.6.7"
   },

@@ -69,6 +69,7 @@ describe('tools/list contract', () => {
           "name": "spec_list",
           "properties": [
             "cursor",
+            "dll_ref",
             "format",
             "kind",
             "section",
@@ -149,6 +150,7 @@ describe('tools/list contract', () => {
         {
           "name": "lint_ini",
           "properties": [
+            "dll_ref",
             "files",
             "format",
             "game",
@@ -516,8 +518,8 @@ describe('resources', () => {
     const c = await client();
 
     const list = await c.listResources();
-    expect(list.resources.map((r) => r.uri)).toContain('xxmi://spec/latest/commands.json');
-    const read = await c.readResource({ uri: 'xxmi://spec/latest/sections.json' });
+    expect(list.resources.map((r) => r.uri)).toContain('xxmi://spec/latest-release/commands.json');
+    const read = await c.readResource({ uri: 'xxmi://spec/latest-release/sections.json' });
     const doc = JSON.parse((read.contents[0] as { text: string }).text) as { sections: unknown[] };
     expect(doc.sections.length).toBeGreaterThan(10);
   });

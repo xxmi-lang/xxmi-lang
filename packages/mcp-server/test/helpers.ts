@@ -5,12 +5,15 @@ import { join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { create } from 'tar';
 import { afterAll } from 'vitest';
+import { defaultSpec, SpecLookup } from '@xxmi-lang/core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createApp, type App } from '../src/app.ts';
+import { createApp, type App, type AppOptions } from '../src/app.ts';
 import { createMcpServer } from '../src/tools/index.ts';
 import { loadConfig, type ServerConfig } from '../src/config.ts';
 import { extractTar } from '../src/extract.ts';
+import { buildVersionSpec } from '../src/specs/build.ts';
+import type { SpecBuilder } from '../src/specs/ensure.ts';
 import { silentLogger } from '../src/logger.ts';
 import type { ReleaseInfo } from '../src/releases.ts';
 import { TRACKED_REPOS, type TrackedRepo } from '../src/repos.ts';
@@ -70,7 +73,22 @@ export interface FakeSources extends SourceClient {
   failMaterialize: Set<string>;
 }
 
-export function fakeSources(remotes: Record<string, FakeRemote>): FakeSources {
+/** The lookup package checkouts are parsed with in tests (the bundled spec). */
+export const bundledLookup = (): SpecLookup => new SpecLookup(defaultSpec());
+
+/** Builds in the test's own thread: a worker per indexed app would only slow the suite down. */
+export const inlineBuild: SpecBuilder = (input) => Promise.resolve(buildVersionSpec(input));
+
+/**
+ * Checkout directories by `alias`, or by `alias@sha` to give one commit other sources than
+ * the rest of its repo.
+ */
+export type FixtureDirs = Record<string, string>;
+
+export function fakeSources(
+  remotes: Record<string, FakeRemote>,
+  dirs: FixtureDirs = FIXTURE_DIRS,
+): FakeSources {
   const client: FakeSources = {
     remotes,
     materialized: [],
@@ -94,7 +112,7 @@ export function fakeSources(remotes: Record<string, FakeRemote>): FakeSources {
     async materialize(repo, sha, destDir) {
       client.materialized.push(`${repo.alias}@${sha}`);
       if (client.failMaterialize.has(repo.alias)) throw new Error('bad gateway');
-      const dir = FIXTURE_DIRS[repo.alias];
+      const dir = dirs[`${repo.alias}@${sha}`] ?? dirs[repo.alias];
       if (!dir) throw new Error('no fixture');
       return extractTar(Readable.from(create({ cwd: dir }, readdirSync(dir))), destDir, repo.role);
     },
@@ -136,9 +154,15 @@ export interface TestApp {
 export async function indexedApp(
   overrides: Partial<ServerConfig> = {},
   remotes: Record<string, FakeRemote> = defaultRemotes(),
+  options: { dirs?: FixtureDirs; app?: AppOptions } = {},
 ): Promise<TestApp> {
-  const sources = fakeSources(remotes);
-  const app = await createApp(testConfig(overrides), { sources, logger: silentLogger });
+  const sources = fakeSources(remotes, options.dirs);
+  const app = await createApp(testConfig(overrides), {
+    sources,
+    logger: silentLogger,
+    buildSpec: inlineBuild,
+    ...options.app,
+  });
   await app.indexer.runOnce();
   return { app, sources };
 }
@@ -148,6 +172,7 @@ export function coldApp(overrides: Partial<ServerConfig> = {}): Promise<App> {
   return createApp(testConfig(overrides), {
     sources: fakeSources(defaultRemotes()),
     logger: silentLogger,
+    buildSpec: inlineBuild,
   });
 }
 

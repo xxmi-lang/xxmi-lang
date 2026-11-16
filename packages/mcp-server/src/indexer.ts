@@ -3,15 +3,19 @@
  * Per pass: `git ls-remote` each repo, work out the wanted versions, fetch and extract each
  * missing commit, build the symbol index for packages, and only then publish the new state.
  * Readers keep the old checkout until the swap, and a failed fetch leaves everything as it was.
+ * Specs per DLL version are built after publishing, so they never delay readiness.
  */
 import { rm } from 'node:fs/promises';
-import type { SymbolSnapshot } from '@xxmi-lang/core';
+import type { SpecLookup, SymbolSnapshot } from '@xxmi-lang/core';
 import { Catalog, type RepoState, type StateFile, type VersionRef } from './catalog.ts';
 import { errorMessage, type Logger } from './logger.ts';
 import { loadPackageCheckout } from './packages.ts';
 import { refreshReleases, type ReleasesState } from './releases.ts';
-import { fullName, type TrackedRepo } from './repos.ts';
+import { dllRepo, fullName, type TrackedRepo } from './repos.ts';
 import { selectVersions, tracksTags, type SelectionLimits } from './selection.ts';
+import { ensureSpecs, type SpecBuilder } from './specs/ensure.ts';
+import type { SpecRegistry } from './specs/registry.ts';
+import { buildInWorker } from './specs/runner.ts';
 import type { Store } from './store.ts';
 import type { RemoteRefs, SourceClient } from './upstream.ts';
 
@@ -26,6 +30,12 @@ export interface IndexerOptions {
   pollIntervalMin: number;
   /** Builds the symbol snapshot of a package checkout; replaceable in tests. */
   buildIndex?: (checkout: string, repo: TrackedRepo, sha: string) => Promise<SymbolSnapshot>;
+  /** What package checkouts are parsed with (the bundled spec's lookup). */
+  lookup: SpecLookup;
+  /** Where specs per DLL version are built and kept; without it the indexer builds none. */
+  specs?: SpecRegistry;
+  /** Builds one spec (in a worker thread by default); replaceable in tests. */
+  buildSpec?: SpecBuilder;
   now?: () => number;
 }
 
@@ -122,6 +132,7 @@ export class Indexer {
       await this.guard(repo, result, () => this.indexTags(repo, head, result, force));
     }
 
+    await this.buildSpecs();
     await this.prune(grace);
     this.o.logger.info('index pass finished', {
       ms: Date.now() - started,
@@ -129,6 +140,22 @@ export class Indexer {
       errors: result.errors.length,
     });
     return result;
+  }
+
+  /** A failing build is recorded, never an error of the pass, and nothing here gates readiness. */
+  private async buildSpecs(): Promise<void> {
+    if (!this.o.specs) return;
+    try {
+      await ensureSpecs({
+        registry: this.o.specs,
+        catalog: this.o.catalog,
+        repos: this.o.repos,
+        build: this.o.buildSpec ?? buildInWorker,
+        logger: this.o.logger,
+      });
+    } catch (error) {
+      this.o.logger.warn('spec builds failed', { error: errorMessage(error) });
+    }
   }
 
   private async guard(
@@ -233,7 +260,8 @@ export class Indexer {
 
   private async writePackageIndex(repo: TrackedRepo, sha: string, checkout: string): Promise<void> {
     const build =
-      this.o.buildIndex ?? (async (dir, r, s) => (await loadPackageCheckout(dir, r, s)).snapshot);
+      this.o.buildIndex ??
+      (async (dir, r, s) => (await loadPackageCheckout(dir, r, s, this.o.lookup)).snapshot);
     await this.o.store.writeIndex(repo, sha, await build(checkout, repo, sha));
   }
 
@@ -284,6 +312,18 @@ export class Indexer {
       } catch (error) {
         this.o.logger.warn('prune failed', { repo: fullName(repo), error: errorMessage(error) });
       }
+    }
+    await this.pruneSpecs();
+  }
+
+  private async pruneSpecs(): Promise<void> {
+    const repo = dllRepo(this.o.repos);
+    if (!this.o.specs || !repo) return;
+    try {
+      const removed = await this.o.specs.retain(this.o.catalog.keptShas(repo));
+      if (removed.length > 0) this.o.logger.info('pruned specs', { removed });
+    } catch (error) {
+      this.o.logger.warn('spec prune failed', { error: errorMessage(error) });
     }
   }
 

@@ -9,12 +9,14 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_SPEC_ROOT, loadSpec } from './spec/load.ts';
+import { DEFAULT_SPEC_ROOT, loadSpec, readOverlays, type SpecOverlayFile } from './spec/load.ts';
 import type { Spec } from './spec/types.ts';
 import type { SymbolSnapshot } from './workspace/symbols.ts';
 
 const BUNDLED_SPEC = fileURLToPath(new URL('../dist/spec.json', import.meta.url));
 const BUNDLED_SPEC_FROM_DIST = fileURLToPath(new URL('./spec.json', import.meta.url));
+const BUNDLED_OVERLAY = fileURLToPath(new URL('../dist/overlay.json', import.meta.url));
+const BUNDLED_OVERLAY_FROM_DIST = fileURLToPath(new URL('./overlay.json', import.meta.url));
 const SNAPSHOT_DIR = fileURLToPath(new URL('../snapshots/', import.meta.url));
 
 let configuredSpec: Spec | undefined;
@@ -38,6 +40,17 @@ export function defaultSpec(): Spec {
     }
   }
   return cachedSpec;
+}
+
+/** The parsed overlays `defaultSpec` was merged from, for specs extracted at runtime. */
+export function defaultOverlays(): SpecOverlayFile[] {
+  if (existsSync(join(DEFAULT_SPEC_ROOT, 'generated', 'meta.json'))) {
+    return readOverlays().overlays;
+  }
+  const bundled = [BUNDLED_OVERLAY_FROM_DIST, BUNDLED_OVERLAY].find((p) => existsSync(p));
+  if (!bundled)
+    throw new Error('No overlays found: neither spec/ nor dist/overlay.json is present.');
+  return JSON.parse(readFileSync(bundled, 'utf8')) as SpecOverlayFile[];
 }
 
 /** Library snapshots bundled with core (built by `xxmi index`). */

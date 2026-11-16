@@ -234,6 +234,9 @@ importers:
       '@xxmi-lang/core':
         specifier: workspace:*
         version: link:../core
+      '@xxmi-lang/spec-extractor':
+        specifier: workspace:*
+        version: link:../spec-extractor
       tar:
         specifier: ^7.5.22
         version: 7.5.22

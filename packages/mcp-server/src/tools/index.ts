@@ -1,6 +1,6 @@
 /** Builds one `McpServer` with every tool and resource (one per request in stateless mode). */
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { VERSION } from '@xxmi-lang/core';
+import { VERSION, type Spec } from '@xxmi-lang/core';
 import { CatalogError } from '../catalog.ts';
 import { errorMessage } from '../logger.ts';
 import { SourceError } from '../sources.ts';
@@ -9,7 +9,7 @@ import { libraryList, librarySymbol } from './library.ts';
 import { lintIni } from './lint.ts';
 import { findImplementationTool, readSourceTool, searchSourceTool } from './source.ts';
 import { specList, specLookup } from './spec.ts';
-import { ToolError, withTimeout, type ToolContext } from './shared.ts';
+import { resolveSpec, specBlock, ToolError, withTimeout, type ToolContext } from './shared.ts';
 import { listVersions } from './versions.ts';
 
 export const TOOLS = [
@@ -71,59 +71,92 @@ function register(server: McpServer, ctx: ToolContext, def: ToolDefinition): voi
   );
 }
 
-function specDocument(ctx: ToolContext, file: string, ref: string): unknown {
-  const commit = ctx.spec.meta.dll.commit;
-  if (ref !== 'latest' && !(ref.length >= 7 && commit.startsWith(ref.toLowerCase()))) {
-    throw new ToolError(`unknown dll_ref "${ref}"; this server serves "latest" (${commit})`);
+type SpecFile = 'sections.json' | 'commands.json';
+
+function specDocument(spec: Spec, file?: SpecFile): unknown {
+  const sections = {
+    meta: spec.meta,
+    sections: spec.sections,
+    builtinSections: spec.builtinSections,
+  };
+  const commands = {
+    meta: spec.meta,
+    commands: spec.commands,
+    resourceMembers: spec.resourceMembers,
+    functions: spec.functions,
+  };
+  if (file === 'sections.json') return sections;
+  return file === 'commands.json' ? commands : { ...sections, ...commands };
+}
+
+function specFileOf(name: string): SpecFile {
+  if (name !== 'sections.json' && name !== 'commands.json') {
+    throw new ToolError(`unknown spec file "${name}"`);
   }
-  return file === 'sections.json'
-    ? {
-        meta: ctx.spec.meta,
-        sections: ctx.spec.sections,
-        builtinSections: ctx.spec.builtinSections,
-      }
-    : {
-        meta: ctx.spec.meta,
-        commands: ctx.spec.commands,
-        resourceMembers: ctx.spec.resourceMembers,
-        functions: ctx.spec.functions,
-      };
+  return name;
+}
+
+const SPEC_FILES: SpecFile[] = ['sections.json', 'commands.json'];
+
+/** One read of a spec resource; `dll_ref` is resolved like a tool's, falling back with the note in `_spec`. */
+async function readSpecResource(
+  ctx: ToolContext,
+  uri: URL,
+  dllRef: string | undefined,
+  file?: SpecFile,
+) {
+  const resolved = await resolveSpec(ctx, dllRef);
+  const document = specDocument(resolved.spec, file) as Record<string, unknown>;
+  return {
+    contents: [
+      {
+        uri: uri.href,
+        mimeType: 'application/json',
+        text: JSON.stringify({ ...document, _spec: specBlock(resolved) }),
+      },
+    ],
+  };
 }
 
 function registerResources(server: McpServer, ctx: ToolContext): void {
-  const commit = ctx.spec.meta.dll.commit;
+  const description =
+    'DLL-derived spec of a DLL version (dll_ref: latest-release by default, latest-prerelease, head, a tag, a commit prefix or bundled)';
+  const options = { description, mimeType: 'application/json' };
+
+  server.registerResource('spec', 'xxmi://spec', options, (uri) =>
+    readSpecResource(ctx, uri, undefined),
+  );
   server.registerResource(
-    'spec',
+    'spec-version',
+    new ResourceTemplate('xxmi://spec/{dll_ref}', { list: undefined }),
+    options,
+    (uri, variables) => readSpecResource(ctx, uri, String(variables['dll_ref'])),
+  );
+  server.registerResource(
+    'spec-file',
     new ResourceTemplate('xxmi://spec/{dll_ref}/{file}', {
       list: () => ({
-        resources: ['sections.json', 'commands.json'].map((file) => ({
-          uri: `xxmi://spec/latest/${file}`,
+        resources: SPEC_FILES.map((file) => ({
+          uri: `xxmi://spec/latest-release/${file}`,
           name: `spec ${file}`,
-          description: `Generated spec (XXMI-Libs-Package ${commit.slice(0, 7)})`,
+          description:
+            'Spec of the latest release (falls back to the bundled spec while it builds)',
           mimeType: 'application/json',
         })),
       }),
     }),
     {
       description:
-        'DLL-derived spec: sections.json (sections, keys) and commands.json (commands, members tagged resource or shader, functions)',
+        'sections.json (sections, keys) or commands.json (commands, members tagged resource or shader, functions) of a DLL version',
       mimeType: 'application/json',
     },
-    (uri, variables) => {
-      const file = String(variables['file']);
-      const ref = String(variables['dll_ref']);
-      if (file !== 'sections.json' && file !== 'commands.json')
-        throw new ToolError(`unknown spec file "${file}"`);
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: 'application/json',
-            text: JSON.stringify(specDocument(ctx, file, ref)),
-          },
-        ],
-      };
-    },
+    (uri, variables) =>
+      readSpecResource(
+        ctx,
+        uri,
+        String(variables['dll_ref']),
+        specFileOf(String(variables['file'])),
+      ),
   );
 }
 

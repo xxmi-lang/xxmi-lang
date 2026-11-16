@@ -118,6 +118,16 @@ const lintGood = await call('lint_ini', {
 });
 check('lint this ini (library reference resolves)', lintGood, [/0 errors/]);
 
+// The release answer is not asserted: a future release will gain the key as well.
+check(
+  'spec_lookup at the branch head finds a key newer than the latest release',
+  await call('spec_lookup', { name: 'match_dhash', dll_ref: 'head' }),
+  ['key match_dhash', /spec: XXMI-Libs-Package \S+ \(head, [0-9a-f]{7}\)/],
+);
+check('spec_lookup names the spec it used', await call('spec_lookup', { name: 'match_dhash' }), [
+  /spec: (XXMI-Libs-Package|bundled)/,
+]);
+
 if (failures.length > 0) {
   console.error(`\n${failures.length} acceptance check(s) failed`);
   process.exit(1);

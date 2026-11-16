@@ -8,22 +8,21 @@ import {
 } from '@xxmi-lang/core';
 import * as z from 'zod/v4';
 import { permalink, treeFor } from '../sources.ts';
+import type { ResolvedSpec } from '../specs/registry.ts';
 import { dllRepo } from '../repos.ts';
 import { defineTool } from './define.ts';
-import { nextCursorLine, pageOf, ToolError, type ToolContext } from './shared.ts';
+import {
+  dllRefField,
+  nextCursorLine,
+  pageOf,
+  resolveSpec,
+  ToolError,
+  withSpec,
+  type ToolContext,
+} from './shared.ts';
 
 const formatField = z.enum(['text', 'json']).optional().describe('text (default) or json');
 const kindField = z.enum(SPEC_ENTRY_KINDS);
-
-/** `latest` or the commit (7+ characters) the bundled spec was extracted from. */
-function checkDllRef(ctx: ToolContext, ref: string | undefined): void {
-  if (!ref || ref === 'latest') return;
-  const commit = ctx.spec.meta.dll.commit;
-  if (ref.length >= 7 && commit.startsWith(ref.toLowerCase())) return;
-  throw new ToolError(
-    `This server's spec was extracted from XXMI-Libs-Package ${commit} ("latest"); other dll_ref values are not served.`,
-  );
-}
 
 interface Located {
   path: string;
@@ -32,11 +31,11 @@ interface Located {
   commit: string;
 }
 
-/** Where the entry's DLL symbol sits in the indexed DLL source, when that checkout exists. */
-function locate(ctx: ToolContext, entry: SpecEntry): Located | undefined {
+/** Where the entry's DLL symbol sits in the indexed source of the DLL the spec came from. */
+function locate(ctx: ToolContext, entry: SpecEntry, spec: ResolvedSpec): Located | undefined {
   const repo = dllRepo();
   if (!repo || !ctx.catalog.isReady(repo) || entry.source === 'manual') return undefined;
-  const ref = ctx.catalog.resolve(repo);
+  const ref = ctx.catalog.resolve(repo, spec.source === 'extracted' ? spec.dllSha : undefined);
   const hit = locateSpecEntry(entry, treeFor(ref.dir));
   return hit
     ? {
@@ -57,22 +56,22 @@ export const specLookup = defineTool({
     kind: kindField.optional().describe('narrow to one kind'),
     section: z.string().max(100).optional().describe('for keys: the section that reads it'),
     target: z.enum(['resource', 'shader']).optional().describe('for members: resource or shader'),
-    dll_ref: z.string().max(80).optional().describe('only "latest" (default) is served'),
+    dll_ref: dllRefField,
     format: formatField,
   },
-  run(ctx, args) {
-    checkDllRef(ctx, args.dll_ref);
+  async run(ctx, args) {
+    const resolved = await resolveSpec(ctx, args.dll_ref);
     const entries = lookupSpec(
-      ctx.spec,
+      resolved.spec,
       {
         name: args.name,
         ...(args.kind ? { kind: args.kind } : {}),
         ...(args.section ? { section: args.section } : {}),
         ...(args.target ? { target: args.target } : {}),
       },
-      ctx.lookup,
+      resolved.lookup,
     );
-    const located = entries.map((e) => ({ ...e, dll: locate(ctx, e) }));
+    const located = entries.map((e) => ({ ...e, dll: locate(ctx, e, resolved) }));
     const text =
       entries.length === 0
         ? `No spec entry named "${args.name}"${args.kind ? ` of kind ${args.kind}` : ''}. Use spec_list to browse names.`
@@ -84,7 +83,7 @@ export const specLookup = defineTool({
               ),
             )
             .join('\n\n');
-    return Promise.resolve({ text, data: { entries: located } });
+    return withSpec({ text, data: { entries: located } }, resolved);
   },
 });
 
@@ -96,12 +95,14 @@ export const specList = defineTool({
     kind: kindField,
     section: z.string().max(100).optional().describe('required for kind=key, e.g. Resource'),
     cursor: z.string().max(40).optional(),
+    dll_ref: dllRefField,
     format: formatField,
   },
-  run(ctx, args) {
+  async run(ctx, args) {
+    const resolved = await resolveSpec(ctx, args.dll_ref);
     let items;
     try {
-      items = listSpec(ctx.spec, args.kind, args.section, ctx.lookup);
+      items = listSpec(resolved.spec, args.kind, args.section, resolved.lookup);
     } catch (error) {
       throw new ToolError(error instanceof Error ? error.message : String(error));
     }
@@ -110,9 +111,12 @@ export const specList = defineTool({
       (i) =>
         `${i.name}${i.target ? ` [${i.target}]` : ''}${i.form ? ' [value form]' : ''}${i.xxmi ? ' [XXMI-only]' : ''}${i.summary ? ` - ${i.summary}` : ''}`,
     );
-    return Promise.resolve({
-      text: [...lines, ...nextCursorLine(page.nextCursor)].join('\n'),
-      data: { items: page.items, nextCursor: page.nextCursor ?? null },
-    });
+    return withSpec(
+      {
+        text: [...lines, ...nextCursorLine(page.nextCursor)].join('\n'),
+        data: { items: page.items, nextCursor: page.nextCursor ?? null },
+      },
+      resolved,
+    );
   },
 });

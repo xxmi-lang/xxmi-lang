@@ -4,6 +4,7 @@ import { Catalog } from '../src/catalog.ts';
 import { Indexer, nextDelayMs } from '../src/indexer.ts';
 import { Store } from '../src/store.ts';
 import {
+  bundledLookup,
   defaultRemotes,
   fakeSources,
   silentLogger,
@@ -26,6 +27,7 @@ async function setup(dataDir = tempDir()) {
     sources,
     logger: silentLogger,
     repos: TEST_REPOS,
+    lookup: bundledLookup(),
     limits: { releases: 3, prereleases: 2 },
     gitCacheMaxMb: 512,
     pollIntervalMin: 0,

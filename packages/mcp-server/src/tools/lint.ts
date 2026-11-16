@@ -10,7 +10,7 @@ import {
 import * as z from 'zod/v4';
 import { choosePackage } from './package.ts';
 import { defineTool } from './define.ts';
-import { ToolError, type ToolContext } from './shared.ts';
+import { dllRefField, resolveSpec, ToolError, withSpec, type ToolContext } from './shared.ts';
 
 /** Where the submitted files live for the linter; nothing at or below it is ever read. */
 const VIRTUAL_ROOT = resolve(sep, 'xxmi-virtual');
@@ -82,10 +82,12 @@ export const lintIni = defineTool({
       .max(80)
       .optional()
       .describe('package branch, tag or commit; default latest'),
+    dll_ref: dllRefField,
     format: z.enum(['text', 'json']).optional().describe('text (default) or json'),
   },
   async run(ctx, args) {
     const files = checkLintInput(ctx, args.files);
+    const resolved = await resolveSpec(ctx, args.dll_ref);
     const choice = await choosePackage(ctx, args.game, args.package_ref, { needDocs: false });
     const virtual = files.map((f) => ({ path: join(VIRTUAL_ROOT, f.path), text: f.text }));
 
@@ -94,7 +96,7 @@ export const lintIni = defineTool({
       resolver: new VirtualPathResolver(virtual.map((f) => f.path)),
       snapshots: [choice.snapshot],
       configs: new NoConfig(),
-      lookup: ctx.lookup,
+      lookup: resolved.lookup,
     });
     // Sizes and counts only: the submitted text must never reach the logs.
     ctx.logger.info('lint_ini', {
@@ -113,7 +115,10 @@ export const lintIni = defineTool({
       ...(reported.dropped > 0 ? [`(${reported.dropped} more diagnostics not shown)`] : []),
       ...(choice.note ? [choice.note] : []),
     ].join('\n');
-    return { text, data: reported.dropped > 0 ? { ...doc, truncated: reported.dropped } : doc };
+    return withSpec(
+      { text, data: reported.dropped > 0 ? { ...doc, truncated: reported.dropped } : doc },
+      resolved,
+    );
   },
 });
 

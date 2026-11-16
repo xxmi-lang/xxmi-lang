@@ -3,6 +3,7 @@
  *
  *   <DATA_DIR>/repos/<owner>/<repo>/<sha>/      checkout of one commit (text files only)
  *   <DATA_DIR>/index/<owner>__<repo>/<sha>.json  library symbols of a package commit
+ *   <DATA_DIR>/specs/<dllSha>.json               spec built from one DLL commit (specs/store.ts)
  *   <DATA_DIR>/state.json                        which refs are indexed
  *   <DATA_DIR>/tmp/                              staging area, same file system as the rest
  *
@@ -91,7 +92,7 @@ export class Store {
     return removed;
   }
 
-  private async readJson<T>(path: string): Promise<T | undefined> {
+  async readJson<T>(path: string): Promise<T | undefined> {
     try {
       return JSON.parse(await readFile(path, 'utf8')) as T;
     } catch {
@@ -99,7 +100,7 @@ export class Store {
     }
   }
 
-  private async writeJsonAtomic(path: string, value: unknown): Promise<void> {
+  async writeJsonAtomic(path: string, value: unknown): Promise<void> {
     await mkdir(join(path, '..'), { recursive: true });
     const tmp = join(this.dataDir, 'tmp', `${randomBytes(6).toString('hex')}.json`);
     await writeFile(tmp, JSON.stringify(value));

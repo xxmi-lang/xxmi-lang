@@ -6,7 +6,7 @@ import { createGitSources, parseLsRemote } from '../src/git.ts';
 import { Indexer } from '../src/indexer.ts';
 import { Store } from '../src/store.ts';
 import { createSourceClient, type SourceClient } from '../src/upstream.ts';
-import { silentLogger, tempDir } from './helpers.ts';
+import { bundledLookup, silentLogger, tempDir } from './helpers.ts';
 import { LocalUpstream } from './upstream-repo.ts';
 
 const SHA_1 = '1'.repeat(40);
@@ -266,6 +266,7 @@ describe('indexer over a local repository', { timeout: GIT_TEST_TIMEOUT_MS }, ()
       sources,
       logger: silentLogger,
       repos: [repo],
+      lookup: bundledLookup(),
       limits: { releases: 3, prereleases: 2 },
       gitCacheMaxMb: 512,
       pollIntervalMin: 0,

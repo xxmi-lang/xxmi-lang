@@ -10,7 +10,7 @@ import {
 } from '../sources.ts';
 import { dllRepo } from '../repos.ts';
 import { defineTool } from './define.ts';
-import { ToolError } from './shared.ts';
+import { ToolError, withSpec } from './shared.ts';
 
 const formatField = z.enum(['text', 'json']).optional().describe('text (default) or json');
 const refField = z.string().max(80).optional().describe('branch, tag or commit; default latest');
@@ -25,11 +25,18 @@ export const findImplementationTool = defineTool({
     limit: z.number().int().min(1).max(50).optional(),
     format: formatField,
   },
-  run(ctx, args) {
+  async run(ctx, args) {
     const repo = dllRepo();
     if (!repo) throw new ToolError('the DLL repository is not tracked');
     const ref = ctx.catalog.resolve(repo, args.ref);
-    const result = findImplementation(ctx.spec, args.feature, treeFor(ref.dir), args.limit ?? 20);
+    // The spec of the DLL version being searched, so its symbols exist in that source.
+    const resolved = await ctx.specs.forVersion(ref, args.ref ?? 'head');
+    const result = findImplementation(
+      resolved.spec,
+      args.feature,
+      treeFor(ref.dir),
+      args.limit ?? 20,
+    );
     const hits = result.hits.map((h) => ({ ...h, permalink: permalink(ref, h.path, h.line) }));
     const lines = [
       `DLL source: ${repo.owner}/${repo.name} @ ${ref.name} (${ref.sha.slice(0, 7)})`,
@@ -42,10 +49,13 @@ export const findImplementationTool = defineTool({
           `${h.path}:${h.line}  ${h.role}${h.inFunction ? ` in ${h.inFunction}` : ''}\n    ${h.snippet}\n    ${h.permalink}`,
       ),
     ];
-    return Promise.resolve({
-      text: lines.join('\n'),
-      data: { dll: { ref: ref.name, sha: ref.sha }, entries: result.entries, hits },
-    });
+    return withSpec(
+      {
+        text: lines.join('\n'),
+        data: { dll: { ref: ref.name, sha: ref.sha }, entries: result.entries, hits },
+      },
+      resolved,
+    );
   },
 });
 

@@ -66,6 +66,7 @@ export function run(command: string, args: readonly string[], o: ExecOptions): P
         env: gitEnv(),
         timeout: o.timeoutMs,
         maxBuffer: MAX_OUTPUT_BYTES,
+        killSignal: 'SIGKILL',
         encoding: 'utf8',
       },
       (error, stdout, stderr) => {

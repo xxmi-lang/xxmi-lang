@@ -58,6 +58,12 @@ export function gameRepo(
   return repos.find((r) => r.role === 'package' && r.game === game.trim().toLowerCase());
 }
 
+export function baselineRepo(
+  repos: readonly TrackedRepo[] = TRACKED_REPOS,
+): TrackedRepo | undefined {
+  return repos.find((r) => r.role === 'baseline');
+}
+
 export function dllRepo(repos: readonly TrackedRepo[] = TRACKED_REPOS): TrackedRepo | undefined {
   return repos.find((r) => r.role === 'dll');
 }
