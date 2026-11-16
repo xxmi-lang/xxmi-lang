@@ -1,7 +1,6 @@
 /** A real local git repository standing in for a GitHub repo; tests fetch from it by path. */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { devNull } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { TrackedRepo } from '../src/repos.ts';
 import { tempDir } from './helpers.ts';
@@ -9,7 +8,6 @@ import { tempDir } from './helpers.ts';
 // The machine's git config (autocrlf, signing, hooks of a global template) must not leak in.
 const ISOLATION = {
   GIT_CONFIG_NOSYSTEM: '1',
-  GIT_CONFIG_GLOBAL: devNull,
   GIT_AUTHOR_NAME: 'Test',
   GIT_AUTHOR_EMAIL: 'test@example.com',
   GIT_COMMITTER_NAME: 'Test',
@@ -26,6 +24,17 @@ const REPO_CONFIG: [string, string][] = [
 ];
 
 const FIRST_COMMIT_MS = Date.UTC(2026, 0, 1);
+
+let emptyConfig: string | undefined;
+
+/** Git cannot open the null device as a config file on Windows, so an empty real file stands in. */
+function emptyGitConfig(): string {
+  if (!emptyConfig) {
+    emptyConfig = join(tempDir(), 'gitconfig-empty');
+    writeFileSync(emptyConfig, '');
+  }
+  return emptyConfig;
+}
 
 export class LocalUpstream {
   /** The bare repository that the server fetches from. */
@@ -115,6 +124,7 @@ export class LocalUpstream {
       env: {
         ...process.env,
         ...ISOLATION,
+        GIT_CONFIG_GLOBAL: emptyGitConfig(),
         GIT_AUTHOR_DATE: date,
         GIT_COMMITTER_DATE: date,
       },
