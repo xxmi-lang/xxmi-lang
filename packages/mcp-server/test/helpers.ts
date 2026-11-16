@@ -37,6 +37,15 @@ afterAll(() => {
     rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
 });
 
+/** Polls until `condition` holds, so a slow runner delays a test instead of failing it. */
+export async function waitFor(condition: () => boolean, timeoutMs = 30_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!condition()) {
+    if (Date.now() > deadline) throw new Error(`condition not met within ${timeoutMs} ms`);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
 /** A fresh directory that is removed when the test file finishes. */
 export function tempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), TEMP_PREFIX));

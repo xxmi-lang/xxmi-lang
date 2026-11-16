@@ -13,6 +13,7 @@ import {
   TAG_SHA,
   tempDir,
   testConfig,
+  waitFor,
 } from './helpers.ts';
 import { versionedFixtures } from './spec-fixtures.ts';
 
@@ -115,7 +116,7 @@ describe('spec builds in the indexer', () => {
     const { app } = await setup({ buildSpec: async (input) => (await gate, inlineBuild(input)) });
 
     const pass = app.indexer.runOnce();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await waitFor(() => app.catalog.ready);
 
     expect(app.catalog.ready).toBe(true);
     release();

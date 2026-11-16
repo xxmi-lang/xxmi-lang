@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Catalog } from '../src/catalog.ts';
 import { createGitSources, parseLsRemote } from '../src/git.ts';
@@ -19,7 +19,7 @@ function readTree(dir: string, base = dir): Record<string, string> {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) Object.assign(files, readTree(path, base));
-    else files[path.slice(base.length + 1)] = readFileSync(path, 'utf8');
+    else files[relative(base, path).split(sep).join('/')] = readFileSync(path, 'utf8');
   }
   return files;
 }
@@ -316,8 +316,9 @@ describe('indexer over a local repository', { timeout: GIT_TEST_TIMEOUT_MS }, ()
 
     const second = upstream.commit({ 'README.md': 'two' });
     upstream.tag('v1', { rev: second });
-    await indexer.runOnce();
+    const result = await indexer.runOnce();
 
+    expect(result.errors).toEqual([]);
     expect(catalog.resolve(repo, 'v1').sha).toBe(second);
   });
 
