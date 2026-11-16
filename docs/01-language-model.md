@@ -19,12 +19,12 @@ Line numbers are from `master` as of 2026-09-29 and will move. The extractor mus
 | Lines allowed without `=` | `IniHandler.cpp`, `AllowLinesWithoutEquals[]` | Plus all command-list sections (for if/else/endif) |
 | Duplicate-key whitelist | `IniHandler.cpp`, `whitelisted_duplicate_key()` | `key` and `back` in `[Key*]`; anything in `[Include]` |
 | Per-section keys | `IniHandler.cpp`, the `Parse*Section`/`Get*` functions that read keys (e.g. resource `type`, `format`, `filename`, `data`, `stride`, `array`; key `key`, `type`, `condition`, …) | Harder to extract mechanically. Extract calls like `GetIniString(section, L"format", …)` / `GetIniInt`/`GetIniEnum`… with a regex over call sites, grouped by the enclosing parse function |
-| General commands | `CommandList.cpp`, `ParseCommandListGeneralCommands()` | `checktextureoverride`, `handling`, `store`, `run`, draw commands, … Collect `!wcscmp(key, L"…")` comparisons |
+| General commands | `CommandList.cpp`, `ParseCommandListGeneralCommands()` | `checktextureoverride`, `handling`, `store`, `run`, draw commands, … Collect `!wcscmp(key, L"…")` comparisons; blocks that compare only `val` (`snapshotoriginaltextures`, `restoreoriginaltextures`) are commands too, marked `"form": "value"` and not offered or accepted as keys |
 | Draw commands | `CommandList.cpp`, `ParseDrawCommand()` / `ParseDrawCommandArgs()` | Name and arg count |
 | Flow control | `CommandList.cpp`, `ParseIfCommand` / `ParseElseIfCommand` / `ParseElseCommand` / `ParseEndIfCommand` | |
 | Operators | `CommandList.cpp`, `static const wchar_t *operator_tokens[]` | Includes `<<`, `>>`, `**`, `//`, `&&`, `\|\|`, … Also read the precedence table the tokenizer uses |
 | `local` declarations | `CommandList.cpp`, the `line.compare(0, 5, L"local")` branch | |
-| Resource member access | `CommandList.cpp`, the `->` handling (e.g. `ResourceFoo->HashRegion($offset, $size)`, `vb0->Offset`, `->Region(...)`) | |
+| Resource and shader member access | `CommandList.cpp`, the `members[]` tables in `ResourceCopyTarget::ParseTargetMember` (e.g. `ResourceFoo->HashRegion($offset, $size)`, `->Region(...)`) and `ShaderTarget::ParseTargetMember` (`ps->cb_first_slot`, `ps->MatchTextures(ResourceX)`) | Both land in `resourceMembers`, told apart by `target` (`resource` or `shader`); neither function exists in vanilla, so the baseline skips them without a warning |
 | Pool semantics | `IniHandler.cpp`, Pool section parsing (around the `lower_bound(L"Pool")` loop) | Index types, persistence ("ring" only), wildcard `[*]` |
 | Enums (formats, types, usage flags, shader stages, slots) | DirectX11 headers and the enum tables used by `GetIniEnum*` | DXGI formats may be easier to take from a static list |
 
@@ -57,10 +57,10 @@ Known limits: keys the DLL builds at runtime (`blend[0]`…`mask[7]`, via `swpri
     "keys": [ { "name": "type", "valueType": "enum:CustomResourceTypeNames",
                 "source": "IniHandler.cpp:ParseResourceSection", "xxmi": false } ],
     "dynamicKeys": [], "source": "IniHandler.cpp:RegularSections", "xxmi": false } ] }
-// commands.json: commands (kind general|draw|flow|declaration|prefix), resourceMembers, functions
+// commands.json: commands (kind general|draw|flow|declaration|prefix), resourceMembers (resource and shader targets), functions
 { "commands": [ { "name": "store", "kind": "general", "match": "exact", "values": [],
                   "source": "CommandList.cpp:ParseCommandListGeneralCommands", "xxmi": true } ],
-  "resourceMembers": [ { "name": "region", "args": ["unsigned", "unsigned"], … } ],
+  "resourceMembers": [ { "name": "region", "target": "resource", "args": ["unsigned", "unsigned"], … } ],
   "functions": [ { "name": "saturate", … } ] }
 // operators.json: tokens, and precedence levels (0 binds tightest)
 // enums.json: every EnumName_t table plus DXGIFormats
@@ -79,7 +79,7 @@ valueType = "enum:CustomResourceTypeNames"   # keys may override valueType; memb
 doc = "…"
 ```
 
-An overlay entry for a name the generated spec doesn't have is an error, unless it has `source = "manual"` plus a `note` saying why; it's then added. Overlays can't set `xxmi` or `source` on generated entries, and an unknown field is an error, so typos surface.
+An overlay entry for a name the generated spec doesn't have is an error, unless it has `source = "manual"` plus a `note` saying why; it's then added (manual members also need `target`). Overlays can't set `xxmi` or `source` on generated entries, and an unknown field is an error, so typos surface.
 
 ### Dialects
 
@@ -96,6 +96,7 @@ Fork policy:
 - Periodically merge upstream `main` into the fork (a monthly CI job opens a PR in the fork when upstream has new commits). Resolve conflicts in favor of upstream's structure, then re-apply our fixes.
 - Keep node names compatible with upstream where possible, so their highlight and other queries keep working on our fork.
 - Consume the fork in `@xxmi-lang/core` via a pinned git dependency or a published package (e.g. `@xxmi-lang/tree-sitter-migoto`); pin to a commit or version.
+- **DLL 1.3.1 syntax** (fork branch `xxmi-dll-1.3.1-syntax`, commit `5d78a72`): `run = snapshotoriginaltextures` / `restoreoriginaltextures` parse as a `run_instruction` holding a `run_instruction_key_value` (no section reference), `ps->MatchTextures(ResourceX) = ResourceY` is an `assignment_statement` with a `shader_identifier` target, and member-call arguments accept `hex_integer` (`0x` plus 1-16 hex digits). The model needs no special case: resources inside `MatchTextures(...)` lower as ordinary `custom_resource` references. Fixtures: `fixtures/xxmi-1.3.1/`.
 - **Current setup (M0):** the fork's WASM build is vendored at `packages/core/grammar/tree-sitter-migoto.wasm`, with `SOURCE.json` recording the fork commit, upstream version, tree-sitter CLI version and SHA-256 (a unit test checks the hash). Rebuild it from a clean fork checkout with `XXMI_GRAMMAR_SRC=<fork> pnpm grammar:update`. `web-tree-sitter` is pinned to the same version as the CLI that built the WASM. The fork's own CI (`xxmi-ci.yml`) runs `tree-sitter test --wasm` and checks that `src/` is regenerated; `upstream-sync.yml` is the monthly merge job.
 
 ### Known dialect gaps (measured 2026-09-30, fixed in M0)

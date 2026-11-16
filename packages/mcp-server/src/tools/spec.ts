@@ -51,11 +51,12 @@ function locate(ctx: ToolContext, entry: SpecEntry): Located | undefined {
 export const specLookup = defineTool({
   name: 'spec_lookup',
   description:
-    'Look up a 3DMigoto/XXMI ini section, key, command, operator, ->member, function or enum: docs, args, XXMI-only flag, example and DLL source location.',
+    'Look up a 3DMigoto/XXMI ini section, key, command, operator, ->member, function or enum: docs, args, XXMI-only flag, example and DLL source location. Members carry a target (resource or shader); commands with form "value" are written as the value, not as a key.',
   input: {
     name: z.string().min(1).max(200).describe('e.g. store, Resource, hash, ->Region, <<'),
     kind: kindField.optional().describe('narrow to one kind'),
     section: z.string().max(100).optional().describe('for keys: the section that reads it'),
+    target: z.enum(['resource', 'shader']).optional().describe('for members: resource or shader'),
     dll_ref: z.string().max(80).optional().describe('only "latest" (default) is served'),
     format: formatField,
   },
@@ -67,6 +68,7 @@ export const specLookup = defineTool({
         name: args.name,
         ...(args.kind ? { kind: args.kind } : {}),
         ...(args.section ? { section: args.section } : {}),
+        ...(args.target ? { target: args.target } : {}),
       },
       ctx.lookup,
     );
@@ -105,7 +107,8 @@ export const specList = defineTool({
     }
     const page = pageOf(items, args.cursor);
     const lines = page.items.map(
-      (i) => `${i.name}${i.xxmi ? ' [XXMI-only]' : ''}${i.summary ? ` - ${i.summary}` : ''}`,
+      (i) =>
+        `${i.name}${i.target ? ` [${i.target}]` : ''}${i.form ? ' [value form]' : ''}${i.xxmi ? ' [XXMI-only]' : ''}${i.summary ? ` - ${i.summary}` : ''}`,
     );
     return Promise.resolve({
       text: [...lines, ...nextCursorLine(page.nextCursor)].join('\n'),

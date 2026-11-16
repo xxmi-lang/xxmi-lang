@@ -54,6 +54,24 @@
       "xxmi": true
     },
     {
+      "name": "snapshotoriginaltextures",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true,
+      "form": "value"
+    },
+    {
+      "name": "restoreoriginaltextures",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true,
+      "form": "value"
+    },
+    {
       "name": "draw",
       "kind": "draw",
       "match": "exact",
@@ -179,17 +197,35 @@
   "resourceMembers": [
     {
       "name": "size",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "region",
+      "target": "resource",
       "args": [
         "unsigned",
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_mask",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "matchtextures",
+      "target": "shader",
+      "args": [
+        "resource"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
       "xxmi": true
     }
   ],

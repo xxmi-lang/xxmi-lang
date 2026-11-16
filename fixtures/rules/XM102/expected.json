@@ -64,5 +64,39 @@
         "character": 19
       }
     }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM102",
+    "severity": "warning",
+    "message": "Unknown key `match_dhsh` in [ResourceMatch]; the DLL ignores it. Did you mean `match_dhash`?",
+    "range": {
+      "start": {
+        "line": 11,
+        "character": 0
+      },
+      "end": {
+        "line": 11,
+        "character": 10
+      }
+    },
+    "fix": {
+      "title": "Change to `match_dhash`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 11,
+              "character": 0
+            },
+            "end": {
+              "line": 11,
+              "character": 10
+            }
+          },
+          "newText": "match_dhash"
+        }
+      ]
+    }
   }
 ]

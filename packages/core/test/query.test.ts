@@ -27,6 +27,22 @@ describe('lookupSpec', () => {
     });
   });
 
+  it('tells resource and shader members apart and filters by target', () => {
+    expect(lookupSpec(spec, { name: '->Region' })[0]?.target).toBe('resource');
+    expect(lookupSpec(spec, { name: 'MatchTextures', kind: 'member' })[0]?.target).toBe('shader');
+    expect(lookupSpec(spec, { name: 'Region', kind: 'member', target: 'shader' })).toEqual([]);
+    const listed = listSpec(spec, 'member');
+    expect(listed.every((m) => m.target === 'resource' || m.target === 'shader')).toBe(true);
+  });
+
+  it('shows that value-form commands are written as the value', () => {
+    const [entry] = lookupSpec(spec, { name: 'snapshotoriginaltextures', kind: 'command' });
+
+    expect(entry?.form).toBe('value');
+    expect(entry?.facts.join(' ')).toMatch(/as the value/);
+    expect(listSpec(spec, 'command').find((c) => c.name === 'store')).not.toHaveProperty('form');
+  });
+
   it('narrows keys by section and returns nothing for unknown names', () => {
     const inResource = lookupSpec(spec, { name: 'type', kind: 'key', section: 'ResourceX' });
 

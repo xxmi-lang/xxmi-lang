@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { lintPaths, RULES } from '../src/index.ts';
@@ -89,4 +90,23 @@ describe('rule fixtures', () => {
       expect(await run(rule.id, good)).toEqual([]);
     });
   }
+});
+
+describe('XM102 did-you-mean', () => {
+  it('never suggests a value-form command for a misspelled key', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'xm102-'));
+    const path = join(dir, 'mod.ini');
+    writeFileSync(path, '[CommandListA]\nrestoreoriginaltexture = 1\n');
+
+    try {
+      const { files } = await lintPaths([path], { rules: ['XM102'], snapshots: [] });
+      const messages = files.flatMap((f) => f.diagnostics.map((d) => d.message));
+
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toMatch(/^Unrecognised entry/);
+      expect(messages[0]).not.toContain('restoreoriginaltextures');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

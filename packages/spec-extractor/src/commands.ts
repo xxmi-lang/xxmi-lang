@@ -1,5 +1,6 @@
 import type {
   CommandKind,
+  MemberTarget,
   SpecCommand,
   SpecCommandValue,
   SpecFunction,
@@ -62,6 +63,17 @@ function values(code: string, source: string): SpecCommandValue[] {
   return out;
 }
 
+/**
+ * Blocks that test only `val` (`snapshotoriginaltextures`): the keyword is the command, whatever
+ * the key is, so on a bare line it is the whole line.
+ */
+function valueCommands(condition: string, source: string): SpecCommand[] {
+  return comparisons(condition, VALUE).map((m) => ({
+    ...command(m, 'general', source),
+    form: 'value' as const,
+  }));
+}
+
 /** `ParseCommandListGeneralCommands`: one if-block per command keyword. */
 function generalCommands(file: CppFile): SpecCommand[] {
   const fn = 'ParseCommandListGeneralCommands';
@@ -69,7 +81,13 @@ function generalCommands(file: CppFile): SpecCommand[] {
   const commands: SpecCommand[] = [];
   for (const block of ifBlocks(file.functionBody(fn))) {
     const argCount = readerArgCount(file, block.body);
-    for (const key of comparisons(block.condition, KEY)) {
+    const keys = comparisons(block.condition, KEY);
+    if (keys.length === 0) {
+      commands.push(...valueCommands(block.condition, source));
+      continue;
+    }
+
+    for (const key of keys) {
       const existing = commands.find((c) => c.name === key.name);
       const vals = values(block.body, source);
       if (argCount !== undefined && !existing) {
@@ -173,9 +191,12 @@ function prefixes(file: CppFile): SpecCommand[] {
   return found.map((m) => command(m, 'prefix', `${file.name}:${fn}`));
 }
 
-/** The `members[]` table in `ResourceCopyTarget::ParseTargetMember` (`->Region(…)` etc.). */
-function resourceMembers(file: CppFile): SpecResourceMember[] {
-  const fn = 'ResourceCopyTarget::ParseTargetMember';
+/**
+ * The `members[]` table in a `ParseTargetMember` function: `ResourceCopyTarget` for
+ * `->Region(…)` etc., `ShaderTarget` for `->cb_first_slot` etc. Argument kinds are the
+ * `MemberArg::Type` names (`unsigned`, `float`, `string`, `hash`, `resource`, …).
+ */
+function targetMembers(file: CppFile, fn: string, target: MemberTarget): SpecResourceMember[] {
   const body = new CppFile(`${file.name}#${fn}`, file.functionBody(fn));
   const table = body.arrayInitializer('members');
   const members: SpecResourceMember[] = [];
@@ -188,6 +209,7 @@ function resourceMembers(file: CppFile): SpecResourceMember[] {
     );
     members.push({
       name: name.replace(/^->/, ''),
+      target,
       args,
       source: `${file.name}:${fn}`,
       xxmi: false,
@@ -195,6 +217,18 @@ function resourceMembers(file: CppFile): SpecResourceMember[] {
   }
   if (members.length === 0) throw new AnchorNotFoundError(file.name, fn, 'empty members[] table');
   return members;
+}
+
+/** The members of both target kinds; neither function exists in vanilla 3DMigoto. */
+function allMembers(x: Extraction): SpecResourceMember[] {
+  const cl = x.dll.file(CL);
+  const functions: [string, MemberTarget][] = [
+    ['ResourceCopyTarget::ParseTargetMember', 'resource'],
+    ['ShaderTarget::ParseTargetMember', 'shader'],
+  ];
+  return functions.flatMap(([fn, target]) =>
+    x.step([], () => targetMembers(cl, fn, target), { xxmiOnly: true }),
+  );
 }
 
 /** Function-call operators (`sin(…)`, `saturate(…)`, …) in the `unary_operators` group. */
@@ -223,5 +257,5 @@ export function extractCommands(x: Extraction): {
     ...declarations(x),
     ...prefixes(ini),
   ];
-  return { commands, resourceMembers: x.step([], () => resourceMembers(cl)) };
+  return { commands, resourceMembers: allMembers(x) };
 }

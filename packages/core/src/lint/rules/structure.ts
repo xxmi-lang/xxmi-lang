@@ -3,6 +3,7 @@
  * (IniHandler.cpp), so editor output matches the game log.
  */
 import type { LineModel, SectionModel } from '../../model/types.ts';
+import { keyCommands } from '../../spec/lookup.ts';
 import type { SpecKey } from '../../spec/types.ts';
 import { didYouMean, editDistance, replaceFix } from '../suggest.ts';
 import type { Rule, RuleContext } from '../types.ts';
@@ -74,7 +75,7 @@ export const XM102: Rule = {
           if (lookup.key(spec, command) || lookup.command(command)) continue;
           report(
             line.content.span.range,
-            `Unrecognised entry: ${line.content.text}.${didYouMean(command, [...known, ...lookup.spec.commands.map((c) => c.name)])}`,
+            `Unrecognised entry: ${line.content.text}.${didYouMean(command, [...known, ...keyCommands(lookup.spec).map((c) => c.name)])}`,
           );
           continue;
         }

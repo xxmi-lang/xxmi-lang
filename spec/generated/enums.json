@@ -520,6 +520,11 @@
           "xxmi": true
         },
         {
+          "name": "ResourceHammingDistance",
+          "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
           "name": "ResourceBindFlags",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
           "xxmi": true

@@ -121,8 +121,8 @@ All tools return compact text, or JSON with `format: "json"`. Errors come back a
 
 | Tool | Input | Returns |
 |---|---|---|
-| `spec_lookup` | `name`, `kind?` (section, key, command, operator, function, member, enum), `section?`, `dll_ref?` | Spec entries: facts, docs, example, XXMI-only flag, the spec's DLL symbol and its line in the indexed DLL source (with permalink). `ResourceFoo` finds the `Resource` section, `->Region` the member. |
-| `spec_list` | `kind`, `section?` (needed for `key`), `cursor?` | Names with one-line docs. |
+| `spec_lookup` | `name`, `kind?` (section, key, command, operator, function, member, enum), `section?`, `target?` (resource or shader), `dll_ref?` | Spec entries: facts, docs, example, XXMI-only flag, the spec's DLL symbol and its line in the indexed DLL source (with permalink). `ResourceFoo` finds the `Resource` section, `->Region` the member. `target` limits member lookups to resource members (e.g. `ResourceX->Region`) or shader members (e.g. `ps->cb_size`). |
+| `spec_list` | `kind`, `section?` (needed for `key`), `cursor?` | Names with one-line docs. Members are tagged `[resource]` or `[shader]`; commands written as a value (e.g. `run = snapshotoriginaltextures`) are tagged `[value form]`. |
 | `library_list` | `game`, `ref?`, `cursor?` | Libraries (namespaces) with symbol counts, files and the header comment of the library. |
 | `library_symbol` | `qualified_name`, `game`, `ref?` | Location and permalink; doc comment (plain `;` block above the header, or `;;` tags: `@desc`, `@in`, `@out`, `@since`, `@example`); the file header; comment blocks elsewhere in the package that mention the symbol (where ZZMI documents inputs today); what the section references; other symbols of the same namespace (candidate inputs); the section source. |
 | `find_implementation` | `feature`, `ref?`, `limit?` | Ranked DLL locations: the spec symbol's definition, then the literal in that file with the function it sits in, then other mentions; snippets and permalinks. Falls back to a word search for names outside the spec. |

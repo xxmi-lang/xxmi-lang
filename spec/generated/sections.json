@@ -922,6 +922,24 @@
           "xxmi": true
         },
         {
+          "name": "match_format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "match_dhash",
+          "valueType": "hash",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "match_confidence",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
           "name": "color_space",
           "valueType": "enum:CustomColorSpaceNames",
           "source": "IniHandler.cpp:ParseResourceSection",
@@ -1047,6 +1065,24 @@
           "valueType": "enum:DXGIFormats",
           "source": "IniHandler.cpp:ParseResourceSection",
           "xxmi": false
+        },
+        {
+          "name": "match_format",
+          "valueType": "enum:DXGIFormats",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "match_dhash",
+          "valueType": "hash",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
+        },
+        {
+          "name": "match_confidence",
+          "valueType": "float",
+          "source": "IniHandler.cpp:ParseResourceSection",
+          "xxmi": true
         },
         {
           "name": "color_space",
@@ -1681,6 +1717,12 @@
           "valueType": "bool",
           "source": "Hunting.cpp:literal",
           "xxmi": false
+        },
+        {
+          "name": "dump_mips",
+          "valueType": "bool",
+          "source": "Hunting.cpp:literal",
+          "xxmi": true
         }
       ],
       "removedKeys": [
@@ -2041,6 +2083,18 @@
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
           "xxmi": false
+        },
+        {
+          "name": "dhash_mip_size",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
+        },
+        {
+          "name": "dhash_allow_rehash",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": true
         },
         {
           "name": "override_directory",
