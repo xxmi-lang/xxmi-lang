@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/XxmiLang/XxmiLang.csproj" />
+    <!-- Built before the tests (see TestEnvironment.FakeServer), not referenced as a library. -->
+    <ProjectReference Include="../XxmiLang.FakeServer/XxmiLang.FakeServer.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

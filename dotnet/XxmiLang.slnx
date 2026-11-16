@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/XxmiLang.Core.Tests/XxmiLang.Core.Tests.csproj" />
+    <Project Path="tests/XxmiLang.FakeServer/XxmiLang.FakeServer.csproj" />
     <Project Path="tests/XxmiLang.Tests/XxmiLang.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">

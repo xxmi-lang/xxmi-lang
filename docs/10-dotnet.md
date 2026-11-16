@@ -104,11 +104,13 @@ if (check.CanRename)
 IReadOnlyList<XxmiCodeAction> fixes = await service.GetCodeActionsAsync(path, diagnostics[0].Range);
 ```
 
-- Every method is async, takes a `CancellationToken`, and works with local file paths and 0-based positions. The service is `IAsyncDisposable` (graceful `shutdown`/`exit`, kill after 3 s) and `IDisposable` (kill).
+- Every method is async, takes a `CancellationToken`, and works with local file paths and 0-based positions. The service is `IAsyncDisposable` (graceful `shutdown`/`exit`; the process tree is killed after `XxmiOptions.ShutdownTimeout`, 10 s; `Timeout.InfiniteTimeSpan` waits without limit) and `IDisposable` (kill).
 - `StartAsync(workspaceRoot)` starts `xxmi lsp --stdio`. The server indexes every `.ini` below the root in the background (up to 5,000 files); requests wait for that, so the first answer on a large folder is slower. `ServerVersion` and `ServerProcessId` are available once it runs.
 - **`GetDiagnosticsAsync` is current.** It waits until the server has processed every change you sent, then returns the diagnostics for that text. Use the `DiagnosticsPublished` event if you prefer pushes; it is raised on a thread-pool thread, in order, and always carries the full list for one document.
 - `XxmiRequestException` is the server refusing a request (`RenameAsync` of a library symbol). `PrepareRenameAsync` reports the same refusal as `CanRename = false` with a `Message`.
-- Requests time out after `XxmiOptions.RequestTimeout` (60 s) with `TimeoutException`.
+- Requests time out after `XxmiOptions.RequestTimeout` (60 s) with `TimeoutException`. A write to the server's stdin that outlasts the same limit (a server that stopped reading) kills the process and fails with `XxmiServerExitedException`. `StartAsync` times out the same way if the server never answers `initialize`.
+- `XxmiLinter` kills a `xxmi` process that runs longer than `XxmiOptions.ProcessTimeout` (2 min per process; a `LintAsync` batch is one process) and throws `XxmiProcessException`.
+- Diagnostics are matched to documents by path, so a server that echoes a URI with another drive-letter case or percent-encoding still reaches `GetDiagnosticsAsync`.
 - **Crashes.** If the process ends without `StopAsync` or disposal, `ServerExited` is raised (exit code and the last stderr lines), pending and later calls throw `XxmiServerExitedException`, and `IsRunning` is false. `StartAsync` again starts a new process and re-opens every document with its latest text. `RestartAsync` does the same on demand. `StopAsync` forgets the documents.
 - Calls on a document that isn't open throw `InvalidOperationException`; a service that isn't started does too.
 - Thread safety: the service can be used from several threads. Document changes are sent in the order they take the internal lock, so don't update the same document from two threads at once.
@@ -153,7 +155,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 
 ## Testing
 
-`dotnet/` holds the solution `XxmiLang.slnx`: `XxmiLang.Core`, `XxmiLang`, the packaging projects, `XxmiLang.Core.Tests` (xUnit; JSON round-trips through the source-generated context, text edits, interface contracts), `XxmiLang.Tests` (lint, every language service request, crash and restart, binary resolution, the JSON-RPC layer) and `samples/XxmiLang.Sample`.
+`dotnet/` holds the solution `XxmiLang.slnx`: `XxmiLang.Core`, `XxmiLang`, the packaging projects, `XxmiLang.Core.Tests` (xUnit; JSON round-trips through the source-generated context, text edits, interface contracts), `XxmiLang.Tests` (lint, every language service request, crash and restart, binary resolution, the JSON-RPC layer, and hang guards against a fake misbehaving server), `XxmiLang.FakeServer` (the fake `xxmi` those hang-guard tests run) and `samples/XxmiLang.Sample`.
 
 ```bash
 pnpm build && pnpm build:binaries --target host

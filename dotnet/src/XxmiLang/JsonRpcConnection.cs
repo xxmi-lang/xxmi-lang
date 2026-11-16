@@ -44,6 +44,12 @@ namespace XxmiLang
         /// <summary>Builds the exception that pending and later requests fail with once the streams end.</summary>
         public Func<Task<Exception>>? CreateClosedException { get; set; }
 
+        /// <summary>Longest a single message may take to be written; a server that stops reading its input would otherwise block the writer for good.</summary>
+        public TimeSpan WriteTimeout { get; set; } = Timeout.InfiniteTimeSpan;
+
+        /// <summary>Called once a write outlasts <see cref="WriteTimeout"/>. It must end the other side so the blocked write fails.</summary>
+        public Action? WriteStalled { get; set; }
+
         /// <summary>Raised once, after pending requests were failed, when the input ended or broke.</summary>
         public event Action<Exception>? Closed;
 
@@ -175,6 +181,7 @@ namespace XxmiLang
             var body = buffer.WrittenMemory;
             var header = Encoding.ASCII.GetBytes("Content-Length: " + body.Length + "\r\n\r\n");
             await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            using var stall = new Timer(_ => ReportStalledWrite(), null, WriteTimeout, Timeout.InfiniteTimeSpan);
             try
             {
                 // Once the first byte is out the message must be complete: no cancellation from here on.
@@ -191,6 +198,18 @@ namespace XxmiLang
             finally
             {
                 _writeLock.Release();
+            }
+        }
+
+        private void ReportStalledWrite()
+        {
+            try
+            {
+                WriteStalled?.Invoke();
+            }
+            catch (Exception)
+            {
+                // Runs on a timer thread: there is nobody to tell.
             }
         }
 
