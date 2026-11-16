@@ -320,17 +320,17 @@ namespace XxmiLang
                             new DocumentSymbolCapabilities(true),
                             new CompletionCapabilities(new CompletionItemCapabilities(new[] { "markdown", "plaintext" })),
                             new RenameCapabilities(true))));
-                    JsonElement initialized;
                     try
                     {
-                        initialized = await session.Connection.RequestAsync("initialize", parameters, WireJsonContext.Default.InitializeParams, timeout.Token).ConfigureAwait(false);
+                        var initialized = await session.Connection.RequestAsync("initialize", parameters, WireJsonContext.Default.InitializeParams, timeout.Token).ConfigureAwait(false);
+                        if (initialized.ValueKind == JsonValueKind.Object && initialized.TryGetProperty("serverInfo", out var info)) session.Version = LspParsing.Str(info, "version");
+                        // Shares the budget: a slow start must not surface as a bare cancellation here.
+                        await session.Connection.NotifyAsync("initialized", new EmptyObject(), WireJsonContext.Default.EmptyObject, timeout.Token).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                     {
                         throw new TimeoutException($"The language server didn't answer 'initialize' within {_options.RequestTimeout}.");
                     }
-                    if (initialized.ValueKind == JsonValueKind.Object && initialized.TryGetProperty("serverInfo", out var info)) session.Version = LspParsing.Str(info, "version");
-                    await session.Connection.NotifyAsync("initialized", new EmptyObject(), WireJsonContext.Default.EmptyObject, timeout.Token).ConfigureAwait(false);
                 }
 
                 _workspaceRoot = workspaceRoot;
