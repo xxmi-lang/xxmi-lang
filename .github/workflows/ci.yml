@@ -134,6 +134,8 @@ jobs:
 
   dotnet:
     # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
+    # A hung test once ran this job for 6 hours: the limits below end it in minutes and name the test.
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -167,7 +169,14 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Test against XXMI_PATH
-        run: dotnet test dotnet/XxmiLang.slnx --configuration Release
+        run: dotnet test dotnet/XxmiLang.slnx --configuration Release --blame-hang --blame-hang-timeout 3m --results-directory dotnet/TestResults
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results-${{ matrix.os }}
+          path: dotnet/TestResults
 
       - name: Library builds clean (warnings are errors, incl. trim and AOT analyzers)
         run: dotnet build dotnet/XxmiLang.slnx --configuration Release -warnaserror

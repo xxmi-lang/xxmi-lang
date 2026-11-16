@@ -17,7 +17,7 @@ public class LanguageServiceTests : IAsyncLifetime
 
     private static TextPosition At(int line, int character) => new TextPosition(line, character);
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Non_ASCII_paths_and_text_round_trip_through_the_server()
     {
         var directory = TestEnvironment.TempMod("");
@@ -47,7 +47,7 @@ public class LanguageServiceTests : IAsyncLifetime
         }
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task A_clean_mod_has_no_diagnostics_and_an_edit_introduces_XM201()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -75,7 +75,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Empty(await _service.GetDiagnosticsAsync(TestEnvironment.ModIni));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task DiagnosticsPublished_is_raised_for_changes()
     {
         var published = new TaskCompletionSource<DiagnosticsPublishedEventArgs>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -91,7 +91,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Equal(TestEnvironment.ModIni, args.Path);
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Definition_goes_into_the_library()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -103,7 +103,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Equal(new TextRange(At(7, 1), At(7, 16)), location.Range);
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Hover_documents_commands()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -115,7 +115,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Null(await _service.GetHoverAsync(TestEnvironment.ModIni, 40, 0));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task References_cover_every_file_of_the_mod()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -126,7 +126,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Contains(references, r => r.Path == System.IO.Path.Combine(TestEnvironment.Mod, "extra.ini"));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Completion_offers_command_lists_after_run()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -142,7 +142,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.All(items, i => Assert.False(string.IsNullOrEmpty(i.NewText)));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Outline_groups_sections_by_kind()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -155,7 +155,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.All(outline, s => Assert.Equal(SymbolKind.Namespace, s.Kind));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Rename_updates_every_file_and_refuses_library_symbols()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -175,13 +175,13 @@ public class LanguageServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<XxmiRequestException>(() => _service.RenameAsync(TestEnvironment.ModIni, 5, 20, "Nope"));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Requests_for_documents_that_are_not_open_say_so()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetHoverAsync(TestEnvironment.ModIni, 0, 0));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task A_closed_document_is_forgotten()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -190,7 +190,7 @@ public class LanguageServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetDiagnosticsAsync(TestEnvironment.ModIni));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task The_service_works_through_the_interface()
     {
         IXxmiLanguageService service = _service;
@@ -202,7 +202,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Empty(await service.GetCodeActionsAsync(TestEnvironment.ModIni, 4)); // the line overload
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Reports_the_server_version()
     {
         Assert.Matches(@"^\d+\.\d+\.\d+", _service.ServerVersion);
@@ -211,7 +211,7 @@ public class LanguageServiceTests : IAsyncLifetime
         await Task.CompletedTask;
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task A_killed_server_is_reported_fails_calls_and_can_be_restarted()
     {
         await _service.OpenDocumentAsync(TestEnvironment.ModIni);
@@ -234,7 +234,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Empty(await _service.GetDiagnosticsAsync(TestEnvironment.ModIni));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task StartAsync_while_running_is_refused_and_RestartAsync_works()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.StartAsync(TestEnvironment.Mod));
@@ -247,7 +247,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Empty(await _service.GetDiagnosticsAsync(TestEnvironment.ModIni));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task StopAsync_ends_the_process_without_ServerExited()
     {
         var raised = false;
@@ -262,7 +262,7 @@ public class LanguageServiceTests : IAsyncLifetime
         Assert.Throws<ArgumentException>(() => Process.GetProcessById(pid)); // gone
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task A_service_that_was_never_started_says_so()
     {
         await using var fresh = new XxmiLanguageService(TestEnvironment.Options());
@@ -270,7 +270,7 @@ public class LanguageServiceTests : IAsyncLifetime
         await Assert.ThrowsAsync<InvalidOperationException>(() => fresh.OpenDocumentAsync(TestEnvironment.ModIni));
     }
 
-    [Fact]
+    [Fact(Timeout = 60_000)]
     public async Task Disposed_services_throw()
     {
         var other = new XxmiLanguageService(TestEnvironment.Options());
