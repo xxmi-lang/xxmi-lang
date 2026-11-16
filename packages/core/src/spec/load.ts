@@ -138,7 +138,11 @@ export function applyOverlay(spec: Spec, overlay: unknown, file: string): string
           break;
         case 'members':
           mergeNamed(spec.resourceMembers, name, raw, path, problem, ['args'], (e) =>
-            manualEntry<SpecResourceMember>(e, path, problem, [], { name, args: [] }),
+            manualEntry<SpecResourceMember>(e, path, problem, ['target'], {
+              name,
+              target: e.target as SpecResourceMember['target'],
+              args: [],
+            }),
           );
           break;
         case 'functions':

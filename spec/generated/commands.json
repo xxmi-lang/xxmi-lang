@@ -149,6 +149,24 @@
       "xxmi": true
     },
     {
+      "name": "snapshotoriginaltextures",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true,
+      "form": "value"
+    },
+    {
+      "name": "restoreoriginaltextures",
+      "kind": "general",
+      "match": "exact",
+      "values": [],
+      "source": "CommandList.cpp:ParseCommandListGeneralCommands",
+      "xxmi": true,
+      "form": "value"
+    },
+    {
       "name": "draw",
       "kind": "draw",
       "match": "exact",
@@ -350,60 +368,70 @@
   "resourceMembers": [
     {
       "name": "mips",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "size",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "array",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "index",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "width",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "offset",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "stride",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "format",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "height",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "region",
+      "target": "resource",
       "args": [
         "unsigned",
         "unsigned"
@@ -413,18 +441,21 @@
     },
     {
       "name": "bindflags",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "lastframe",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "hashregion",
+      "target": "resource",
       "args": [
         "unsigned",
         "unsigned"
@@ -434,6 +465,7 @@
     },
     {
       "name": "spatialhash",
+      "target": "resource",
       "args": [
         "unsigned",
         "unsigned",
@@ -445,12 +477,14 @@
     },
     {
       "name": "sourcestride",
+      "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
     },
     {
       "name": "elementformat",
+      "target": "resource",
       "args": [
         "string",
         "unsigned"
@@ -460,11 +494,138 @@
     },
     {
       "name": "elementoffset",
+      "target": "resource",
       "args": [
         "string",
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "getmatchformat",
+      "target": "resource",
+      "args": [],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "hammingdistance",
+      "target": "resource",
+      "args": [
+        "resource"
+      ],
+      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_mask",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_type",
+      "target": "shader",
+      "args": [
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_size",
+      "target": "shader",
+      "args": [
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_mask",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_type",
+      "target": "shader",
+      "args": [
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_stride",
+      "target": "shader",
+      "args": [
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_last_slot",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_dimension",
+      "target": "shader",
+      "args": [
+        "unsigned"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_slot_count",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "cb_first_slot",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_last_slot",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "matchtextures",
+      "target": "shader",
+      "args": [
+        "resource"
+      ],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_slot_count",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
+      "xxmi": true
+    },
+    {
+      "name": "srv_first_slot",
+      "target": "shader",
+      "args": [],
+      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
       "xxmi": true
     }
   ],

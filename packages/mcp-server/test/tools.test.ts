@@ -33,6 +33,7 @@ describe('tools/list contract', () => {
             "kind",
             "name",
             "section",
+            "target",
           ],
           "required": [
             "name",

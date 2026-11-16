@@ -1,0 +1,16 @@
+[
+  {
+    "id": "XM001",
+    "message": "Syntax error: unexpected `run = snapshotoriginaltexture`",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 0
+      },
+      "end": {
+        "line": 4,
+        "character": 29
+      }
+    }
+  }
+]

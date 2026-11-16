@@ -91,12 +91,25 @@ export interface SpecCommand extends Sourced, Documented {
   argCount?: number;
   /** First argument is a resource holding the indirect arguments. */
   indirect?: boolean;
+  /**
+   * `value`: the DLL matches the right-hand side and never checks the key, so the name is not a
+   * key. Absent means the usual `key = …` form.
+   */
+  form?: 'value';
 }
+
+/** The DLL function whose `members[]` table lists the member. */
+export type MemberTarget = 'resource' | 'shader';
 
 export interface SpecResourceMember extends Sourced, Documented {
   /** Without the `->`, e.g. `Region`. Matching is case-insensitive. */
   name: string;
-  /** Argument kinds from the DLL's member table: `unsigned`, `float`, `string`. */
+  /** `resource`: `ResourceCopyTarget` (`Res->Region`); `shader`: `ShaderTarget` (`ps->…`). */
+  target: MemberTarget;
+  /**
+   * Argument kinds from the DLL's member table (`MemberArg::Type`): `unsigned`, `signed`, `float`,
+   * `string`, `hash`, `resource`. Shader-target members (`ps->…`) come from `ShaderTarget`.
+   */
   args: string[];
 }
 

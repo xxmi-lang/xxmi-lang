@@ -141,3 +141,21 @@ example = """
 [CommandList.SetValue]
 store = $packed, Resource.UAV, 7
 $low = $packed & 127"""
+
+[commands.snapshotoriginaltextures]
+doc = """
+XXMI: written as the value, the key is not checked. Pre list only."""
+
+[commands.restoreoriginaltextures]
+doc = """
+XXMI: written as the value, the key is not checked. Post list only."""
+
+[members.matchtextures]
+doc = """
+XXMI: destination form `ps->MatchTextures(ResourceX) = ResourceY`. `ResourceX` is the \
+matching candidate; the DLL picks the pixel-shader slot at run time and binds `ResourceY` \
+there. Only the pixel stage (`ps`) is accepted: another stage gives "MatchTextures is only \
+supported for pixel shaders". The argument must be a plain custom resource (not a slot, \
+`this` or a member), otherwise "MatchTextures candidate must be a custom resource"."""
+example = """
+ps->MatchTextures(ResourceBodyDiffuse) = ResourceNewDiffuse"""

@@ -61,7 +61,7 @@ export class DllSource {
  * Runs extraction steps. In strict mode (the XXMI DLL) a missing anchor aborts extraction, so
  * source drift is noticed instead of silently shrinking the spec. In lenient mode (the vanilla
  * baseline, which lacks XXMI-only tables) a missing anchor is recorded and the step yields its
- * fallback.
+ * fallback. An `xxmiOnly` step is expected to miss in the baseline, so it falls back silently.
  */
 export class Extraction {
   readonly warnings: string[] = [];
@@ -73,12 +73,12 @@ export class Extraction {
     this.strict = strict;
   }
 
-  step<T>(fallback: T, run: () => T): T {
+  step<T>(fallback: T, run: () => T, options: { xxmiOnly?: boolean } = {}): T {
     try {
       return run();
     } catch (error) {
       if (this.strict || !(error instanceof AnchorNotFoundError)) throw error;
-      this.warnings.push(error.message);
+      if (!options.xxmiOnly) this.warnings.push(error.message);
       return fallback;
     }
   }

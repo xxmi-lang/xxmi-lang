@@ -3,9 +3,9 @@
   "repository": "https://github.com/xxmi-lang/tree-sitter-migoto.git",
   "upstream": "https://github.com/lupomikti/tree-sitter-migoto",
   "upstreamVersion": "0.9.4",
-  "branch": "xxmi",
-  "commit": "4ab1f02507753c8acbf0dd41c025ff069bd2fa86",
+  "branch": "xxmi-dll-1.3.1-syntax",
+  "commit": "5d78a72a267908f01717759eeafe42814341ad6d",
   "dirty": false,
   "treeSitterCli": "0.26.13",
-  "sha256": "832681db72873a1632598298e1fc32814c31f50e5462b6eba1b668c5fb8ea16f"
+  "sha256": "bbc104a91941dbf1a6bc3426811ce44b8ac90d4c97e3a81a10c4c9cd7a21f6be"
 }

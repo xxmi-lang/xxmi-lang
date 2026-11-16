@@ -106,7 +106,7 @@ function registerResources(server: McpServer, ctx: ToolContext): void {
     }),
     {
       description:
-        'DLL-derived spec: sections.json (sections, keys) and commands.json (commands, members, functions)',
+        'DLL-derived spec: sections.json (sections, keys) and commands.json (commands, members tagged resource or shader, functions)',
       mimeType: 'application/json',
     },
     (uri, variables) => {

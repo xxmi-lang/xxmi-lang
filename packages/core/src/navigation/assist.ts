@@ -5,7 +5,8 @@
 import { dirname } from 'node:path';
 import type { IniFile, LineModel, SectionModel } from '../model/types.ts';
 import type { Position, Range } from '../parser/index.ts';
-import type { Documented, Sourced, SpecKey, SpecSection } from '../spec/types.ts';
+import { keyCommands, valueCommands } from '../spec/lookup.ts';
+import type { Documented, Sourced, SpecCommand, SpecKey, SpecSection } from '../spec/types.ts';
 import type { SymbolOrigin } from '../workspace/symbols.ts';
 import type { Workspace } from '../workspace/workspace.ts';
 import { contains, offsetAt, targetAt } from './navigation.ts';
@@ -123,21 +124,20 @@ export function hover(workspace: Workspace, file: IniFile, pos: Position): Hover
   if (key) return { contents: keyDoc(key, section.spec), range: keyRange };
   if (section.spec.kind === 'commandlist') {
     const command = lookup.command(line.command ?? keyName);
-    if (command) {
-      const args =
-        command.argCount !== undefined
-          ? ` (${command.argCount} argument${command.argCount === 1 ? '' : 's'})`
-          : '';
-      const values = command.values.length
-        ? `\n\nSpecial values: ${command.values.map((v) => `\`${v.name}${v.match === 'prefix' ? '…' : ''}\``).join(', ')}`
-        : '';
-      return {
-        contents: `**${command.name}** — ${command.kind} command${args}${badge(command)}\n\n${docs(command)}${values}${source(command)}`,
-        range: keyRange,
-      };
-    }
+    if (command) return { contents: commandDoc(command), range: keyRange };
   }
   return undefined;
+}
+
+function commandDoc(command: SpecCommand): string {
+  const args =
+    command.argCount !== undefined
+      ? ` (${command.argCount} argument${command.argCount === 1 ? '' : 's'})`
+      : '';
+  const values = command.values.length
+    ? `\n\nSpecial values: ${command.values.map((v) => `\`${v.name}${v.match === 'prefix' ? '…' : ''}\``).join(', ')}`
+    : '';
+  return `**${command.name}** — ${command.kind} command${args}${badge(command)}\n\n${docs(command)}${values}${source(command)}`;
 }
 
 function sectionDoc(spec: SpecSection): string {
@@ -166,6 +166,13 @@ function valueHover(
       start: { line: line.line, character: value.span.range.start.character + m.index },
       end: { line: line.line, character: value.span.range.start.character + m.index + m[0].length },
     };
+    const valueCommand =
+      line.command === 'run'
+        ? valueCommands(workspace.lookup.spec).find(
+            (c) => c.name.toLowerCase() === m[0].toLowerCase(),
+          )
+        : undefined;
+    if (valueCommand) return { contents: commandDoc(valueCommand), range };
     const fn = workspace.lookup.spec.functions.find(
       (f) => f.name.toLowerCase() === m[0].toLowerCase(),
     );
@@ -285,7 +292,7 @@ export function completions(workspace: Workspace, file: IniFile, pos: Position):
       ...(assign ? { insertText: k.name + assign } : {}),
     }));
     if (spec.kind === 'commandlist') {
-      for (const c of lookup.spec.commands) {
+      for (const c of keyCommands(lookup.spec)) {
         const keyword = c.kind === 'flow' || c.kind === 'declaration';
         // `pre`/`post` and the other prefixes only make sense in front of something else.
         if (c.kind === 'prefix' || (c.match === 'prefix' && !keyword)) continue;
