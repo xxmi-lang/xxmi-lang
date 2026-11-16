@@ -49,4 +49,15 @@ describe('stream', () => {
 
     expect(error.timedOut).toBe(true);
   });
+
+  it('keeps the output of a child that exited before anyone read it', async () => {
+    const child = stream(node, ['-e', "process.stdout.write('payload')"], options(30_000));
+    await child.exit.catch(() => undefined);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of child.stdout) chunks.push(chunk as Buffer);
+
+    expect(Buffer.concat(chunks).toString()).toBe('payload');
+  });
 });

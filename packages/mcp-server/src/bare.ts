@@ -93,7 +93,7 @@ export class BareCaches {
   /** Drops the cache when it outgrew `maxBytes`; true if it did. */
   async trim(repo: TrackedRepo, maxBytes: number): Promise<boolean> {
     if ((await treeBytes(this.dir(repo))) <= maxBytes) return false;
-    await rm(this.dir(repo), { recursive: true, force: true });
+    await this.remove(repo);
     return true;
   }
 
@@ -118,10 +118,14 @@ export class BareCaches {
     );
   }
 
+  private remove(repo: TrackedRepo): Promise<void> {
+    return rm(this.dir(repo), { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+
   private async recreate(repo: TrackedRepo, reason: string): Promise<void> {
     this.recreated.add(fullName(repo));
     this.logger.warn('git cache re-created', { repo: fullName(repo), reason });
-    await rm(this.dir(repo), { recursive: true, force: true });
+    await this.remove(repo);
     await this.create(repo);
   }
 

@@ -2,6 +2,7 @@
  * Git-backed upstream access: `ls-remote` for refs and `git archive` for files, never a checkout.
  * The bare caches it fetches into are in bare.ts.
  */
+import { setTimeout as sleep } from 'node:timers/promises';
 import { BareCaches, LIST_TIMEOUT_MS, TRANSFER_TIMEOUT_MS, type GitCommand } from './bare.ts';
 import { extractTar } from './extract.ts';
 import { silentLogger, type Logger } from './logger.ts';
@@ -11,6 +12,7 @@ import type { CommitInfo, RemoteRefs, SourceClient } from './upstream.ts';
 export type GitSources = Omit<SourceClient, 'releases'>;
 
 const SHA = /^[0-9a-f]{40}$/;
+const GIT_EXIT_GRACE_MS = 2_000;
 
 /** Parses `git ls-remote --symref <url> HEAD 'refs/heads/*' 'refs/tags/*'`. */
 export function parseLsRemote(output: string): RemoteRefs {
@@ -56,10 +58,14 @@ async function extractArchive(
     timeoutMs: TRANSFER_TIMEOUT_MS,
     label: 'git archive',
   });
-  const extraction = extractTar(archive.stdout, destDir, repo.role).catch((error: unknown) => {
-    archive.kill();
-    throw error;
-  });
+  const extraction = extractTar(archive.stdout, destDir, repo.role).catch(
+    async (error: unknown) => {
+      // The stream often ends because git failed; let it report why before it is killed.
+      await Promise.race([archive.exit.catch(() => undefined), sleep(GIT_EXIT_GRACE_MS)]);
+      archive.kill();
+      throw error;
+    },
+  );
 
   const [extracted, exited] = await Promise.allSettled([extraction, archive.exit]);
   if (exited.status === 'rejected' && !archive.killed) throw exited.reason;
