@@ -15,11 +15,12 @@ namespace XxmiLang.Tests;
 public class HangGuardTests
 {
     private static readonly TimeSpan Guard = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan ShortTimeout = TimeSpan.FromSeconds(2);
 
     [Fact]
     public async Task A_lint_process_that_never_answers_is_killed_and_reported()
     {
-        using var server = FakeServer.InMode("silent");
+        using var server = FakeServer.InMode("silent", processTimeout: ShortTimeout);
 
         var error = await Assert.ThrowsAsync<XxmiProcessException>(() => new XxmiLinter(server.Options).LintFileAsync(TestEnvironment.ModIni).WaitAsync(Guard));
 
@@ -29,7 +30,7 @@ public class HangGuardTests
     [Fact]
     public async Task A_lint_process_that_never_reads_its_input_is_killed_and_reported()
     {
-        using var server = FakeServer.InMode("deaf");
+        using var server = FakeServer.InMode("deaf", processTimeout: ShortTimeout);
         var text = new string('a', 4_000_000); // far beyond any pipe buffer
 
         var error = await Assert.ThrowsAsync<XxmiProcessException>(() => new XxmiLinter(server.Options).LintTextAsync(TestEnvironment.ModIni, text).WaitAsync(Guard));
@@ -58,7 +59,7 @@ public class HangGuardTests
     [Fact]
     public async Task A_server_that_never_answers_initialize_times_out_on_start()
     {
-        using var server = FakeServer.InMode("silent");
+        using var server = FakeServer.InMode("silent", requestTimeout: ShortTimeout);
         await using var service = new XxmiLanguageService(server.Options);
 
         await Assert.ThrowsAsync<TimeoutException>(() => service.StartAsync(server.Directory).WaitAsync(Guard));
@@ -69,7 +70,7 @@ public class HangGuardTests
     [Fact]
     public async Task A_server_that_never_reads_its_input_times_out_on_start()
     {
-        using var server = FakeServer.InMode("deaf");
+        using var server = FakeServer.InMode("deaf", requestTimeout: ShortTimeout);
         await using var service = new XxmiLanguageService(server.Options);
 
         await Assert.ThrowsAsync<TimeoutException>(() => service.StartAsync(server.Directory).WaitAsync(Guard));
@@ -83,6 +84,7 @@ public class HangGuardTests
         await service.StartAsync(server.Directory).WaitAsync(Guard);
         var pid = service.ServerProcessId!.Value;
         await service.OpenDocumentAsync(TestEnvironment.ModIni).WaitAsync(Guard);
+        server.Options.RequestTimeout = ShortTimeout; // read per request, so the start above was not held to it
 
         await Assert.ThrowsAsync<TimeoutException>(() => service.GetHoverAsync(TestEnvironment.ModIni, 4, 1).WaitAsync(Guard));
         await service.DisposeAsync().AsTask().WaitAsync(Guard); // the shutdown handshake is never answered: killed after ShutdownTimeout

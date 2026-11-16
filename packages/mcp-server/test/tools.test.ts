@@ -1,10 +1,36 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { App } from '../src/app.ts';
-import { callTool, coldApp, connectClient, indexedApp } from './helpers.ts';
+import {
+  callTool,
+  coldApp,
+  connectClient,
+  defaultRemotes,
+  indexedApp,
+  SHA_A,
+  SHA_B,
+  TAG_SHA,
+} from './helpers.ts';
 
 const apps: App[] = [];
 afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()));
+});
+
+interface VersionsJsonRepo {
+  alias: string;
+  default: { kind: string } | null;
+  tags: { name: string; kind: string; publishedAt?: string }[];
+  latestRelease: unknown;
+  latestPrerelease: unknown;
+}
+
+/** The fields `list_versions` added, without the timestamps that change on every run. */
+const projectRepo = (r: VersionsJsonRepo) => ({
+  alias: r.alias,
+  default: r.default?.kind,
+  tags: r.tags.map((t) => `${t.name}:${t.kind}:${t.publishedAt ?? '-'}`),
+  latestRelease: r.latestRelease,
+  latestPrerelease: r.latestPrerelease,
 });
 
 async function client() {
@@ -43,6 +69,7 @@ describe('tools/list contract', () => {
           "name": "spec_list",
           "properties": [
             "cursor",
+            "dll_ref",
             "format",
             "kind",
             "section",
@@ -123,6 +150,7 @@ describe('tools/list contract', () => {
         {
           "name": "lint_ini",
           "properties": [
+            "dll_ref",
             "files",
             "format",
             "game",
@@ -308,6 +336,93 @@ describe('DLL and source tools', () => {
     expect(text).toContain('index: ready');
     expect(text).toContain('leotorrez/ZZMI-Package: main');
   });
+
+  it('reports kinds, the latest release and the latest pre-release', async () => {
+    const remotes = defaultRemotes();
+    remotes['dll'] = {
+      head: { name: 'master', sha: SHA_A },
+      tags: [
+        { name: 'v1.2.3', sha: SHA_B },
+        { name: 'v1.3.1', sha: TAG_SHA },
+      ],
+      releases: [
+        {
+          tag: 'v1.2.3',
+          name: null,
+          prerelease: false,
+          draft: false,
+          publishedAt: '2026-10-31T09:00:00Z',
+        },
+        {
+          tag: 'v1.3.1',
+          name: null,
+          prerelease: true,
+          draft: false,
+          publishedAt: '2026-11-15T09:00:00Z',
+        },
+      ],
+    };
+    const { app } = await indexedApp({}, remotes);
+    apps.push(app);
+
+    const client = await connectClient(app);
+    const text = (await callTool(client, 'list_versions', {})).text;
+    const json = JSON.parse((await callTool(client, 'list_versions', { format: 'json' })).text) as {
+      repos: VersionsJsonRepo[];
+    };
+
+    expect(text).toContain('  latest release: v1.2.3 (2026-10-31)');
+    expect(text).toContain('  latest pre-release: v1.3.1 (2026-11-15)');
+    expect(json.repos.map(projectRepo)).toMatchInlineSnapshot(`
+      [
+        {
+          "alias": "dll",
+          "default": "head",
+          "latestPrerelease": {
+            "name": "v1.3.1",
+            "publishedAt": "2026-11-15T09:00:00Z",
+            "sha": "cccccccccccccccccccccccccccccccccccccccc",
+          },
+          "latestRelease": {
+            "name": "v1.2.3",
+            "publishedAt": "2026-10-31T09:00:00Z",
+            "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          },
+          "tags": [
+            "v1.3.1:prerelease:2026-11-15T09:00:00Z",
+            "v1.2.3:release:2026-10-31T09:00:00Z",
+          ],
+        },
+        {
+          "alias": "zzmi",
+          "default": "head",
+          "latestPrerelease": null,
+          "latestRelease": {
+            "name": "v1.0.0",
+            "publishedAt": null,
+            "sha": "cccccccccccccccccccccccccccccccccccccccc",
+          },
+          "tags": [
+            "v1.0.0:tag:-",
+          ],
+        },
+        {
+          "alias": "xxmitools",
+          "default": "head",
+          "latestPrerelease": null,
+          "latestRelease": null,
+          "tags": [],
+        },
+        {
+          "alias": "migoto",
+          "default": "head",
+          "latestPrerelease": null,
+          "latestRelease": null,
+          "tags": [],
+        },
+      ]
+    `);
+  });
 });
 
 describe('lint_ini', () => {
@@ -403,8 +518,8 @@ describe('resources', () => {
     const c = await client();
 
     const list = await c.listResources();
-    expect(list.resources.map((r) => r.uri)).toContain('xxmi://spec/latest/commands.json');
-    const read = await c.readResource({ uri: 'xxmi://spec/latest/sections.json' });
+    expect(list.resources.map((r) => r.uri)).toContain('xxmi://spec/latest-release/commands.json');
+    const read = await c.readResource({ uri: 'xxmi://spec/latest-release/sections.json' });
     const doc = JSON.parse((read.contents[0] as { text: string }).text) as { sections: unknown[] };
     expect(doc.sections.length).toBeGreaterThan(10);
   });

@@ -24,3 +24,6 @@ dist/
 
 # .NET build output and packages (dotnet/, scripts/pack-dotnet.ts).
 dotnet/artifacts/
+
+# Temporary git worktrees created by Claude Code tooling.
+.claude/worktrees/

@@ -13,6 +13,8 @@ export default tseslint.config(
       '.dll/**',
       // VS Code downloaded by @vscode/test-electron (packages/vscode/.vscode-test).
       '**/.vscode-test/**',
+      // Temporary git worktrees (ESLint does not read .gitignore).
+      '.claude/worktrees/**',
     ],
   },
   js.configs.recommended,

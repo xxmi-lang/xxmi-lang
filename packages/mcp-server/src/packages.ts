@@ -5,9 +5,8 @@
 import { join } from 'node:path';
 import {
   buildSnapshot,
-  defaultSpec,
-  SpecLookup,
   Workspace,
+  type SpecLookup,
   type LoadedPackage,
   type SymbolSnapshot,
 } from '@xxmi-lang/core';
@@ -20,14 +19,18 @@ export interface LoadedPackageIndex {
   snapshot: SymbolSnapshot;
 }
 
-/** Parses the package in `checkout` (the repo root) and builds its symbol snapshot. */
+/**
+ * Parses the package in `checkout` (the repo root) and builds its symbol snapshot. The lookup is
+ * the bundled spec's: a package index must not change with the DLL versions indexed.
+ */
 export async function loadPackageCheckout(
   checkout: string,
   repo: TrackedRepo,
   sha: string,
+  lookup: SpecLookup,
 ): Promise<LoadedPackageIndex> {
   const root = join(checkout, repo.packageDir ?? '.');
-  const workspace = new Workspace({ lookup: new SpecLookup(defaultSpec()) });
+  const workspace = new Workspace({ lookup });
   await workspace.loadPackage(root);
   const snapshot = buildSnapshot(workspace, root, {
     name: repo.game ?? repo.name.toLowerCase(),
@@ -43,9 +46,11 @@ const CACHE_SIZE = 3;
 export class PackageCache {
   private readonly entries = new Map<string, Promise<LoadedPackageIndex>>();
   private readonly store: Store;
+  private readonly lookup: SpecLookup;
 
-  constructor(store: Store) {
+  constructor(store: Store, lookup: SpecLookup) {
     this.store = store;
+    this.lookup = lookup;
   }
 
   get(ref: ResolvedRef): Promise<LoadedPackageIndex> {
@@ -54,7 +59,7 @@ export class PackageCache {
     if (entry) {
       this.entries.delete(key);
     } else {
-      entry = loadPackageCheckout(ref.dir, ref.repo, ref.sha);
+      entry = loadPackageCheckout(ref.dir, ref.repo, ref.sha, this.lookup);
       entry.catch(() => this.entries.delete(key));
     }
     this.entries.set(key, entry);

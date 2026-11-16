@@ -16,8 +16,9 @@ RUN pnpm install --frozen-lockfile --filter "@xxmi-lang/mcp-server..." \
 # own layers (npm, yarn, headers) would add ~90 MB that a server doesn't use. Keep the Alpine
 # version equal to the Node image's, so libstdc++ matches what the binary was built with.
 FROM alpine:3.24
-# ripgrep backs search_source; su-exec drops root after fixing the volume's ownership.
-RUN apk add --no-cache libstdc++ ripgrep su-exec \
+# ripgrep backs search_source; git fetches the tracked repos; su-exec drops root after fixing
+# the volume's ownership.
+RUN apk add --no-cache git libstdc++ ripgrep su-exec \
  && addgroup -g 1000 node && adduser -u 1000 -G node -s /bin/sh -D node
 COPY --from=build-node /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app

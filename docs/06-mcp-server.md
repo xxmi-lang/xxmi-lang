@@ -111,8 +111,8 @@ Status (2026-10-20): implemented in `packages/mcp-server`, tested, and run from 
 | Path | What |
 |---|---|
 | `POST /mcp` | MCP Streamable HTTP, stateless, JSON responses (no SSE). A fresh MCP server and transport per request. `GET`/`DELETE` answer 405. |
-| `GET /healthz` | Always 200 once listening: `{"status":"ok","ready":false,"version":"…"}`. `ready` becomes true when every tracked repo has its default branch indexed. Not rate limited. |
-| `POST /admin/refresh` | Runs an index pass now. Needs `Authorization: Bearer $ADMIN_TOKEN`; does not exist (404) if `ADMIN_TOKEN` is unset. Returns 202 at once, or the pass result with `?wait=1`. |
+| `GET /healthz` | Always 200 once listening: `{"status":"ok","ready":false,"version":"…"}`. `ready` becomes true when every tracked repo except the baseline (bo3b/3Dmigoto) has its default branch indexed; the baseline's own state is the `indexed` flag of its entry in `list_versions`. Not rate limited. |
+| `POST /admin/refresh` | Runs an index pass now, and asks GitHub about releases again even if the tags didn't change. Needs `Authorization: Bearer $ADMIN_TOKEN`; does not exist (404) if `ADMIN_TOKEN` is unset. Returns 202 at once, or the pass result with `?wait=1`. |
 | `GET /` | Name and version. |
 
 ### Tools
@@ -121,17 +121,17 @@ All tools return compact text, or JSON with `format: "json"`. Errors come back a
 
 | Tool | Input | Returns |
 |---|---|---|
-| `spec_lookup` | `name`, `kind?` (section, key, command, operator, function, member, enum), `section?`, `target?` (resource or shader), `dll_ref?` | Spec entries: facts, docs, example, XXMI-only flag, the spec's DLL symbol and its line in the indexed DLL source (with permalink). `ResourceFoo` finds the `Resource` section, `->Region` the member. `target` limits member lookups to resource members (e.g. `ResourceX->Region`) or shader members (e.g. `ps->cb_size`). |
-| `spec_list` | `kind`, `section?` (needed for `key`), `cursor?` | Names with one-line docs. Members are tagged `[resource]` or `[shader]`; commands written as a value (e.g. `run = snapshotoriginaltextures`) are tagged `[value form]`. |
+| `spec_lookup` | `name`, `kind?` (section, key, command, operator, function, member, enum), `section?`, `target?` (resource or shader), `dll_ref?` | Spec entries: facts, docs, example, XXMI-only flag, the spec's DLL symbol and its line in the indexed DLL source (with permalink). `ResourceFoo` finds the `Resource` section, `->Region` the member. `target` limits member lookups to resource members (e.g. `ResourceX->Region`) or shader members (e.g. `ps->cb_size`). `dll_ref` picks the DLL version, see "Specs per DLL version". |
+| `spec_list` | `kind`, `section?` (needed for `key`), `cursor?`, `dll_ref?` | Names with one-line docs. Members are tagged `[resource]` or `[shader]`; commands written as a value (e.g. `run = snapshotoriginaltextures`) are tagged `[value form]`. |
 | `library_list` | `game`, `ref?`, `cursor?` | Libraries (namespaces) with symbol counts, files and the header comment of the library. |
 | `library_symbol` | `qualified_name`, `game`, `ref?` | Location and permalink; doc comment (plain `;` block above the header, or `;;` tags: `@desc`, `@in`, `@out`, `@since`, `@example`); the file header; comment blocks elsewhere in the package that mention the symbol (where ZZMI documents inputs today); what the section references; other symbols of the same namespace (candidate inputs); the section source. |
 | `find_implementation` | `feature`, `ref?`, `limit?` | Ranked DLL locations: the spec symbol's definition, then the literal in that file with the function it sits in, then other mentions; snippets and permalinks. Falls back to a word search for names outside the spec. |
 | `search_source` | `repo`, `query`, `path_glob?`, `ref?`, `max_results?` (≤ 50) | ripgrep matches with 2 lines of context. |
 | `read_source` | `repo`, `path`, `start_line`, `end_line` (≤ 400 lines), `ref?` | Numbered excerpt and permalink. |
-| `lint_ini` | `files` (`{path: content}`), `game` (default `zzmi`), `package_ref?` | `xxmi lint` output: text, or the `version: 1` JSON document (same shape) plus the package commit used. Paths decide namespaces (`Mods/MyMod/mod.ini`) and `include =` works between the submitted files. |
-| `list_versions` | — | Indexed repos and refs, the DLL commit the spec was extracted from, ready flag. |
+| `lint_ini` | `files` (`{path: content}`), `game` (default `zzmi`), `package_ref?`, `dll_ref?` | `xxmi lint` output: text, or the `version: 1` JSON document (same shape) plus the package commit used. Paths decide namespaces (`Mods/MyMod/mod.ini`) and `include =` works between the submitted files. |
+| `list_versions` | — | Indexed repos (each with its `role` and `indexed` flag) and refs (each with a `kind`), the latest release and pre-release per repo, the spec status of each DLL version, the spec used by default, the DLL commit the bundled spec was extracted from, ready flag. See "Versions" and "Specs per DLL version". |
 
-`repo` is `dll`, `zzmi`, `xxmitools` or `owner/name` of a tracked repo. `ref` is a branch, a tag or a commit prefix (7+ characters) of something indexed; omitted or `latest` means the default branch. Resources: `xxmi://spec/{dll_ref}/sections.json` and `…/commands.json` (the merged spec; `dll_ref` is `latest` or the spec's commit).
+`repo` is `dll`, `zzmi`, `xxmitools` or `owner/name` of a tracked repo. `ref` is a branch, a tag or a commit prefix (7+ characters) of something indexed, or one of `latest` / `head` (the default branch's head, also what an omitted `ref` means), `latest-release`, `latest-prerelease`. The baseline repo (`migoto`, bo3b/3Dmigoto) is head-only and not offered by the package or library tools. Resources: `xxmi://spec` (the default spec), `xxmi://spec/{dll_ref}`, and `xxmi://spec/{dll_ref}/sections.json` / `…/commands.json`, all resolved like the tools' `dll_ref`; the JSON carries a `_spec` block (see "Specs per DLL version").
 
 The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolver`); the server only maps tool arguments to core calls, serves checkouts and enforces limits. `xxmi query` (`04-cli.md`) uses the same functions.
 
@@ -143,8 +143,11 @@ The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolv
 | `HOST` | `0.0.0.0` | |
 | `DATA_DIR` | `/data` in the image, `./data` otherwise | The volume. |
 | `POLL_INTERVAL_MIN` | 15 | Minutes between index passes; 0 turns polling off. |
-| `INDEXED_TAGS` | 5 | Newest release tags indexed next to the default branch. |
-| `GITHUB_TOKEN` | unset | Optional. Without it GitHub's unauthenticated API allows 60 requests an hour per IP; a pass makes 6 (two per repo; the first one after a start 9, because it also asks for the default branch name), and unchanged answers revalidate with ETags, which GitHub doesn't count; tarballs come from codeload, which isn't part of the API limit. Set it if the shared Railway IP runs out. |
+| `INDEXED_RELEASES` | 3 | Newest GitHub releases indexed next to the default branch. Repos without releases get their newest tags instead. |
+| `INDEXED_PRERELEASES` | 2 | Newest pre-releases indexed, only those newer than the newest release. |
+| `INDEXED_TAGS` | unset | Deprecated: sets `INDEXED_RELEASES` when that is absent (it used to default to 5). |
+| `GIT_CACHE_MAX_MB` | 512 | A repo's bare git cache above this size is deleted after pruning and rebuilt by the next fetch. |
+| `GITHUB_TOKEN` | unset | Optional, no longer needed. Git access to the public repos is anonymous. It is sent only with the one remaining GitHub API call (release metadata, see "Versions"), whose unauthenticated limit of 60 requests an hour per IP is far above what that call needs. |
 | `ADMIN_TOKEN` | unset | Enables `/admin/refresh`. |
 | `RATE_LIMIT_PER_MIN` | 60 | Sustained requests per client IP; 0 disables. |
 | `RATE_LIMIT_BURST` | 20 | Bucket size. |
@@ -153,22 +156,46 @@ The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolv
 | `MAX_LINT_BYTES` / `MAX_LINT_FILES` | 1000000 / 200 | `lint_ini` caps. |
 | `TOOL_TIMEOUT_MS` | 15000 | Per tool call. |
 | `SEARCH_TIMEOUT_MS` | 2000 | `search_source`: ripgrep is killed after this and partial results are returned. |
-| `INDEXER` | on | `off` serves only what the volume holds (no GitHub access). |
+| `INDEXER` | on | `off` serves only what the volume holds (no network access). |
 
 ### Volume and indexer
 
 ```
-/data/state.json                       which refs are indexed (atomic rename)
-/data/repos/<owner>/<repo>/<sha>/      text files of one commit (tarball extract)
+/data/state.json                       which refs are indexed, and the release metadata (atomic rename)
+/data/git/<owner>/<repo>.git           bare repo holding only shallow fetches of indexed commits
+/data/repos/<owner>/<repo>/<sha>/      text files of one commit (git archive extract)
 /data/index/<owner>__<repo>/<sha>.json library symbol snapshot of a package commit
+/data/specs/<dllSha>.json              spec built from one DLL commit, with its build header
 /data/tmp/                             staging; cleared at start
 ```
 
-- Every `POLL_INTERVAL_MIN` the indexer asks GitHub for the default branch head and the newest tags of each tracked repo, downloads the tarball of every commit not on disk (`codeload.github.com`, no `git` or clone needed), extracts only text files (`.ini`, `.cpp`, `.h`, `.hlsl`, …; for the DLL repo only its own folders, not pcre2 and the like), builds the package symbol snapshot with core, then renames the checkout into place and rewrites `state.json`. Readers never see a half-written commit; a failed download leaves the old one served. Old commits are removed one pass after they stop being referenced.
-- Default branches are indexed first, then tags, so the server is `ready` after about 10 seconds on a first boot; the tags follow within a minute. A restart reads `state.json` and serves from the volume at once.
+- Sources come from plain git, not the GitHub API. Every `POLL_INTERVAL_MIN` the indexer runs one `git ls-remote --symref` per tracked repo (default branch, its head, all tags; annotated tags use their peeled commit). For each wanted commit not on disk it does `git fetch --depth 1 --no-tags origin <sha>` into the repo's bare clone (falling back to the ref that pointed at the sha), then `git archive` streams the tree into the extractor, which keeps only text files (`.ini`, `.cpp`, `.h`, `.hlsl`, …; for the DLL repo only its own folders, not pcre2 and the like; for 3Dmigoto only what the spec extractor reads: `DirectX11/`, `D3DCompiler/`, `Injector/` and the root `util.h`). There is never a full clone. The server builds the package symbol snapshot with core, then renames the checkout into place and rewrites `state.json`. Readers never see a half-written commit; a failed fetch leaves the old one served. Old commits are removed one pass after they stop being referenced.
+- Timeouts: 30 s for `ls-remote`, 180 s for fetch and archive. Git runs without a shell, with `GIT_TERMINAL_PROMPT=0` and protocol v2, and refs and shas follow `--end-of-options`. A cache that fails its health check (not a bare repo, wrong `origin`), or on which fetch or archive fails with a git error other than a timeout (a stale `shallow.lock`, corruption), is deleted, rebuilt and retried once, at most once per repo per poll pass; one `git cache re-created` line is logged. The bare clones only grow, so after pruning a repo whose `git/` folder exceeds `GIT_CACHE_MAX_MB` is deleted and fetched afresh when next needed.
+- Default branches are indexed first, then tags and releases, so the server is `ready` after about 10 seconds on a first boot (a baseline that fails to index does not hold this back); the tags follow within a minute. A restart reads `state.json` and serves from the volume at once.
 - Until the first ZZMI index is ready, `library_*` and `lint_ini` answer from the snapshot bundled with the server (locations only, with a note); spec tools always work. The DLL tools say the server is warming up.
-- If GitHub can't be reached before the first index exists, the indexer retries after a minute instead of waiting for the next poll.
+- If git can't reach GitHub before the first index exists, the indexer retries after a minute instead of waiting for the next poll.
 - A new ZZMI-Package commit is served within one poll interval plus about 30 seconds, so within 16 minutes by default.
+
+### Versions
+
+Git can't tell a release from a pre-release, so the one GitHub API call left is `GET https://api.github.com/repos/{owner}/{repo}/releases?per_page=30`. It runs only when a repo's set of tags differs from the one stored at the last successful lookup, and once at the first start; `/admin/refresh` forces it. The answer (`tag_name` to pre-release flag, draft flag, publish date, name) is kept in `state.json` until the tags change again. If the call fails or is rate limited, the previous map stays, new tags are indexed as plain tags (kind `tag`) until it works, one warning is logged, and the call is retried on a later poll at most once an hour.
+
+Each indexed version has a `kind`: `head` (default branch), `release`, `prerelease`, or `tag` (a git tag without a GitHub release, or not yet classified), and for tags its `tag` name and `publishedAt` when known. Per repo the indexer keeps the head, the newest `INDEXED_RELEASES` releases, and the newest `INDEXED_PRERELEASES` pre-releases that are newer than the newest release, ordered by `publishedAt` (tag-name order when dates are missing). Drafts are ignored. A repo with no releases at all keeps its newest `INDEXED_RELEASES` tags. The `baseline` role (bo3b/3Dmigoto) keeps the head only and never queries releases. The policy per role is in `src/selection.ts`.
+
+`list_versions` adds `latestRelease` and `latestPrerelease` (`{name, sha, publishedAt}` or null) per repo and a `kind` on every version; the text output has a line each, e.g. `latest release: v1.2.3 (2026-10-31)`. No tool's default `ref` changed: it is still the default branch's head.
+
+### Specs per DLL version
+
+The server extracts a spec from every indexed DLL version (head, releases, pre-releases) with the in-process spec extractor (`@xxmi-lang/spec-extractor`), using the baseline (bo3b/3Dmigoto head) for the xxmi flags. The overlay (`spec/overlay/*.toml`) is the one shipped with the server build, merged the same way core merges it into the bundled spec; it is not fetched at runtime. A new DLL release is therefore served without a redeploy, and the daily `spec-extract` PR only refreshes the fallback.
+
+- **When:** at the end of an index pass, after the new state is published, so builds never delay `ready`. One build at a time. If the baseline is not indexed yet, nothing is built and the next pass tries again. A failing build is recorded and never fails the pass.
+- **Where:** builds run in a `worker_threads` Worker (`src/specs/worker.ts`), killed after 120 s and recorded as failed. One extraction takes about 250 ms of synchronous CPU, which would stall every HTTP request on the main thread.
+- **Volume:** `/data/specs/<dllSha>.json` holds `{dllSha, baselineSha, builder, builtAt, status, error?, warnings, spec}`, written by tmp and rename. An entry is used only when its `builder` (server version, extractor version and overlay hash) and `baselineSha` match the running ones; otherwise it is rebuilt. A `failed` entry is not retried until one of those changes. Specs of versions that are pruned are removed with them; only indexed versions' specs are held in memory.
+- **`dll_ref`** (`spec_lookup`, `spec_list`, `lint_ini`, the spec resources): `latest-release` (default), `latest-prerelease`, `head` / `latest`, a tag name, a commit prefix (7+ characters) or `bundled`. An unknown ref is an error that lists the valid choices.
+- **Fallback:** if the version's spec is pending or failed, or nothing is indexed yet, the bundled spec answers and the result's `spec.note` says which version was requested, why, and which DLL commit the bundled spec is from.
+- **Reporting:** every result has `spec: {source, dllRef, dllSha, tag, kind, dllCommitDate, note?}` (`source` is `extracted` or `bundled`) in the JSON, and the text ends with one line such as `spec: XXMI-Libs-Package v1.2.3 (release, 065dc74)` or `spec: bundled (b0bff3f); requested v1.3.1 (b0bff3f) is still building`.
+- **`list_versions`:** each DLL version has `spec: "ok" | "pending" | "failed"` (and `specError`), and the top level has `defaultSpec: {source, dllSha, tag, kind}`; the existing `spec` object still describes the bundled spec.
+- Package indexes (`library_*`, `lint_ini` package symbols) are parsed with the bundled spec, so they do not change with the DLL versions indexed.
 
 ### Safety
 
@@ -182,7 +209,7 @@ The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolv
 
 ### Docker and Railway
 
-`packages/mcp-server/Dockerfile` (build context: the repo root) builds with Node 22 and pnpm (`pnpm deploy --prod`), and runs on plain Alpine with only the `node` binary copied over, plus ripgrep: about 240 MB uncompressed, 37 MB of it the app. It starts as root only to `chown` the volume mount (Railway mounts volumes as root), then runs `node --liftoff-only dist/main.js` as the unprivileged `node` user. The flag avoids the web-tree-sitter memory leak (`packages/core/src/runtime.ts`). The Dockerfile has a `HEALTHCHECK`; Railway uses `railway.toml` instead.
+`packages/mcp-server/Dockerfile` (build context: the repo root) builds with Node 22 and pnpm (`pnpm deploy --prod`), and runs on plain Alpine with only the `node` binary copied over, plus git and ripgrep: about 240 MB uncompressed (the figure predates git), 37 MB of it the app. It starts as root only to `chown` the volume mount (Railway mounts volumes as root), then runs `node --liftoff-only dist/main.js` as the unprivileged `node` user. The flag avoids the web-tree-sitter memory leak (`packages/core/src/runtime.ts`). The Dockerfile has a `HEALTHCHECK`; Railway uses `railway.toml` instead.
 
 Run it locally:
 
@@ -198,16 +225,16 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 
 1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. `railway.toml` at the repo root selects the Dockerfile, the `/healthz` health check and the restart policy; nothing to configure in the build settings.
 2. In the service: add a **volume** and mount it at `/data`.
-3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional, no scopes needed). Leave `PORT` alone; the image already sets `DATA_DIR=/data` and `TRUSTED_PROXY_HOPS=1`. Keep the service at one replica.
+3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data` and `TRUSTED_PROXY_HOPS=1`. Keep the service at one replica.
 4. Settings → Networking → **Generate domain** (or add a custom domain). In Settings → Deploy, tick "Wait for CI" so a push to `main` deploys only after the checks pass.
 5. Check `https://<domain>/healthz` (`ready` turns true after about 10 seconds), then `node scripts/mcp-acceptance.ts https://<domain>/mcp`.
 6. Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
 
 ### Deviations from the design above
 
-- **No git, no clones.** Tarballs by commit sha instead of `git ls-remote` plus bare clones and worktrees; the image needs no `git`. Same effect, much smaller volume (a few MB per commit).
+- **Git without clones or worktrees.** `git ls-remote` plus shallow fetches by sha into one bare repo per tracked repo, and `git archive` for the files, instead of full bare clones with worktrees. The volume holds one commit's objects plus its text files, a few MB per commit.
 - **Default `ref` is the default branch's head, not the latest release**, because the acceptance criterion is that a new package commit is served within 20 minutes. Pass a tag to get a release.
-- **Spec is the one bundled with the server**, not re-extracted on DLL changes. `spec_lookup` shows both the spec's DLL commit and the line in the indexed DLL head, which can drift apart until the server is rebuilt (the weekly `spec-extract` workflow opens the PR that updates the spec). Only `dll_ref: latest` or the spec's own commit is served.
+- **Specs are built per indexed DLL version at runtime** (see "Specs per DLL version"), so a new DLL release needs no redeploy. The spec bundled with the server (updated by the daily `spec-extract` workflow's PR) is the fallback while a version's own spec is missing.
 - **Tracked repos are code (`src/repos.ts`), not `config/repos.toml`.**
 - **No `migration_guide` tool and no `xxmi://eras/…` resources:** the era docs belong to M5, which moved (`09-roadmap.md`).
 - **No `XXMI_MCP_KEYS`** API keys, no webhook endpoint.
@@ -216,4 +243,4 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 
 ### Tests
 
-`packages/mcp-server/test`: tools through the SDK's in-memory transport on a fixture package and DLL (with a contract snapshot of `tools/list`), the indexer with a fake GitHub serving fixture tarballs (first pass, no-change pass, atomic swap, failed download, restart from the volume), the HTTP server with the real SDK client (rate limit, spoofed `X-Forwarded-For`, body cap, lint caps, admin token), ripgrep search, path sandboxing, the GitHub client with a mocked `fetch`. `scripts/mcp-acceptance.ts <url>` asks the three acceptance questions of a running server; CI builds the image and starts it on every run, and runs the script against it weekly.
+`packages/mcp-server/test`: tools through the SDK's in-memory transport on a fixture package and DLL (with a contract snapshot of `tools/list`), the indexer with a fake source client serving fixture trees (first pass, no-change pass, atomic swap, failed fetch, restart from the volume, release lookups), the real git code against a local repository built in a temp dir (listing, shallow fetch by sha, new commits and tags, moved and deleted tags), version selection and ref resolution, the HTTP server with the real SDK client (rate limit, spoofed `X-Forwarded-For`, body cap, lint caps, admin token), ripgrep search, path sandboxing, the releases lookup with a mocked `fetch`. Spec building is tested against the extractor's fixture sources (build, store validity rules, registry and ref resolution, indexer passes with a throwing builder, the worker timeout) and the tools against two fixture DLL versions that differ in one key. `scripts/mcp-acceptance.ts <url>` asks the three acceptance questions of a running server, plus a `dll_ref=head` spec lookup; CI builds the image and starts it on every run, and runs the script against it weekly.

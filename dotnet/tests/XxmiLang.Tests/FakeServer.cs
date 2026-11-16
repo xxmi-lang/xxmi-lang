@@ -9,7 +9,7 @@ namespace XxmiLang.Tests;
 /// </summary>
 internal sealed class FakeServer : IDisposable
 {
-    private FakeServer(string mode)
+    private FakeServer(string mode, TimeSpan requestTimeout, TimeSpan processTimeout)
     {
         Directory = Path.Combine(Path.GetTempPath(), "xxmi-lang-fake-" + Guid.NewGuid().ToString("N"));
         System.IO.Directory.CreateDirectory(Directory);
@@ -18,9 +18,9 @@ internal sealed class FakeServer : IDisposable
         {
             ExecutablePath = ExecutablePath(),
             WorkingDirectory = Directory,
-            RequestTimeout = TimeSpan.FromSeconds(2),
+            RequestTimeout = requestTimeout,
             ShutdownTimeout = TimeSpan.FromSeconds(1),
-            ProcessTimeout = TimeSpan.FromSeconds(2),
+            ProcessTimeout = processTimeout,
         };
     }
 
@@ -28,7 +28,11 @@ internal sealed class FakeServer : IDisposable
 
     public XxmiOptions Options { get; }
 
-    public static FakeServer InMode(string mode) => new FakeServer(mode);
+    // A healthy start must fit in the default on a slow runner; only a test about that very timeout passes a short one.
+    public static FakeServer InMode(string mode, TimeSpan? requestTimeout = null, TimeSpan? processTimeout = null) =>
+        new FakeServer(mode, requestTimeout ?? DefaultTimeout, processTimeout ?? DefaultTimeout);
+
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     public void Dispose()
     {

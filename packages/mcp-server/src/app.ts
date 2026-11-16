@@ -1,23 +1,31 @@
 /** Wires config, volume, catalog, indexer and HTTP server together. */
 import type { Server } from 'node:http';
-import { bundledSnapshots, defaultSpec, SpecLookup } from '@xxmi-lang/core';
+import { bundledSnapshots, defaultSpec } from '@xxmi-lang/core';
 import { Catalog } from './catalog.ts';
 import type { ServerConfig } from './config.ts';
-import { createGitHubClient, type GitHubClient } from './github.ts';
 import { createHttpServer } from './http.ts';
 import { Indexer } from './indexer.ts';
 import { createLogger, type Logger } from './logger.ts';
 import { PackageCache } from './packages.ts';
 import { RateLimiter } from './ratelimit.ts';
 import { TRACKED_REPOS, type TrackedRepo } from './repos.ts';
+import { builderId } from './specs/build.ts';
+import type { SpecBuilder } from './specs/ensure.ts';
+import { SpecRegistry } from './specs/registry.ts';
+import { SpecStore } from './specs/store.ts';
 import { Store } from './store.ts';
 import type { ToolContext } from './tools/shared.ts';
+import { createSourceClient, type SourceClient } from './upstream.ts';
 
 export interface AppOptions {
-  github?: GitHubClient;
+  sources?: SourceClient;
   logger?: Logger;
   repos?: readonly TrackedRepo[];
   now?: () => number;
+  /** Replaces the worker-thread spec build (tests). */
+  buildSpec?: SpecBuilder;
+  /** Replaces `builderId()` (tests of the rebuild rules). */
+  builder?: string;
 }
 
 export interface App {
@@ -38,23 +46,34 @@ export async function createApp(config: ServerConfig, options: AppOptions = {}):
   const catalog = new Catalog(store, repos);
   await catalog.load();
 
-  const spec = defaultSpec();
+  const specs = new SpecRegistry({
+    store: new SpecStore(store),
+    catalog,
+    bundled: defaultSpec(),
+    builder: options.builder ?? builderId(),
+    repos,
+  });
   const tools: ToolContext = {
     config,
     catalog,
-    packages: new PackageCache(store),
+    packages: new PackageCache(store, specs.bundled.lookup),
     logger,
-    spec,
-    lookup: new SpecLookup(spec),
+    specs,
     bundled: (game) => bundledSnapshots().find((s) => s.name === game),
   };
   const indexer = new Indexer({
     store,
     catalog,
-    github: options.github ?? createGitHubClient({ token: config.githubToken }),
+    sources:
+      options.sources ??
+      createSourceClient({ dataDir: config.dataDir, token: config.githubToken, logger }),
     logger,
     repos,
-    indexedTags: config.indexedTags,
+    lookup: specs.bundled.lookup,
+    specs,
+    ...(options.buildSpec ? { buildSpec: options.buildSpec } : {}),
+    limits: { releases: config.indexedReleases, prereleases: config.indexedPrereleases },
+    gitCacheMaxMb: config.gitCacheMaxMb,
     pollIntervalMin: config.pollIntervalMin,
   });
   const limiter = new RateLimiter(config.rateLimitPerMin, config.rateLimitBurst, options.now);
