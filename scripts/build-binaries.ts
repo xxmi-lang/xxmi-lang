@@ -4,7 +4,8 @@
  *
  *   pnpm build:binaries [--target host | <os>-<arch>[,…]] [--out dist/bin]
  *
- * `--target host` builds for this machine and writes dist/bin/xxmi[.exe] and dist/bin/xxmi-lsp[.exe].
+ * `--target host` builds for this machine and writes dist/bin/xxmi[.exe], dist/bin/xxmi-lsp[.exe]
+ * and dist/bin/xxmi-<os>-<arch>[.exe], the name the VS Code packaging reads.
  * `--target <os>-<arch>` writes dist/bin/xxmi-<os>-<arch>[.exe], the names the release reads.
  * Run `--help` for the full list. The rust/ build embeds packages/core/dist/spec.json, so run
  * `pnpm build` first.
@@ -26,7 +27,7 @@ export const TARGETS: Record<string, string> = {
 
 const USAGE = `Usage: pnpm build:binaries [--target <list>] [--out dir]
 
-  --target host          this machine: dist/bin/xxmi and dist/bin/xxmi-lsp
+  --target host          this machine: dist/bin/xxmi, xxmi-lsp and xxmi-<os>-<arch>[.exe]
   --target <os>-<arch>   one release target: dist/bin/xxmi-<os>-<arch>[.exe]
   (no --target)          every release target. Needs a cross toolchain for each (rustup target add);
                          CI builds one target per runner instead (.github/workflows/release.yml).
@@ -61,6 +62,15 @@ function tripleOf(target: string): string | undefined {
   return triple;
 }
 
+/** The release name of this machine, e.g. macos-arm64. */
+function hostName(): string {
+  const os = { darwin: 'macos', linux: 'linux', win32: 'windows' }[process.platform];
+  if (!os || (process.arch !== 'x64' && process.arch !== 'arm64')) {
+    throw new Error(`no release name for ${process.platform}-${process.arch}`);
+  }
+  return `${os}-${process.arch}`;
+}
+
 /** cargo's output for one target; `triple` undefined means this machine. */
 function cargoBuild(triple: string | undefined, exe: string): string {
   const args = [
@@ -84,7 +94,9 @@ function build(target: string): void {
   const exe = windows ? '.exe' : '';
   const built = cargoBuild(triple, exe);
 
-  const names = host ? [`xxmi${exe}`, `xxmi-lsp${exe}`] : [`xxmi-${target}${exe}`];
+  const names = host
+    ? [`xxmi${exe}`, `xxmi-lsp${exe}`, `xxmi-${hostName()}${exe}`]
+    : [`xxmi-${target}${exe}`];
   for (const name of names) {
     const dest = join(out, name);
     // macOS kills a binary overwritten in place once it has run, so replace the file instead.
