@@ -261,19 +261,10 @@ importers:
       '@vscode/vsce':
         specifier: ^4.0.0
         version: 4.0.0
-      '@xxmi-lang/core':
-        specifier: workspace:*
-        version: link:../core
-      '@xxmi-lang/lsp':
-        specifier: workspace:*
-        version: link:../lsp
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
       vscode-languageclient:
-        specifier: ^10.1.2
-        version: 10.1.2
-      vscode-languageserver:
         specifier: ^10.1.2
         version: 10.1.2
 
