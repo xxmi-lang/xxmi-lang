@@ -64,7 +64,7 @@ function values(code: string, source: string): SpecCommandValue[] {
 }
 
 /**
- * Blocks that test only `val` (`snapshotoriginaltextures`): the keyword is the command, whatever
+ * Blocks that test only `val` (`snapshotinitialtextures`): the keyword is the command, whatever
  * the key is, so on a bare line it is the whole line.
  */
 function valueCommands(condition: string, source: string): SpecCommand[] {
