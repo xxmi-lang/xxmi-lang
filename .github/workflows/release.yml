@@ -55,8 +55,13 @@ jobs:
       # The rust/ build embeds packages/core/dist/spec.json.
       - run: pnpm build
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
           targets: ${{ matrix.triple }}
 
       - uses: Swatinem/rust-cache@v2

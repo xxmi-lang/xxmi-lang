@@ -114,7 +114,13 @@ jobs:
           pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
           diff packages/core/snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -145,8 +151,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
           components: clippy, rustfmt
 
       - uses: Swatinem/rust-cache@v2
@@ -219,7 +230,13 @@ jobs:
       # The Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
       - run: pnpm build
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -286,7 +303,13 @@ jobs:
 
       - run: pnpm build
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
 
       - uses: Swatinem/rust-cache@v2
         with:
