@@ -1,5 +1,7 @@
 //! Plumbing shared by the tool handlers: context, output shape, arguments, pagination.
 
+use std::sync::Arc;
+
 use serde::Serialize;
 use serde_json::{Map, Value};
 
@@ -12,7 +14,7 @@ use crate::specs::{ResolvedSpec, SpecRegistry};
 
 pub struct ToolContext {
     pub config: Config,
-    pub catalog: Catalog,
+    pub catalog: Arc<Catalog>,
     pub logger: Logger,
     /// Every spec the server can answer with; tools pick one through `resolve_spec`.
     pub specs: SpecRegistry,

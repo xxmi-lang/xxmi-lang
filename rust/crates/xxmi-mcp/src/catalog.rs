@@ -1,13 +1,15 @@
 //! Which refs of which repos are indexed right now, and how tool inputs (`ref`, `repo`) map to
 //! a checkout. Loaded from `state.json` once; the indexer is the only writer.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
 
 use serde::{Deserialize, Serialize};
 
 use crate::repos::{RepoRole, TRACKED_REPOS, TrackedRepo, find_repo};
 use crate::store::{Store, read_json};
+use crate::upstream::releases::ReleasesState;
 
 pub const KIND_HEAD: &str = "head";
 
@@ -35,7 +37,7 @@ fn default_kind() -> String {
     "tag".to_string()
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RepoState {
     pub branch: VersionRef,
@@ -45,11 +47,25 @@ pub struct RepoState {
     pub indexed_at: String,
 }
 
-#[derive(Deserialize)]
-struct StateFile {
-    version: u32,
+/// `state.json`: what is indexed, and what GitHub said about each repo's tags.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct StateFile {
+    pub version: u32,
     #[serde(default)]
-    repos: HashMap<String, RepoState>,
+    pub repos: BTreeMap<String, RepoState>,
+    /// Kept until the tag set changes; files from before release tracking have none.
+    #[serde(default)]
+    pub releases: BTreeMap<String, ReleasesState>,
+}
+
+impl Default for StateFile {
+    fn default() -> Self {
+        Self {
+            version: 1,
+            repos: BTreeMap::new(),
+            releases: BTreeMap::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -107,55 +123,84 @@ fn find_version<'a>(entry: &'a RepoState, wanted: &str) -> Option<&'a VersionRef
     })
 }
 
+/// Files from before release tracking have no `kind` on their tags; refs whose checkout is gone
+/// are dropped.
+fn present_on_volume(store: &Store, mut saved: StateFile) -> StateFile {
+    let mut state = StateFile::default();
+    for repo in &TRACKED_REPOS {
+        let Some(mut entry) = saved.repos.remove(repo.alias) else {
+            continue;
+        };
+        if !store.has_checkout(repo, &entry.branch.sha) {
+            continue;
+        }
+        entry.branch.kind = KIND_HEAD.to_string();
+        entry.tags.retain(|t| store.has_checkout(repo, &t.sha));
+        state.repos.insert(repo.alias.to_string(), entry);
+        if let Some(releases) = saved.releases.remove(repo.alias) {
+            state.releases.insert(repo.alias.to_string(), releases);
+        }
+    }
+    state
+}
+
+/// The indexer is the only writer; readers see a new state as soon as it is published.
 pub struct Catalog {
     store: Store,
-    repos: HashMap<&'static str, RepoState>,
+    state: RwLock<Arc<StateFile>>,
 }
 
 impl Catalog {
     /// Loads `state.json`, dropping refs whose checkout vanished from the volume.
     pub async fn load(store: Store) -> Self {
-        let mut catalog = Self {
+        let saved = read_json::<StateFile>(store.state_file()).await;
+        let state = saved
+            .filter(|saved| saved.version == 1)
+            .map(|saved| present_on_volume(&store, saved))
+            .unwrap_or_default();
+        Self {
             store,
-            repos: HashMap::new(),
-        };
-        let Some(saved) = read_json::<StateFile>(catalog.store.state_file()).await else {
-            return catalog;
-        };
-        if saved.version != 1 {
-            return catalog;
+            state: RwLock::new(Arc::new(state)),
         }
-
-        for repo in &TRACKED_REPOS {
-            let Some(mut entry) = saved.repos.get(repo.alias).cloned() else {
-                continue;
-            };
-            if !catalog.store.has_checkout(repo, &entry.branch.sha) {
-                continue;
-            }
-            entry.branch.kind = KIND_HEAD.to_string();
-            entry
-                .tags
-                .retain(|t| catalog.store.has_checkout(repo, &t.sha));
-            catalog.repos.insert(repo.alias, entry);
-        }
-        catalog
     }
 
-    pub fn repo_state(&self, repo: &TrackedRepo) -> Option<&RepoState> {
-        self.repos.get(repo.alias)
+    pub fn snapshot(&self) -> Arc<StateFile> {
+        self.state.read().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    /// Publishes a new state (the indexer calls this after the files are in place).
+    pub async fn publish(&self, next: StateFile) -> std::io::Result<()> {
+        self.store.write_state(&next).await?;
+        *self.state.write().unwrap_or_else(|e| e.into_inner()) = Arc::new(next);
+        Ok(())
+    }
+
+    pub fn repo_state(&self, repo: &TrackedRepo) -> Option<RepoState> {
+        self.snapshot().repos.get(repo.alias).cloned()
     }
 
     /// True once every tracked repo but the baseline has its default branch indexed: the baseline
     /// only backs DLL comparisons, so a failing one must not keep the server "warming up".
     pub fn ready(&self) -> bool {
+        let state = self.snapshot();
         TRACKED_REPOS
             .iter()
-            .all(|r| r.role == RepoRole::Baseline || self.repos.contains_key(r.alias))
+            .all(|r| r.role == RepoRole::Baseline || state.repos.contains_key(r.alias))
     }
 
     pub fn is_ready(&self, repo: &TrackedRepo) -> bool {
-        self.repos.contains_key(repo.alias)
+        self.snapshot().repos.contains_key(repo.alias)
+    }
+
+    /// Shas that must stay on disk.
+    pub fn kept_shas(&self, repo: &TrackedRepo) -> HashSet<String> {
+        self.repo_state(repo)
+            .map(|entry| {
+                std::iter::once(entry.branch.sha)
+                    .chain(entry.tags.into_iter().map(|t| t.sha))
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// `owner/name` or alias to a tracked repo; the error lists the allowed names.
@@ -180,7 +225,8 @@ impl Catalog {
         repo: &'static TrackedRepo,
         wanted: Option<&str>,
     ) -> Result<ResolvedRef, CatalogError> {
-        let Some(entry) = self.repo_state(repo) else {
+        let state = self.snapshot();
+        let Some(entry) = state.repos.get(repo.alias) else {
             return Err(CatalogError(format!(
                 "{} is not indexed yet (the server is warming up). Try again in a minute.",
                 repo.full_name()

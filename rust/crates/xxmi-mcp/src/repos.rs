@@ -44,6 +44,11 @@ impl TrackedRepo {
     }
 }
 
+/// The git remote of a tracked repo.
+pub fn repo_url(repo: &TrackedRepo) -> String {
+    format!("https://github.com/{}.git", repo.full_name())
+}
+
 pub static TRACKED_REPOS: [TrackedRepo; 4] = [
     TrackedRepo {
         alias: "dll",

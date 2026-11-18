@@ -37,7 +37,8 @@ fn decorate(ctx: &ToolContext, repo: &TrackedRepo, version: &VersionRef) -> Valu
 }
 
 fn describe_repo(ctx: &ToolContext, repo: &TrackedRepo) -> Value {
-    let state: Option<&RepoState> = ctx.catalog.repo_state(repo);
+    let owned = ctx.catalog.repo_state(repo);
+    let state: Option<&RepoState> = owned.as_ref();
     let default = state.map_or(Value::Null, |s| {
         let mut branch = decorate(ctx, repo, &s.branch);
         if let Value::Object(map) = &mut branch {

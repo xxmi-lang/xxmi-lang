@@ -18,10 +18,14 @@ mimalloc = "0.1"
 regex = "1"
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
+tar = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "process", "signal", "sync", "time", "io-util", "fs"] }
+tokio-util = { version = "0.7", features = ["io-util"] }
 toml.workspace = true
 tower-http = { version = "0.6", features = ["catch-panic", "limit", "timeout"] }
+ureq = { version = "3", features = ["json"] }
 xxmi-core = { path = "../xxmi-core" }
+xxmi-spec-extractor = { path = "../xxmi-spec-extractor" }
 
 [dev-dependencies]
 tempfile = "3"

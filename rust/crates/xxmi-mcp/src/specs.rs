@@ -18,20 +18,21 @@ pub const BUNDLED_REF: &str = "bundled";
 const SYMBOLIC_REFS: [&str; 2] = ["latest-release", "latest-prerelease"];
 
 /// A spec built from one DLL commit.
+#[derive(Clone)]
 pub struct ExtractedSpec {
     pub lookup: &'static Lookup,
     pub doc: Arc<Value>,
 }
 
 /// The build result for one DLL commit.
+#[derive(Clone)]
 pub enum SpecSlot {
     Pending,
     Failed(String),
     Ready(ExtractedSpec),
 }
 
-/// Where per-version specs come from. Nothing builds them until the indexer is ported, so the
-/// server answers from the bundled spec.
+/// Where per-version specs come from; the volume the indexer builds them on, or nothing.
 pub trait VersionSpecs: Send + Sync {
     fn slot(&self, dll_sha: &str) -> SpecSlot;
 }

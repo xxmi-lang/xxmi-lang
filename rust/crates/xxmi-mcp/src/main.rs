@@ -11,12 +11,18 @@ use tokio::signal::unix::{SignalKind, signal};
 use xxmi_mcp::app::{AppState, router};
 use xxmi_mcp::catalog::Catalog;
 use xxmi_mcp::config::Config;
-use xxmi_mcp::indexer::Unavailable;
+use xxmi_mcp::exec::GitCommand;
+use xxmi_mcp::indexer::{IndexerOptions, PollingIndexer};
 use xxmi_mcp::logger::Logger;
 use xxmi_mcp::packages::PackageCache;
-use xxmi_mcp::specs::{NoVersionSpecs, SpecRegistry};
+use xxmi_mcp::selection::SelectionLimits;
+use xxmi_mcp::spec_build::{SpecBuilder, builder_id};
+use xxmi_mcp::spec_store::VolumeSpecs;
+use xxmi_mcp::specs::SpecRegistry;
 use xxmi_mcp::store::Store;
 use xxmi_mcp::tools::ToolContext;
+use xxmi_mcp::upstream::GitSources;
+use xxmi_mcp::upstream::releases::GithubReleases;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -44,20 +50,55 @@ async fn shutdown_signal(logger: Logger) {
     logger.info("shutting down", json!({ "signal": name }));
 }
 
+fn polling_indexer(
+    config: &Config,
+    store: Store,
+    catalog: Arc<Catalog>,
+    specs: Arc<VolumeSpecs>,
+    logger: Logger,
+) -> Arc<PollingIndexer<GithubReleases>> {
+    let options = IndexerOptions {
+        sources: GitSources::new(store.data_dir.clone(), GitCommand::default(), logger),
+        store,
+        catalog,
+        logger,
+        limits: SelectionLimits {
+            releases: config.indexed_releases as usize,
+            prereleases: config.indexed_prereleases as usize,
+        },
+        git_cache_max_mb: config.git_cache_max_mb,
+        poll_interval_min: config.poll_interval_min,
+        specs,
+        spec_builder: SpecBuilder::new(),
+    };
+    let releases = GithubReleases {
+        token: config.github_token.clone(),
+    };
+    Arc::new(PollingIndexer::new(options, releases))
+}
+
 async fn serve(config: Config) -> std::io::Result<()> {
     let logger = Logger::default();
-    let catalog = Catalog::load(Store::new(&config.data_dir)).await;
+    let store = Store::new(&config.data_dir);
+    store.init().await?;
+    let catalog = Arc::new(Catalog::load(store.clone()).await);
     let ready = catalog.ready();
     let (port, host, indexer_enabled) = (config.port, config.host.clone(), config.indexer_enabled);
 
+    let specs = Arc::new(VolumeSpecs::new(
+        store.clone(),
+        catalog.clone(),
+        builder_id(),
+    ));
+    let indexer = polling_indexer(&config, store, catalog.clone(), specs.clone(), logger);
     let ctx = ToolContext {
         config,
         catalog,
         logger,
-        specs: SpecRegistry::new(Box::new(NoVersionSpecs)),
+        specs: SpecRegistry::new(Box::new(specs)),
         packages: PackageCache::default(),
     };
-    let app = router(AppState::new(ctx, Arc::new(Unavailable)));
+    let app = router(AppState::new(ctx, indexer.clone()));
 
     let listener = TcpListener::bind((host.as_str(), port)).await?;
     let bound = listener.local_addr()?.port();
@@ -65,6 +106,10 @@ async fn serve(config: Config) -> std::io::Result<()> {
         "listening",
         json!({ "port": bound, "ready": ready, "indexer": indexer_enabled }),
     );
+
+    if indexer_enabled {
+        indexer.start();
+    }
 
     let service = app.into_make_service_with_connect_info::<SocketAddr>();
     axum::serve(listener, service)

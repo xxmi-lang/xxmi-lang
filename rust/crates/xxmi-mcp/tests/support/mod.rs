@@ -3,7 +3,9 @@
 #![allow(dead_code)]
 
 use std::fs;
+use std::future::Future;
 use std::path::Path;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::Router;
@@ -15,7 +17,7 @@ use tower::ServiceExt;
 use xxmi_mcp::app::{AppState, router};
 use xxmi_mcp::catalog::Catalog;
 use xxmi_mcp::config::Config;
-use xxmi_mcp::indexer::Unavailable;
+use xxmi_mcp::indexer::{Indexer, PassResult};
 use xxmi_mcp::logger::Logger;
 use xxmi_mcp::packages::PackageCache;
 use xxmi_mcp::specs::{NoVersionSpecs, SpecRegistry};
@@ -124,17 +126,26 @@ pub fn config(dir: &Path, env: &[(&str, &str)]) -> Config {
     .expect("valid test config")
 }
 
+/// The tests serve a fixed volume: nothing is fetched.
+struct NoIndexer;
+
+impl Indexer for NoIndexer {
+    fn refresh(&self) -> Pin<Box<dyn Future<Output = PassResult> + Send + '_>> {
+        Box::pin(async { PassResult::default() })
+    }
+}
+
 pub async fn app(dir: &Path, env: &[(&str, &str)]) -> Router {
     make_volume(dir);
     let config = config(dir, env);
     let ctx = ToolContext {
-        catalog: Catalog::load(Store::new(&config.data_dir)).await,
+        catalog: Arc::new(Catalog::load(Store::new(&config.data_dir)).await),
         config,
         logger: Logger::default(),
         specs: SpecRegistry::new(Box::new(NoVersionSpecs)),
         packages: PackageCache::default(),
     };
-    router(AppState::new(ctx, Arc::new(Unavailable)))
+    router(AppState::new(ctx, Arc::new(NoIndexer)))
 }
 
 pub struct Reply {
