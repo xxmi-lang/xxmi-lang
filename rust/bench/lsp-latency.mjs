@@ -5,6 +5,7 @@
 //
 //   node rust/bench/lsp-latency.mjs            measure rust/target/release/xxmi
 //   XXMI_RS=path node rust/bench/lsp-latency.mjs
+//   XXMI_TRACE_TIMING=1 node rust/bench/lsp-latency.mjs    adds the per-span breakdown of an edit
 //
 // Edits are spaced past the 150 ms debounce so each one is linted on the leading edge; the server
 // publishes without a document version, so a reply is the next publishDiagnostics for the document.
@@ -79,6 +80,18 @@ async function edits(client, uri, lines) {
   return samples;
 }
 
+// With XXMI_TRACE_TIMING=1 the server prints one "xxmi-trace <label> <ms>" line per span; the
+// median per label over the run is the breakdown of one edit.
+function printBreakdown(stderr) {
+  const byLabel = new Map();
+  for (const [, label, ms] of stderr.matchAll(/^xxmi-trace (.+) ([\d.]+)$/gm)) {
+    byLabel.set(label, [...(byLabel.get(label) ?? []), Number(ms)]);
+  }
+  for (const [label, times] of byLabel) {
+    console.log(`trace ${label}: median ${median(times).toFixed(3)} ms over ${times.length}`);
+  }
+}
+
 const hasPackage = existsSync(zzmi);
 if (!hasPackage) console.error(`no ZZMI package at ${zzmi}: measuring without a workspace`);
 const folders = hasPackage ? [pathToFileURL(zzmi).href] : [];
@@ -110,5 +123,6 @@ const results = [
   ['RSS after edits', `${peakMb.toFixed(1)} MB`, `< ${TARGETS.rssMb} MB: ${peakMb < TARGETS.rssMb ? 'met' : 'MISSED'}`],
   ['binary size', `${statSync(binary).size} B`, ''],
 ];
+if (process.env.XXMI_TRACE_TIMING === '1') printBreakdown(client.stderr);
 for (const [name, value, target] of results) console.log(`${name}: ${value}${target && ` (${target})`}`);
 process.exit(results.some(([, , target]) => target.endsWith('MISSED')) ? 1 : 0);

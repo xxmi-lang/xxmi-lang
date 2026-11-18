@@ -16,4 +16,5 @@ pub mod rules;
 pub mod scan;
 pub mod spec;
 pub mod suggest;
+pub mod trace;
 pub mod workspace;

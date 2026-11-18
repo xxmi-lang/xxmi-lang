@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use lsp_server::{Connection, Message, Notification, Request, RequestId};
 use serde_json::{Value, json};
 use xxmi_core::lint::{ConfigLoader, LintOptions, RuleSetting, collect_ini_files, lint_file};
+use xxmi_core::trace;
 use xxmi_core::workspace::{FileId, Workspace};
 
 use super::convert::publish;
@@ -129,7 +130,8 @@ impl<'a> Server<'a> {
         let path = uri_to_path(uri);
         self.uri_by_path.insert(path.clone(), uri.to_string());
         let root = self.fallback_root(&path);
-        match self.workspace.open_document(&path, text, &root) {
+        let opened = trace::span("index", || self.workspace.open_document(&path, text, &root));
+        match opened {
             Ok(_) => true,
             Err(error) => {
                 self.log(ERROR, format!("xxmi-lsp: {error}"));
@@ -153,7 +155,7 @@ impl<'a> Server<'a> {
     /// A change after a quiet period is linted at once (an agent's single edit gets diagnostics
     /// while it's still looking); a burst of keystrokes is linted 150 ms after the last one.
     pub fn did_change(&mut self, uri: &str, changes: Vec<super::documents::Change>) {
-        if !self.documents.change(uri, changes) {
+        if !trace::span("apply_change", || self.documents.change(uri, changes)) {
             return;
         }
 
@@ -210,7 +212,10 @@ impl<'a> Server<'a> {
             let large = !full && bytes > LARGE_FILE && self.utf16_len(&uri) > LARGE_FILE;
             self.options.rule_prefixes = large.then(|| vec!["XM0", "XM1"]);
 
-            let diagnostics = match lint_file(id, &self.workspace, &self.options, &self.configs) {
+            let linted = trace::span("lint", || {
+                lint_file(id, &self.workspace, &self.options, &self.configs)
+            });
+            let diagnostics = match linted {
                 Ok(diagnostics) => diagnostics,
                 Err(error) => {
                     self.log(
@@ -220,7 +225,7 @@ impl<'a> Server<'a> {
                     Vec::new()
                 }
             };
-            self.send(publish(&uri, &diagnostics));
+            trace::span("publish", || self.send(publish(&uri, &diagnostics)));
         }
     }
 

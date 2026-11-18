@@ -6,6 +6,7 @@ use std::path::Path;
 use crate::diagnostic::{Diagnostic, Fix, TextEdit};
 use crate::model::IniFile;
 use crate::rules::{Finding, RULES, Rule, RuleContext};
+use crate::trace;
 use crate::workspace::{FileId, Workspace};
 
 use super::config::{ConfigLoader, RuleSetting};
@@ -57,7 +58,8 @@ pub fn lint_file(
             continue;
         };
 
-        for finding in (rule.check)(&context) {
+        let findings = trace::span(rule.id, || (rule.check)(&context));
+        for finding in findings {
             diagnostics.push(diagnostic(file, rule, severity, finding));
         }
     }
