@@ -401,3 +401,27 @@ jobs:
 
       - if: always()
         run: docker logs mcp
+
+  docker-rust:
+    # The Rust server image (docs/06-mcp-server.md), built next to the TypeScript one until Railway
+    # switches. Not pushed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker build -f packages/mcp-server/Dockerfile.rust -t xxmi-mcp-rs .
+
+      - name: Container starts, passes its health check and lists the tools
+        run: |
+          docker run -d --name mcp -p 3000:3000 -v mcp-data:/data -e INDEXER=off xxmi-mcp-rs
+          for _ in $(seq 1 30); do
+            curl -fsS http://localhost:3000/healthz && break
+            sleep 1
+          done
+          curl -fsS http://localhost:3000/mcp \
+            -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -q lint_ini
+
+      - if: always()
+        run: docker logs mcp
