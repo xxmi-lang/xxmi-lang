@@ -1,4 +1,29 @@
+# Rust port
+
+Stage 1 of replacing the TypeScript core and CLI: `rust/` holds `tree-sitter-migoto` (C parser via `cc`, grammar commit 5d78a72), `xxmi-core` (spec, model, workspace, 19 rules, lint engine) and `xxmi` (the binary; only `lint` so far).
+The TypeScript implementation stays the reference. The LSP, `query`, `index`, release pipeline and MCP server are later stages; `query` and `index` still need the TS CLI.
+
+## Stage 1 status
+
+- `xxmi lint` keeps the flags, text/JSON output and exit codes of `packages/cli`, plus a runtime `--spec <path>` override. `build.rs` embeds `packages/core/dist/spec.json` and `snapshots/zzmi.json`, so run `pnpm build` first.
+- Rule goldens: `cargo test` runs every `fixtures/rules/XMnnn/{bad,good}` and `fixtures/xxmi-1.3.1` with no snapshots, and applies quick fixes to compare with `fixed.ini`.
+- Parity: `node rust/bench/parity.mjs` lints `fixtures/` and ZZMI with both CLIs and compares code, range, severity and message (and the raw JSON).
+  Result: fixtures 85 files, 178 diagnostics, 0 mismatches; ZZMI 19 files, 17 diagnostics, 0 mismatches; output byte-identical.
+- Known differences: the error text for a malformed `xxmi.toml` comes from the `toml` crate, and ambiguous option values are worded by the Rust argument parser (same exit code 2).
+
+## Size and speed (Apple M3 Max)
+
+| | Rust release | TypeScript (`dist/bin/xxmi`, stale v0.1.0 Bun binary) |
+|---|---|---|
+| binary size | 1,660,720 B | 64,998,242 B |
+| `lint` ZZMI package (19 files), 5 runs | 0.04-0.11 s, typically 0.04 | 0.14-0.23 s |
+| `lint fixtures/` (85 files) | 0.13 s | 0.34 s |
+
+The first run of each series is a cold start; at these times process spawn dominates.
+
 # Spike: the language server in Rust
+
+The spike below predates the port. `xxmi-rs`, its LSP server and `rust/bench/lsp-latency.mjs` were removed by stage 1; the numbers stay as the reference for the LSP stage.
 
 Question: is porting the TypeScript core, LSP and CLI (later the MCP server) to Rust worth it?
 This spike answers with numbers; it is not a port. Code: `rust/` (about 2,300 lines of Rust).
