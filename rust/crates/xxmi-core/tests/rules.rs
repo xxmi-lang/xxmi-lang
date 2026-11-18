@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Value, json};
 use xxmi_core::diagnostic::Position;
 use xxmi_core::lint::{LintOptions, lint_paths};
+use xxmi_core::paths::{display_path, resolve_path};
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
@@ -30,16 +31,13 @@ fn options(rules: Option<Vec<String>>) -> LintOptions {
 /// Diagnostics as the golden files record them, with paths relative to `dir`.
 fn diagnose(path: &Path, dir: &Path, rules: Option<Vec<String>>) -> Vec<Value> {
     let result = lint_paths(&[path.to_path_buf()], &options(rules)).expect("lint runs");
+    let base = resolve_path(dir);
 
     let mut out = Vec::new();
     for file in &result.files {
-        let relative = file
-            .path
-            .strip_prefix(dir.canonicalize().unwrap())
-            .unwrap_or(&file.path);
         for d in &file.diagnostics {
             let mut value = serde_json::to_value(d).expect("diagnostics serialize");
-            value["path"] = json!(relative.to_string_lossy().replace('\\', "/"));
+            value["path"] = json!(display_path(&file.path, &base));
             out.push(value);
         }
     }
@@ -135,6 +133,47 @@ rule_tests! {
     xm106 => "XM106", xm107 => "XM107", xm108 => "XM108", xm109 => "XM109",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
     xm206 => "XM206", xm207 => "XM207", xm208 => "XM208",
+}
+
+/// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change.
+#[test]
+fn crlf_files_report_the_same_diagnostics_as_lf() {
+    let scratch = std::env::temp_dir().join(format!("xxmi-crlf-{}", std::process::id()));
+    fs::create_dir_all(&scratch).unwrap();
+
+    let mut checked = 0;
+    for entry in fs::read_dir(fixtures().join("rules")).unwrap() {
+        let dir = entry.unwrap().path();
+        let bad = dir.join("bad.ini");
+        if !bad.is_file() {
+            continue;
+        }
+        let id = dir.file_name().unwrap().to_string_lossy().into_owned();
+
+        let crlf = scratch.join("bad.ini");
+        fs::write(&crlf, to_crlf(&fs::read(&bad).unwrap())).unwrap();
+        let rules = Some(vec![id.clone()]);
+
+        assert_eq!(
+            diagnose(&crlf, &scratch, rules.clone()),
+            diagnose(&bad, &dir, rules),
+            "{id} with CRLF"
+        );
+        checked += 1;
+    }
+    fs::remove_dir_all(&scratch).unwrap();
+    assert!(checked > 15, "only {checked} single-file fixtures found");
+}
+
+fn to_crlf(bytes: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(bytes.len() + bytes.len() / 16);
+    for &b in bytes {
+        if b == b'\n' {
+            out.push(b'\r');
+        }
+        out.push(b);
+    }
+    out
 }
 
 #[test]
