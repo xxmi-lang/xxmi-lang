@@ -103,10 +103,13 @@ impl PathResolver {
         }
 
         let entries = fs::read_dir(dir).ok().map(|read| {
-            let names = read
+            let mut names: Vec<String> = read
                 .filter_map(Result::ok)
-                .map(|e| e.file_name().to_string_lossy().into_owned());
-            Rc::new(names.collect())
+                .map(|e| e.file_name().to_string_lossy().into_owned())
+                .collect();
+            // Node's readdir is sorted (libuv's scandir), and completion order follows it.
+            names.sort();
+            Rc::new(names)
         });
         self.listings
             .borrow_mut()

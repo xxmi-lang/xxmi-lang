@@ -8,6 +8,7 @@ pub mod format;
 mod run;
 mod suppress;
 
+use std::collections::HashMap;
 use std::fmt;
 use std::io;
 use std::path::PathBuf;
@@ -21,12 +22,17 @@ use crate::lookup::Lookup;
 use crate::workspace::snapshot::SymbolSnapshot;
 
 pub use collect::collect_ini_files;
-pub use config::ConfigError;
+pub use config::{ConfigError, ConfigLoader, RuleSetting};
+pub use file::lint_file;
 pub use run::{lint_paths, lint_text};
 
 pub struct LintOptions {
     /// Only run these rule ids (upper-case).
     pub rules: Option<Vec<String>>,
+    /// Settings that win over any `xxmi.toml` (the editor's `xxmi.rules`).
+    pub overrides: HashMap<String, RuleSetting>,
+    /// Only run rules whose id starts with one of these.
+    pub rule_prefixes: Option<Vec<&'static str>>,
     pub lookup: &'static Lookup,
     pub snapshots: &'static [SymbolSnapshot],
 }
@@ -36,6 +42,8 @@ impl LintOptions {
     pub fn bundled() -> Self {
         Self {
             rules: None,
+            overrides: HashMap::new(),
+            rule_prefixes: None,
             lookup: bundled_lookup(),
             snapshots: bundled_snapshots(),
         }

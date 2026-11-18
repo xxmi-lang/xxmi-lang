@@ -125,6 +125,7 @@ fn section_models(
             SectionModel {
                 name: scanned.name,
                 header: scanned.header.clone(),
+                chunk: scanned.chunk,
                 spec,
                 kind: spec.and_then(|s| lookup.symbol_kind(s)),
                 qualified_name: qualified_name(name, namespace, lookup),

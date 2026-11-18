@@ -7,7 +7,7 @@ pub mod snapshot;
 pub mod symbols;
 pub mod usage;
 
-use std::cell::OnceCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
@@ -45,8 +45,13 @@ pub struct Workspace {
     default_excludes: Vec<Glob>,
     /// Files reached through `include =` (or d3dx.ini itself), which exclusions don't apply to.
     included: HashSet<PathBuf>,
+    /// Namespaces that were given rather than derived from the path (d3dx.ini's ``), so a reload
+    /// lowers the file the same way.
+    fixed_namespaces: HashMap<PathBuf, String>,
     /// Text of files open in an editor; wins over the file on disk.
     overlays: HashMap<PathBuf, String>,
+    /// `canonicalize` results: symlinked libraries share an editor buffer with their target.
+    real_paths: RefCell<HashMap<PathBuf, PathBuf>>,
     symbols: OnceCell<SymbolTable>,
     usage: OnceCell<Usage>,
 }
@@ -66,7 +71,9 @@ impl Workspace {
             excludes: HashMap::new(),
             default_excludes: default_excludes(),
             included: HashSet::new(),
+            fixed_namespaces: HashMap::new(),
             overlays: HashMap::new(),
+            real_paths: RefCell::new(HashMap::new()),
             symbols: OnceCell::new(),
             usage: OnceCell::new(),
         }
@@ -84,6 +91,10 @@ impl Workspace {
         &self.files
     }
 
+    pub fn file_id(&self, path: &Path) -> Option<FileId> {
+        self.file_ids.get(path).copied()
+    }
+
     pub fn file_mut(&mut self, id: FileId) -> &mut IniFile {
         &mut self.files[id]
     }
@@ -99,6 +110,105 @@ impl Workspace {
     /// Registers editor-buffer text that wins over the file on disk (the CLI's `--stdin`).
     pub fn set_overlay(&mut self, path: &Path, text: String) {
         self.overlays.insert(resolve_path(path), text);
+    }
+
+    /// Opens (or updates) a file from an editor buffer: the text is used instead of the disk
+    /// contents until `close_document`. Re-lowers the file and follows any new includes.
+    pub fn open_document(
+        &mut self,
+        path: &Path,
+        text: String,
+        fallback_root: &Path,
+    ) -> io::Result<FileId> {
+        let full = resolve_path(path);
+        let aliases = self.aliases(&full);
+        for alias in &aliases {
+            self.overlays.insert(alias.clone(), text.clone());
+        }
+        self.overlays.insert(full.clone(), text);
+
+        for alias in &aliases {
+            self.reload(alias);
+        }
+        if self.file_ids.contains_key(&full)
+            && let Some(id) = self.reload(&full)
+        {
+            self.targets.insert(full);
+            return Ok(id);
+        }
+        self.add_target(&full, fallback_root)
+    }
+
+    /// Drops the editor buffer; the file is re-read from disk (or removed if it's gone).
+    pub fn close_document(&mut self, path: &Path) {
+        let full = resolve_path(path);
+        let mut paths = self.aliases(&full);
+        paths.insert(0, full);
+
+        for path in paths {
+            self.overlays.remove(&path);
+            self.reload(&path);
+        }
+    }
+
+    /// Re-lowers a loaded file from its overlay or from disk (after a file-watcher event). A file
+    /// that no longer exists is removed. The file moves to the end of the load order, which is
+    /// what decides between duplicate sections, so ids from before the call are stale.
+    pub fn reload(&mut self, path: &Path) -> Option<FileId> {
+        let full = resolve_path(path);
+        let id = self.file_ids.get(&full).copied()?;
+        let namespace_root = self.namespace_roots.get(&full)?.clone();
+        let package_root = self.package_roots.get(&full).cloned();
+        let namespace = self.fixed_namespaces.get(&full).cloned();
+
+        self.remove_file(id, &full);
+        match self.load(&full, &namespace_root, package_root.as_deref(), namespace) {
+            Ok(id) => {
+                // A missing include only costs references; the file itself is fine.
+                let _ = self.follow_includes(id, &namespace_root, package_root.as_deref());
+                Some(id)
+            }
+            Err(_) => {
+                self.namespace_roots.remove(&full);
+                self.package_roots.remove(&full);
+                self.fixed_namespaces.remove(&full);
+                self.targets.remove(&full);
+                None
+            }
+        }
+    }
+
+    /// Other loaded paths of the same file on disk (symlinks: a library linked into `Core/` while
+    /// its working copy lives elsewhere). They follow the editor buffer of any of them.
+    fn aliases(&self, path: &Path) -> Vec<PathBuf> {
+        let real = self.real_path(path);
+        self.files
+            .iter()
+            .map(|file| &file.path)
+            .filter(|other| other.as_path() != path && self.real_path(other) == real)
+            .cloned()
+            .collect()
+    }
+
+    fn real_path(&self, path: &Path) -> PathBuf {
+        if let Some(real) = self.real_paths.borrow().get(path) {
+            return real.clone();
+        }
+        let real = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        self.real_paths
+            .borrow_mut()
+            .insert(path.to_path_buf(), real.clone());
+        real
+    }
+
+    fn remove_file(&mut self, id: FileId, path: &Path) {
+        self.files.remove(id);
+        self.file_ids.remove(path);
+        for other in self.file_ids.values_mut().filter(|other| **other > id) {
+            *other -= 1;
+        }
+        self.symbols = OnceCell::new();
+        self.usage = OnceCell::new();
     }
 
     /// The symbols of every loaded file, plus the snapshots of libraries no loaded file provides.
@@ -214,7 +324,7 @@ impl Workspace {
         path: &Path,
         namespace_root: &Path,
         package_root: Option<&Path>,
-        namespace: Option<String>,
+        fixed_namespace: Option<String>,
     ) -> io::Result<FileId> {
         if let Some(&id) = self.file_ids.get(path) {
             return Ok(id);
@@ -225,7 +335,9 @@ impl Workspace {
             path: path.to_path_buf(),
             text,
             encoding,
-            default_namespace: namespace.unwrap_or_else(|| path_namespace(path, namespace_root)),
+            default_namespace: fixed_namespace
+                .clone()
+                .unwrap_or_else(|| path_namespace(path, namespace_root)),
             lookup: self.lookup,
         });
 
@@ -241,6 +353,9 @@ impl Workspace {
         if let Some(root) = package_root {
             self.package_roots
                 .insert(path.to_path_buf(), root.to_path_buf());
+        }
+        if let Some(namespace) = fixed_namespace {
+            self.fixed_namespaces.insert(path.to_path_buf(), namespace);
         }
         Ok(id)
     }
@@ -261,11 +376,10 @@ impl Workspace {
             return None;
         }
 
-        let real = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
-        self.overlays.iter().find_map(|(other, text)| {
-            let other_real = fs::canonicalize(other).unwrap_or_else(|_| other.clone());
-            (other_real == real).then_some(text)
-        })
+        let real = self.real_path(path);
+        self.overlays
+            .iter()
+            .find_map(|(other, text)| (self.real_path(other) == real).then_some(text))
     }
 
     /// `include = ...` in `[Include...]` sections, relative to the including file's folder.

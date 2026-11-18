@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use line_index::{LineIndex, TextSize, WideEncoding};
+use line_index::{LineIndex, TextSize, WideEncoding, WideLineCol};
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostic::{Position, Range};
@@ -83,6 +83,8 @@ pub struct SectionModel {
     /// The name as written between `[` and `]`.
     pub name: Span,
     pub header: ScannedLine,
+    /// From the start of the header's line to the next header.
+    pub chunk: Span,
     /// `None` for an unknown prefix (XM101).
     pub spec: Option<&'static SpecSection>,
     /// Symbol kind this section declares.
@@ -155,6 +157,19 @@ impl IniFile {
             start: self.position_of(span.start),
             end: self.position_of(span.end),
         }
+    }
+
+    /// Byte offset of an LSP position, or `None` when the position isn't inside the text.
+    pub fn offset_at(&self, pos: Position) -> Option<usize> {
+        let wide = WideLineCol {
+            line: pos.line,
+            col: pos.character,
+        };
+        let line_col = self.line_index.to_utf8(WideEncoding::Utf16, wide)?;
+        let offset = usize::from(self.line_index.offset(line_col)?);
+
+        let valid = offset <= self.text.len() && self.text.is_char_boundary(offset);
+        (valid && self.position_of(offset) == pos).then_some(offset)
     }
 
     fn position_of(&self, offset: usize) -> Position {

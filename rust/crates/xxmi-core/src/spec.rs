@@ -237,6 +237,8 @@ impl Associativity {
 pub struct SpecPrecedenceLevel {
     /// 0 binds tightest.
     pub level: u32,
+    /// The DLL's name for the group of operators at this level.
+    pub group: String,
     pub associativity: Associativity,
     pub unary: bool,
     pub operators: Vec<String>,

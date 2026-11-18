@@ -40,9 +40,17 @@ pub fn lint_file(
         if only.as_ref().is_some_and(|only| !only.contains(rule.id)) {
             continue;
         }
-        let setting = config
-            .rules
+        if options
+            .rule_prefixes
+            .as_ref()
+            .is_some_and(|prefixes| !prefixes.iter().any(|p| rule.id.starts_with(p)))
+        {
+            continue;
+        }
+        let setting = options
+            .overrides
             .get(rule.id)
+            .or_else(|| config.rules.get(rule.id))
             .copied()
             .unwrap_or(RuleSetting::Level(rule.severity));
         let RuleSetting::Level(severity) = setting else {

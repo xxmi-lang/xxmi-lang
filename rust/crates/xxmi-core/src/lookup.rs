@@ -102,6 +102,16 @@ impl Lookup {
         self.builtins.contains(&name.to_lowercase())
     }
 
+    /// Commands written as a key (everything but the value-form ones).
+    pub fn key_commands(&self) -> impl Iterator<Item = &'static SpecCommand> {
+        self.spec.commands.iter().filter(|c| c.is_key_command())
+    }
+
+    /// Commands the DLL matches on the right-hand side (`run = BuiltInCommandListUnbindAllRenderTargets`).
+    pub fn value_commands(&self) -> impl Iterator<Item = &'static SpecCommand> {
+        self.spec.commands.iter().filter(|c| !c.is_key_command())
+    }
+
     /// Names of every command that is written as a key (value-form commands are not keys).
     pub fn key_command_names(&self) -> impl Iterator<Item = &'static str> {
         self.spec
