@@ -5,7 +5,7 @@
 
       dotnet pack -p:NativeRid=osx-arm64 -p:XxmiBinary=/path/to/xxmi
 
-    The file must already be called xxmi (xxmi.exe on Windows): the release names it xxmi-darwin-arm64 and
+    The file must already be called xxmi (xxmi.exe on Windows): the release names it xxmi-macos-arm64 and
     so on, which is why the script copies it first.
 
     The package carries nothing but runtimes/<rid>/native/xxmi[.exe]. No buildTransitive targets: NuGet already

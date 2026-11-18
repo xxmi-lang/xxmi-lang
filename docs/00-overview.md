@@ -45,7 +45,7 @@ ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIM
 | MCP | `@modelcontextprotocol/sdk`, Streamable HTTP transport | Remote-friendly; runs on Railway |
 | Monorepo | pnpm workspaces + turborepo (or plain pnpm scripts) | Simple |
 | Tests | vitest; golden fixtures under `fixtures/` | Fast; snapshot-friendly |
-| Binaries | Rust (`rust/`, cargo) for `xxmi`, with `xxmi-lsp` a copy of it, on win-x64, win-arm64, linux-x64, linux-arm64, darwin-x64, darwin-arm64 (`pnpm build:binaries`; the grammar, the spec and the ZZMI snapshot are embedded; Linux builds are static musl) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
+| Binaries | Rust (`rust/`, cargo) for `xxmi`, with `xxmi-lsp` a copy of it, on win-x64, win-arm64, linux-x64, linux-arm64, macos-x64, macos-arm64 (`pnpm build:binaries`; the grammar, the spec and the ZZMI snapshot are embedded; Linux builds are static musl) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
 | Rust port | `rust/`: `xxmi-core`, the `xxmi` CLI and LSP, and `tree-sitter-migoto` built with `cc` (`rust-port.md`) | One static binary per platform, no Node or Bun at runtime. The MCP server still runs on the TypeScript core |
 | Platforms | Windows, Linux, macOS are all first-class for the tooling. CI runs the test suite on all three | The game only runs on Windows/Proton, but mods are authored, fixed and reviewed anywhere. Only the DLL itself (and the `xxmi-dll-dev` skill's build steps) is Windows-only |
 | Config file | `xxmi.toml` at the mod or workspace root | Readable; lupomikti uses TOML too |
