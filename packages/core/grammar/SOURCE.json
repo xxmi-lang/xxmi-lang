@@ -3,8 +3,8 @@
   "repository": "https://github.com/xxmi-lang/tree-sitter-migoto.git",
   "upstream": "https://github.com/lupomikti/tree-sitter-migoto",
   "upstreamVersion": "0.9.4",
-  "branch": "fix-run-eof",
-  "commit": "f308702eaa36784abe6616efb55e477f4d3cf643",
+  "branch": "xxmi",
+  "commit": "2a366ae9368d64ff673ce6fdb9c47aeb7bdc4828",
   "dirty": false,
   "treeSitterCli": "0.26.13",
   "sha256": "8966ff6095c2d750300081acf6b8a89a4b52098c4aa8c5abf747976eb54259b7"
