@@ -2,28 +2,42 @@
 
 use std::path::{Path, PathBuf};
 
-use xxmi_core::paths::resolve_path;
+use xxmi_core::paths::{resolve_path, strip_verbatim};
 
 pub fn uri_to_path(uri: &str) -> PathBuf {
+    resolve_path(Path::new(&uri_to_native(uri, cfg!(windows))))
+}
+
+/// The path text a `file:` URI names. `windows` is a parameter so the Windows forms can be tested
+/// on any OS.
+fn uri_to_native(uri: &str, windows: bool) -> String {
     let rest = uri.strip_prefix("file://").unwrap_or(uri);
     // `file://host/share` is a UNC path, which only matters on Windows; `localhost` is the same as none.
-    let path = rest.find('/').map_or("", |at| &rest[at..]);
+    let (host, path) = rest.split_at(rest.find('/').unwrap_or(rest.len()));
     let decoded = percent_decode(path);
+    if !windows {
+        return decoded;
+    }
 
-    // `/C:/dir` is `C:\dir` on Windows.
+    // `/C:/dir` is `C:\dir`; clients may send the colon as `%3A` and the drive letter in either case.
     let bytes = decoded.as_bytes();
     let drive =
         bytes.len() >= 3 && bytes[0] == b'/' && bytes[1].is_ascii_alphabetic() && bytes[2] == b':';
-    let native = if cfg!(windows) && drive {
-        &decoded[1..]
-    } else {
-        decoded.as_str()
-    };
-    resolve_path(Path::new(native))
+    if drive {
+        return decoded[1..].replace('/', "\\");
+    }
+    if !host.is_empty() && !host.eq_ignore_ascii_case("localhost") {
+        return format!("\\\\{host}{}", decoded.replace('/', "\\"));
+    }
+    decoded
 }
 
 pub fn path_to_uri(path: &Path) -> String {
-    let text = path.to_string_lossy().replace('\\', "/");
+    path_text_to_uri(&path.to_string_lossy())
+}
+
+fn path_text_to_uri(path: &str) -> String {
+    let text = strip_verbatim(path).replace('\\', "/");
     let slash = if text.starts_with('/') { "" } else { "/" };
 
     let mut uri = format!("file://{slash}");
@@ -64,6 +78,45 @@ fn percent_decode(text: &str) -> String {
         }
     }
     String::from_utf8_lossy(&out).into_owned()
+}
+
+#[cfg(test)]
+mod windows_tests {
+    use super::*;
+
+    #[test]
+    fn decodes_an_encoded_drive_colon_in_either_case() {
+        let expected = r"c:\mods\Lib\lib.ini";
+        assert_eq!(
+            uri_to_native("file:///c%3A/mods/Lib/lib.ini", true),
+            expected
+        );
+        assert_eq!(uri_to_native("file:///c:/mods/Lib/lib.ini", true), expected);
+        assert_eq!(
+            uri_to_native("file:///C%3a/mods/Lib/lib.ini", true),
+            r"C:\mods\Lib\lib.ini"
+        );
+    }
+
+    #[test]
+    fn decodes_unc_hosts() {
+        assert_eq!(
+            uri_to_native("file://host/share/a.ini", true),
+            r"\\host\share\a.ini"
+        );
+        assert_eq!(
+            uri_to_native("file://localhost/c%3A/a.ini", true),
+            r"c:\a.ini"
+        );
+    }
+
+    #[test]
+    fn encodes_backslash_and_verbatim_paths() {
+        let expected = "file:///C:/mods/Lib/lib.ini";
+        assert_eq!(path_text_to_uri(r"C:\mods\Lib\lib.ini"), expected);
+        assert_eq!(path_text_to_uri(r"C:\mods/Lib\lib.ini"), expected);
+        assert_eq!(path_text_to_uri(r"\\?\C:\mods\Lib\lib.ini"), expected);
+    }
 }
 
 #[cfg(all(test, unix))]

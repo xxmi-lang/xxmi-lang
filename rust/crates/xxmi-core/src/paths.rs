@@ -16,9 +16,34 @@ fn ini_path_segments(ini_path: &str) -> impl Iterator<Item = &str> {
         .filter(|segment| !segment.is_empty() && *segment != ".")
 }
 
+/// Drops the `\\?\` verbatim marker that `canonicalize` adds on Windows, which would otherwise
+/// make `\\?\C:\a` and `C:\a` different roots (`\\?\UNC\h\s` becomes `\\h\s`).
+pub fn strip_verbatim(path: &str) -> String {
+    if let Some(unc) = path.strip_prefix(r"\\?\UNC\") {
+        return format!(r"\\{unc}");
+    }
+    path.strip_prefix(r"\\?\").unwrap_or(path).to_string()
+}
+
+/// A path component as compared by `relative_path`: the prefix (drive letter, UNC share) ignores
+/// verbatim form and case, as Windows does.
+fn component_key(component: Component) -> String {
+    let text = component.as_os_str().to_string_lossy();
+    match component {
+        Component::Prefix(_) => strip_verbatim(&text).to_lowercase(),
+        _ if cfg!(windows) => text.to_lowercase(),
+        _ => text.into_owned(),
+    }
+}
+
 /// An absolute, lexically normalised path (`path.resolve`): relative paths start at the working
 /// directory, `.` and `..` segments are folded.
 pub fn resolve_path(path: &Path) -> PathBuf {
+    let path = &if cfg!(windows) {
+        PathBuf::from(strip_verbatim(&path.to_string_lossy()))
+    } else {
+        path.to_path_buf()
+    };
     let base = if path.is_absolute() {
         PathBuf::new()
     } else {
@@ -42,7 +67,11 @@ pub fn resolve_path(path: &Path) -> PathBuf {
 pub fn relative_path(from: &Path, to: &Path) -> String {
     let from: Vec<_> = from.components().collect();
     let to: Vec<_> = to.components().collect();
-    let common = from.iter().zip(&to).take_while(|(a, b)| a == b).count();
+    let common = from
+        .iter()
+        .zip(&to)
+        .take_while(|(a, b)| component_key(**a) == component_key(**b))
+        .count();
 
     let mut parts: Vec<String> = vec!["..".to_string(); from.len() - common];
     parts.extend(
@@ -126,6 +155,13 @@ mod tests {
     fn segments_drop_empty_and_dot() {
         let segments: Vec<_> = ini_path_segments(".\\a//b\\.\\c").collect();
         assert_eq!(segments, ["a", "b", "c"]);
+    }
+
+    #[test]
+    fn verbatim_prefixes_are_dropped() {
+        assert_eq!(strip_verbatim(r"\\?\D:\a\b"), r"D:\a\b");
+        assert_eq!(strip_verbatim(r"\\?\UNC\host\share\a"), r"\\host\share\a");
+        assert_eq!(strip_verbatim(r"D:\a"), r"D:\a");
     }
 
     #[test]

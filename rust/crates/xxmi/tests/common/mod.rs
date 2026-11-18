@@ -127,8 +127,13 @@ pub fn package() -> PathBuf {
         .unwrap()
 }
 
+/// A `file:` URI; Windows paths need forward slashes, a leading `/` and no `\\?\` marker (which
+/// `canonicalize` adds).
 pub fn uri(path: &Path) -> String {
-    format!("file://{}", path.display())
+    let text = path.display().to_string().replace('\\', "/");
+    let text = text.strip_prefix("//?/").unwrap_or(&text);
+    let slash = if text.starts_with('/') { "" } else { "/" };
+    format!("file://{slash}{text}")
 }
 
 pub fn pos(line: u32, character: u32) -> Value {
