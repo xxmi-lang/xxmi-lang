@@ -151,6 +151,12 @@ impl PathResolver {
 mod tests {
     use super::*;
 
+    /// `/` alone is not absolute on Windows (it takes the working directory's drive), so the
+    /// expectation needs a drive there.
+    fn absolute(rest: &str) -> PathBuf {
+        Path::new(if cfg!(windows) { r"C:\" } else { "/" }).join(rest)
+    }
+
     #[test]
     fn segments_drop_empty_and_dot() {
         let segments: Vec<_> = ini_path_segments(".\\a//b\\.\\c").collect();
@@ -166,10 +172,7 @@ mod tests {
 
     #[test]
     fn resolve_folds_parent_segments() {
-        assert_eq!(
-            resolve_path(Path::new("/a/b/../c/./d")),
-            Path::new("/a/c/d")
-        );
+        assert_eq!(resolve_path(&absolute("a/b/../c/./d")), absolute("a/c/d"));
     }
 
     #[test]
