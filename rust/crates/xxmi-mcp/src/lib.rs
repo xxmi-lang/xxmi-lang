@@ -1,8 +1,22 @@
 //! Hosted MCP server: the Rust port of packages/mcp-server (docs/06-mcp-server.md).
 
+pub mod app;
+pub mod bundled;
 pub mod catalog;
 pub mod config;
+pub mod http;
+pub mod indexer;
+pub mod jsonrpc;
 pub mod logger;
+pub mod mcp;
+pub mod packages;
 pub mod ratelimit;
 pub mod repos;
+pub mod schema;
+pub mod sources;
+pub mod specs;
 pub mod store;
+pub mod tools;
+pub mod zod;
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
