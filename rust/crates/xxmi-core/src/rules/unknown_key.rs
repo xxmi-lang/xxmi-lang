@@ -1,15 +1,15 @@
 //! XM102: a key the section's parser doesn't read (port of XM102 in
 //! packages/core/src/lint/rules/structure.ts).
 
-use super::{Finding, FixSpec, RuleContext};
+use super::{Finding, RuleContext, replace_fix};
 use crate::model::{LineModel, SectionModel};
 use crate::scan::Span;
 use crate::spec::{DynamicKeyKind, SectionKind, SpecSection};
-use crate::suggest::{did_you_mean, nearest};
+use crate::suggest::did_you_mean;
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
     let mut findings = Vec::new();
-    for section in &context.model.sections {
+    for section in &context.file.sections {
         let Some(spec) = section.spec else {
             continue;
         };
@@ -119,7 +119,7 @@ fn check_regular_line(
     Some(Finding {
         span: key_span,
         message: format!("Unknown key `{key}` in [{name}]; the DLL ignores it.{hint}"),
-        fix: replace_fix(key_span, key, known),
+        fix: replace_fix(key_span, key, known, ""),
     })
 }
 
@@ -139,15 +139,6 @@ fn is_ini_param(key: &str) -> bool {
         .is_some_and(|c| matches!(c.to_ascii_lowercase(), 'x' | 'y' | 'z' | 'w'));
     let digits = chars.as_str();
     letter && digits.len() <= 3 && digits.bytes().all(|b| b.is_ascii_digit())
-}
-
-fn replace_fix(span: Span, word: &str, candidates: &[&str]) -> Option<FixSpec> {
-    let found = nearest(word, candidates.iter().copied())?;
-    Some(FixSpec {
-        title: format!("Change to `{found}`"),
-        span,
-        new_text: found.to_string(),
-    })
 }
 
 #[cfg(test)]

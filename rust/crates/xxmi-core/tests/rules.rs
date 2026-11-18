@@ -1,0 +1,194 @@
+//! Lints the repository's rule fixtures and compares against the golden output the TypeScript
+//! tests check in: fixtures/rules/XMnnn/{bad,good}(.ini|/) with expected.json (and fixed.ini when
+//! the rule has quick fixes), and fixtures/xxmi-1.3.1/*.expected.json.
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use serde_json::{Value, json};
+use xxmi_core::diagnostic::Position;
+use xxmi_core::lint::{LintOptions, lint_paths};
+
+fn fixtures() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
+}
+
+fn read_json(path: &Path) -> Vec<Value> {
+    let text = fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    serde_json::from_str(&text).expect("golden file is a JSON array")
+}
+
+/// Fixtures must not depend on the bundled ZZMI library, so no snapshots.
+fn options(rules: Option<Vec<String>>) -> LintOptions {
+    LintOptions {
+        rules,
+        snapshots: &[],
+        ..LintOptions::bundled()
+    }
+}
+
+/// Diagnostics as the golden files record them, with paths relative to `dir`.
+fn diagnose(path: &Path, dir: &Path, rules: Option<Vec<String>>) -> Vec<Value> {
+    let result = lint_paths(&[path.to_path_buf()], &options(rules)).expect("lint runs");
+
+    let mut out = Vec::new();
+    for file in &result.files {
+        let relative = file
+            .path
+            .strip_prefix(dir.canonicalize().unwrap())
+            .unwrap_or(&file.path);
+        for d in &file.diagnostics {
+            let mut value = serde_json::to_value(d).expect("diagnostics serialize");
+            value["path"] = json!(relative.to_string_lossy().replace('\\', "/"));
+            out.push(value);
+        }
+    }
+    out
+}
+
+fn variant(dir: &Path, name: &str) -> PathBuf {
+    [dir.join(format!("{name}.ini")), dir.join(name)]
+        .into_iter()
+        .find(|p| p.exists())
+        .unwrap_or_else(|| panic!("{} {name} fixture", dir.display()))
+}
+
+fn offset(text: &str, position: &Value) -> usize {
+    let line = position["line"].as_u64().unwrap() as usize;
+    let mut column = position["character"].as_u64().unwrap() as usize;
+    let start: usize = text.split_inclusive('\n').take(line).map(str::len).sum();
+
+    let mut end = start;
+    for c in text[start..].chars() {
+        if column == 0 {
+            break;
+        }
+        column = column.saturating_sub(c.len_utf16());
+        end += c.len_utf8();
+    }
+    end
+}
+
+/// Applies every quick fix, last first so earlier offsets stay valid.
+fn apply_fixes(text: &str, diagnostics: &[Value]) -> String {
+    let mut edits: Vec<(usize, usize, String)> = diagnostics
+        .iter()
+        .flat_map(|d| d["fix"]["edits"].as_array().cloned().unwrap_or_default())
+        .map(|e| {
+            let start = offset(text, &e["range"]["start"]);
+            let end = offset(text, &e["range"]["end"]);
+            (start, end, e["newText"].as_str().unwrap().to_string())
+        })
+        .collect();
+    edits.sort_by_key(|e| std::cmp::Reverse(e.0));
+
+    let mut out = text.to_string();
+    for (start, end, new_text) in edits {
+        out.replace_range(start..end, &new_text);
+    }
+    out
+}
+
+fn check_bad(id: &str) {
+    let dir = fixtures().join("rules").join(id);
+    let bad = variant(&dir, "bad");
+    let actual = diagnose(&bad, &dir, Some(vec![id.to_string()]));
+
+    assert!(
+        !actual.is_empty(),
+        "{id}: the bad fixture reports something"
+    );
+    assert_eq!(actual, read_json(&dir.join("expected.json")), "{id} bad");
+
+    let fixed = dir.join("fixed.ini");
+    if actual.iter().any(|d| d.get("fix").is_some()) {
+        let before = fs::read_to_string(&bad).expect("bad.ini");
+        assert_eq!(
+            apply_fixes(&before, &actual),
+            fs::read_to_string(&fixed).expect("fixed.ini")
+        );
+    } else {
+        assert!(!fixed.exists(), "{id}: fixed.ini without quick fixes");
+    }
+}
+
+fn check_good(id: &str) {
+    let dir = fixtures().join("rules").join(id);
+    let good = variant(&dir, "good");
+    assert_eq!(
+        diagnose(&good, &dir, Some(vec![id.to_string()])),
+        Vec::<Value>::new(),
+        "{id} good"
+    );
+}
+
+macro_rules! rule_tests {
+    ($($name:ident => $id:literal),* $(,)?) => {
+        mod bad { $(#[test] fn $name() { super::check_bad($id) })* }
+        mod good { $(#[test] fn $name() { super::check_good($id) })* }
+    };
+}
+
+rule_tests! {
+    xm001 => "XM001", xm002 => "XM002",
+    xm101 => "XM101", xm102 => "XM102", xm103 => "XM103", xm104 => "XM104", xm105 => "XM105",
+    xm106 => "XM106", xm107 => "XM107", xm108 => "XM108", xm109 => "XM109",
+    xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
+    xm206 => "XM206", xm207 => "XM207", xm208 => "XM208",
+}
+
+#[test]
+fn every_rule_has_a_fixture_directory() {
+    let mut dirs: Vec<String> = fs::read_dir(fixtures().join("rules"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .filter(|name| name.starts_with("XM"))
+        .collect();
+    dirs.sort();
+
+    let ids: Vec<&str> = xxmi_core::rules::RULES.iter().map(|r| r.id).collect();
+    assert_eq!(dirs, ids);
+}
+
+#[test]
+fn xxmi_1_3_1_fixtures_match_the_golden_output() {
+    let dir = fixtures().join("xxmi-1.3.1");
+    let mut checked = 0;
+
+    for entry in fs::read_dir(&dir).expect("fixture directory exists") {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|e| e != "ini") {
+            continue;
+        }
+
+        let golden = path.with_extension("expected.json");
+        let expected = if golden.exists() {
+            read_json(&golden)
+        } else {
+            Vec::new()
+        };
+        let actual: Vec<Value> = diagnose(&path, &dir, None)
+            .iter()
+            .map(|d| json!({ "id": d["id"], "message": d["message"], "range": d["range"] }))
+            .collect();
+        assert_eq!(actual, expected, "{}", path.display());
+        checked += 1;
+    }
+    assert_eq!(
+        checked, 3,
+        "clean, matchtextures-missing and run-misspelled"
+    );
+}
+
+#[test]
+fn position_type_is_utf16_columns() {
+    // Guards the unit the golden ranges are written in.
+    let p = Position {
+        line: 0,
+        character: 2,
+    };
+    assert_eq!(
+        serde_json::to_value(p).unwrap(),
+        json!({ "line": 0, "character": 2 })
+    );
+}
