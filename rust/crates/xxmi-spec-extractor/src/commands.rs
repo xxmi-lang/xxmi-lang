@@ -82,7 +82,7 @@ fn values(code: &str, source: &str) -> Vec<SpecCommandValue> {
     out
 }
 
-/// Blocks that test only `val` (`snapshotoriginaltextures`): the keyword is the command, whatever
+/// Blocks that test only `val` (`snapshotinitialtextures`): the keyword is the command, whatever
 /// the key is, so on a bare line it is the whole line.
 fn value_commands(condition: &str, source: &str) -> Vec<SpecCommand> {
     comparisons(condition, VALUE)

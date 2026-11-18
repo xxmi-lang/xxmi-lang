@@ -85,6 +85,7 @@ fn key_sources(section: &str) -> Vec<KeySource> {
             reads(INI, &["ParseResourceSection", "ParseResourceSections"]),
             reads(INI, &["ParseResourceInitialData"]),
         ],
+        "Filter" => vec![reads(INI, &["ParseFilterSection"])],
         // A pool's resource template is parsed with ParseResourceSection(section_name, L"template").
         "Pool" => vec![
             reads(INI, &["ParseResourcePoolSection"]),
