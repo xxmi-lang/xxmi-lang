@@ -17,7 +17,7 @@ Our position: **LSP features on top of their grammars, never competing grammars.
 A thin client, `vscode-languageclient/node`:
 
 - Activates on language `migoto`. Adds the `xxmi.*` settings (`xxmi.profile`, `xxmi.packagePath`, `xxmi.rules`, `xxmi.lsp.path` to override the bundled server).
-- Bundles `@xxmi-lang/lsp` (Node) so no separate install is needed.
+- Bundles the Rust `xxmi` binary for each platform (`bin/<os>-<arch>/`) and starts `xxmi lsp --stdio`, so no separate install is needed.
 - If lupomikti's extension isn't installed, show a one-time prompt linking to it (highlighting comes from there). Until it's on the Marketplace, link to their `.vsix` release.
 - Commands: `XXMI: Migrate mod…`, `XXMI: Normalize mod…`, `XXMI: Show detected format era`, `XXMI: Restart server`.
 - Semantic tokens: declare `semanticTokenScopes` mapping our token types to the TextMate scopes their grammar already uses (read `source.migoto` in their tmLanguage and pick the matching scopes), so themes color resolved symbols the same way as plain highlighting.
@@ -28,7 +28,7 @@ A thin client, `vscode-languageclient/node`:
 `packages/vscode` (`xxmi-lang.xxmi-lang`, `.vsix` from `pnpm --filter ./packages/vscode run package`):
 
 - **Language:** declares the language `migoto` with the same extensions as lupomikti's extension (`.ini`, `.3dm`, `.migoto`) but no grammar, so it works on its own and merges with theirs. It prompts once to install their extension if it's missing.
-- **Server:** the bundled server (`dist/server.mjs`, with the WASM files, spec and ZZMI snapshot next to it) runs under VS Code's Node with `--liftoff-only` (see 03-lsp.md).
+- **Server:** the bundled `xxmi` binary for the current platform, run as `xxmi lsp --stdio`. `xxmi.lsp.path` runs another executable (the `xxmi` binary or a standalone `xxmi-lsp`) with `--stdio`.
 - **Settings and commands:** `xxmi.rules`, `xxmi.lsp.path`, and the command `XXMI: Restart server`. `xxmi.profile`, `xxmi.packagePath`, the migrate/normalize commands and semantic tokens come with later milestones.
 - **Tests:** `pnpm --filter ./packages/vscode test:vscode` starts a real VS Code with the extension and checks diagnostics after an edit, go to definition into a library, cross-file rename and hover (CI runs it under xvfb).
 - **Not yet:** publishing to the Marketplace and Open VSX, which needs the publisher accounts.

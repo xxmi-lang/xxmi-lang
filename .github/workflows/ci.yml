@@ -25,18 +25,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # Build first: the binaries' entry (scripts/bin/embedded.ts) embeds packages/core/dist/spec.json.
+      # Build first: the Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
       - run: pnpm build
 
       - run: pnpm lint
@@ -52,7 +52,7 @@ jobs:
           echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
 
       - name: Check out XXMI-Libs-Package (DLL source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: SpectrumQT/XXMI-Libs-Package
           ref: ${{ steps.spec.outputs.dll }}
@@ -67,7 +67,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Check out 3Dmigoto (vanilla baseline)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: bo3b/3Dmigoto
           ref: ${{ steps.spec.outputs.baseline }}
@@ -93,7 +93,7 @@ jobs:
           MIGOTO_DLL_SRC: .dll/vanilla
 
       - name: Check out ZZMI-Package
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: leotorrez/ZZMI-Package
           ref: ${{ github.event_name == 'schedule' && 'main' || env.ZZMI_PACKAGE_REF }}
@@ -114,23 +114,95 @@ jobs:
           pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
           diff packages/core/snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
 
-      - uses: oven-sh/setup-bun@v2
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          bun-version: 1.3.14
+          toolchain: ${{ steps.rust-version.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
 
       # docs/09-roadmap.md M3: test the compiled binaries, not just the Node build.
       - name: Build single-file binaries for this machine
         run: pnpm build:binaries --target host
 
-      - name: Protocol tests against the compiled xxmi-lsp, xxmi lsp and the bundled VS Code server
+      - name: Protocol tests against the compiled xxmi-lsp, xxmi lsp and the TypeScript server
         shell: bash
         run: |
           exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
           XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
           XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"node\",\"--liftoff-only\",\"packages/vscode/dist/server.mjs\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"node\",\"--liftoff-only\",\"packages/lsp/dist/main.js\",\"--stdio\"]" pnpm vitest run packages/lsp
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
+
+  rust:
+    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS; the parity
+    # checks against the TypeScript CLI and server run on Linux, where the ZZMI package is checked out.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # build.rs embeds packages/core/dist/spec.json.
+      - run: pnpm build
+
+      - name: Check out ZZMI-Package
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/checkout@v7
+        with:
+          repository: leotorrez/ZZMI-Package
+          ref: ${{ env.ZZMI_PACKAGE_REF }}
+          path: .zzmi-package
+          persist-credentials: false
+
+      - name: Format
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+
+      - name: Clippy (warnings are errors)
+        run: cargo clippy --manifest-path rust/Cargo.toml --release -- -D warnings
+
+      - name: Tests
+        run: cargo test --manifest-path rust/Cargo.toml --release --no-fail-fast
+
+      - name: Parity with the TypeScript CLI and language server
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          XXMI_PACKAGE_SRC: .zzmi-package/ZZMI
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml -p xxmi
+          node rust/bench/parity.mjs
+          node rust/bench/lsp-parity.mjs
 
   dotnet:
     # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
@@ -144,27 +216,35 @@ jobs:
     env:
       XXMI_PATH: ${{ github.workspace }}/dist/bin/xxmi${{ matrix.os == 'windows-latest' && '.exe' || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # The binaries' entry (scripts/bin/embedded.ts) embeds packages/core/dist/spec.json.
+      # The Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
       - run: pnpm build
 
-      - uses: oven-sh/setup-bun@v2
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          bun-version: 1.3.14
+          toolchain: ${{ steps.rust-version.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
 
       - run: pnpm build:binaries --target host
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -173,7 +253,7 @@ jobs:
 
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dotnet-test-results-${{ matrix.os }}
           path: dotnet/TestResults
@@ -210,11 +290,11 @@ jobs:
     # A real VS Code (downloaded by @vscode/test-electron) with the bundled extension.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -223,11 +303,25 @@ jobs:
 
       - run: pnpm build
 
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - run: pnpm build:binaries --target host
+
       - run: xvfb-run -a pnpm --filter ./packages/vscode test:vscode
 
       - run: pnpm --filter ./packages/vscode run package
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: xxmi-lang-vsix
           path: packages/vscode/dist/xxmi-lang.vsix
@@ -235,9 +329,9 @@ jobs:
   plugin:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -253,9 +347,9 @@ jobs:
     # from the repo on deploy.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 

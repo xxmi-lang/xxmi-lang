@@ -1,0 +1,21 @@
+[package]
+name = "xxmi"
+description = "xxmi: lint CLI for XXMI / 3DMigoto mod .ini files"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "xxmi"
+path = "src/main.rs"
+
+[dependencies]
+crossbeam-channel = "0.5"
+gen-lsp-types = "0.11"
+line-index.workspace = true
+lsp-server = "0.10"
+serde.workspace = true
+serde_json.workspace = true
+xxmi-core = { path = "../xxmi-core" }

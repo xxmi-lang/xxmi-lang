@@ -1,11 +1,13 @@
 /**
- * Bundles the release files: one zip per platform (`xxmi[.exe]`, `xxmi-lsp[.exe]`, LICENSE,
- * README.txt), the renamed VS Code extension, and SHA256SUMS over all of them.
+ * Bundles the release files: one zip per platform (`xxmi[.exe]` and `xxmi-lsp[.exe]`, the same
+ * binary under both names, LICENSE, README.txt), the renamed VS Code extension, and SHA256SUMS over
+ * all of them.
  *
  *   node scripts/bundle-release.ts --version 0.1.1 [--bin dist/bin] [--vsix path] [--out dist/release]
  *   node scripts/bundle-release.ts --version 0.1.1 --host      # only this machine, from dist/bin/xxmi[.exe]
  *
- * Reads the loose `xxmi-<os>-<arch>[.exe]` / `xxmi-lsp-…` files that `pnpm build:binaries` writes.
+ * Reads the loose `xxmi-<os>-<arch>[.exe]` files that `pnpm build:binaries --target <os>-<arch>` writes,
+ * one per target (release.yml downloads them into dist/bin).
  * Needs the `zip` command (preinstalled on Linux and macOS runners). The binaries are chmod +x
  * before zipping and `zip -X` keeps the Unix mode, so they stay executable after `unzip`.
  */
@@ -24,6 +26,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import {
+  OS_BY_NODE_PLATFORM,
+  RELEASE_TARGETS,
+  exeSuffix,
+  releaseBinaryName,
+  targetName,
+} from './platforms.ts';
 
 const REPO = resolve(import.meta.dirname, '..');
 const { values } = parseArgs({
@@ -39,16 +48,6 @@ if (!values.version) throw new Error('--version is required');
 const version = values.version;
 const binDir = resolve(values.bin ?? join(REPO, 'dist/bin'));
 const out = resolve(values.out ?? join(REPO, 'dist/release'));
-
-// [name in the zip file name, name Bun's output uses]
-const PLATFORMS: [string, string][] = [
-  ['windows-x64', 'windows-x64'],
-  ['windows-arm64', 'windows-arm64'],
-  ['linux-x64', 'linux-x64'],
-  ['linux-arm64', 'linux-arm64'],
-  ['macos-x64', 'darwin-x64'],
-  ['macos-arm64', 'darwin-arm64'],
-];
 
 const README = `xxmi-lang ${version}
 
@@ -67,14 +66,13 @@ mkdirSync(out, { recursive: true });
 const files: string[] = [];
 const tmp = mkdtempSync(join(tmpdir(), 'xxmi-bundle-'));
 
-function bundle(zipName: string, source: (name: string) => string, exe: string): void {
+function bundle(zipName: string, binary: string, exe: string): void {
   const stage = join(tmp, zipName);
   mkdirSync(stage);
+  if (!existsSync(binary)) throw new Error(`missing ${binary}; run pnpm build:binaries`);
   for (const name of ['xxmi', 'xxmi-lsp']) {
-    const src = source(name);
-    if (!existsSync(src)) throw new Error(`missing ${src}; run pnpm build:binaries`);
     const dest = join(stage, `${name}${exe}`);
-    copyFileSync(src, dest);
+    copyFileSync(binary, dest);
     chmodSync(dest, 0o755);
   }
   copyFileSync(join(REPO, 'LICENSE'), join(stage, 'LICENSE'));
@@ -90,16 +88,13 @@ function bundle(zipName: string, source: (name: string) => string, exe: string):
 
 try {
   if (values.host) {
-    const os = ({ win32: 'windows', darwin: 'macos', linux: 'linux' } as Record<string, string>)[
-      process.platform
-    ];
+    const os = OS_BY_NODE_PLATFORM[process.platform];
     if (!os) throw new Error(`unsupported platform ${process.platform}`);
-    const exe = process.platform === 'win32' ? '.exe' : '';
-    bundle(`${os}-${process.arch}`, (n) => join(binDir, `${n}${exe}`), exe);
+    const exe = exeSuffix(os);
+    bundle(`${os}-${process.arch}`, join(binDir, `xxmi${exe}`), exe);
   } else {
-    for (const [zipName, bunName] of PLATFORMS) {
-      const exe = zipName.startsWith('windows') ? '.exe' : '';
-      bundle(zipName, (n) => join(binDir, `${n}-${bunName}${exe}`), exe);
+    for (const t of RELEASE_TARGETS) {
+      bundle(targetName(t), join(binDir, releaseBinaryName(t)), exeSuffix(t.os));
     }
   }
   if (values.vsix) {

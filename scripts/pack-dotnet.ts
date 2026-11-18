@@ -22,16 +22,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { RELEASE_TARGETS, type Os, type ReleaseTarget, releaseBinaryName } from './platforms.ts';
 
-/** .NET runtime id -> suffix of the binary `pnpm build:binaries` writes. */
-export const RUNTIMES: Record<string, string> = {
-  'win-x64': 'windows-x64.exe',
-  'win-arm64': 'windows-arm64.exe',
-  'linux-x64': 'linux-x64',
-  'linux-arm64': 'linux-arm64',
-  'osx-x64': 'darwin-x64',
-  'osx-arm64': 'darwin-arm64',
-};
+const RID_OS: Record<Os, string> = { windows: 'win', linux: 'linux', macos: 'osx' };
+
+/** .NET runtime id -> the release target whose binary `pnpm build:binaries` writes for it. */
+export const RUNTIMES: Record<string, ReleaseTarget> = Object.fromEntries(
+  RELEASE_TARGETS.map((t) => [`${RID_OS[t.os]}-${t.arch}`, t]),
+);
 
 const REPO = resolve(import.meta.dirname, '..');
 const DOTNET = join(REPO, 'dotnet');
@@ -74,8 +72,8 @@ try {
   dotnet('pack', 'src/XxmiLang.Core', '-c', 'Release', '-o', out, ...version);
   for (const rid of rids) {
     const exe = rid.startsWith('win-') ? 'xxmi.exe' : 'xxmi';
-    const suffix = RUNTIMES[rid] as string;
-    const source = values.host ? join(bin, exe) : join(bin, `xxmi-${suffix}`);
+    const target = RUNTIMES[rid] as ReleaseTarget;
+    const source = join(bin, values.host ? exe : releaseBinaryName(target));
     if (!existsSync(source))
       throw new Error(`${source} is missing; run \`pnpm build:binaries\` first`);
     // The package holds the file as `xxmi[.exe]`, whatever the release calls it.

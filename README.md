@@ -129,7 +129,7 @@ follows, and [docs/](docs/) for the design.
 pnpm install && pnpm build && pnpm test
 pnpm xxmi lint path/to/mod             # CLI from source
 docker build -f packages/mcp-server/Dockerfile -t xxmi-mcp .   # the MCP server image
-pnpm build:binaries --target host      # single-file binaries (needs Bun)
+pnpm build:binaries --target host      # single-file binaries (needs Rust)
 ```
 
 ## Credits

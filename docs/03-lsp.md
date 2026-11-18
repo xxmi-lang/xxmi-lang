@@ -1,6 +1,6 @@
 # 03 — LSP server (`xxmi-lsp`)
 
-A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang/core` for everything. It ships as a Node package (for VS Code) and as a single-file binary (for Kate and Claude Code).
+A stdio language server. The shipped server is Rust (`rust/`, see `rust-port.md`), a single-file binary run as `xxmi-lsp` or `xxmi lsp --stdio` by Kate, Claude Code and VS Code. The TypeScript server (`packages/lsp`, built on `vscode-languageserver/node` and `@xxmi-lang/core`) is the reference it is checked against.
 
 ## Capabilities by phase
 
@@ -8,7 +8,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 
 | Capability | Behavior |
 |---|---|
-| `textDocument/publishDiagnostics` | All enabled rules. Debounce 150 ms after the last change. Cross-file diagnostics (XM2xx) refresh when dependencies change |
+| `textDocument/publishDiagnostics` | All enabled rules. Debounce 50 ms after the last change (the TypeScript server: 150 ms). Cross-file diagnostics (XM2xx) refresh when dependencies change |
 | `textDocument/definition` | Sections, variables, resources, pools, custom shaders, include targets, `filename =` paths (opens the file), and library symbols in the package or bundled snapshot |
 | `textDocument/references` | All references across the indexed workspace, including the package |
 | `textDocument/rename` + `prepareRename` | Rename sections (updates every `CommandList\N\X`, `ref ResourceX`, `run = …` form), variables (`$x`, `$\N\x`), resources. Refuse renames of symbols in the package or bundled snapshot, with a clear message |
@@ -31,7 +31,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 
 `packages/lsp` (`xxmi-lsp`) implements phase 1 except formatting, which is not planned here any more (M4 moved to the maintainer's C# app, `09-roadmap.md`). Navigation, hover and completion logic is in `@xxmi-lang/core` (`src/navigation/`); the server only keeps editor state and converts types.
 
-- **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after 150 ms of quiet is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted 150 ms after the last one.
+- **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after one debounce period of quiet (50 ms; 150 ms in the TypeScript server) is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted one period after the last one.
 - **Definition, references, rename:** sections, variables (`$x`, `$\N\x`, locals), resources, pools, include targets and `filename =` paths. Rename edits only the name part of each reference and keeps prefixes and namespaces as written. It refuses symbols from the bundled snapshot, from the DLL's built-in sections, and from the package (`Core/`, d3dx.ini).
 - **Index:** open files first, then every `.ini` under the workspace folders in the background (stops after 5,000 files with a warning, skips `exclude_recursive` matches such as `DISABLED*` folders), then the package root's d3dx.ini and its includes.
 - **Hover:** spec docs (generated + overlays) with an XXMI-only badge, the doc comment above a section (or the comment block right below its header, ZZMI's `; Input:` style), and a variable's declaration line.
@@ -39,7 +39,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 - **Work queue:** document updates, saves and indexing run one at a time; requests wait for it. A failure is logged and never stops the queue or the process.
 - **Code actions:** "did you mean" quick fixes (XM102, XM105, XM201, XM202).
 - **Settings:** `xxmi.toml`, plus `workspace/configuration` section `xxmi` (`rules`), which wins.
-- **Node and WASM memory:** under Node, web-tree-sitter leaks about 0.2 MB of native memory per parse once V8 tiers its WASM up to the optimizing compiler (Node 24, web-tree-sitter 0.26 and 0.27; Bun doesn't leak). Node entry points therefore relaunch themselves with `--liftoff-only` (`packages/core/src/runtime.ts`), and the VS Code client passes it directly. Parsing isn't measurably slower.
+- **Node and WASM memory:** under Node, web-tree-sitter leaks about 0.2 MB of native memory per parse once V8 tiers its WASM up to the optimizing compiler (Node 24, web-tree-sitter 0.26 and 0.27; Bun doesn't leak). Node entry points therefore relaunch themselves with `--liftoff-only` (`packages/core/src/runtime.ts`), and the TypeScript server's VS Code client passed it directly. Parsing isn't measurably slower.
 
 Measured with `XXMI_PACKAGE_SRC=<ZZMI-Package>/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts` (macOS, Node 24, 2026-10-01):
 
@@ -69,4 +69,4 @@ Measure on the largest file in `corpus/` and on the whole ZZMI package.
 - Protocol: use `vscode-languageserver-protocol` test harness (or a small JSON-RPC driver) with scripted sessions in `packages/lsp/test/sessions/*.json` (request in, expected response out).
 - Smoke test in CI: spawn the compiled binary, `initialize`, open a fixture, assert diagnostics, `shutdown`.
 
-As built: `packages/lsp/test/protocol.test.ts` drives the server over JSON-RPC (diagnostics after an edit, quick fix, definition into a library, cross-file references and rename, refused library rename, hover, completion, outline, unknown documents). `XXMI_LSP_COMMAND` points the same suite at another server: CI runs it against the compiled binary on every OS and against the bundled VS Code server. The release workflow runs it again on the downloaded release binaries.
+As built: `packages/lsp/test/protocol.test.ts` drives the server over JSON-RPC (diagnostics after an edit, quick fix, definition into a library, cross-file references and rename, refused library rename, hover, completion, outline, unknown documents). `XXMI_LSP_COMMAND` points the same suite at another server: CI runs it against the compiled binary on every OS and against the TypeScript server build. The release workflow runs it again on the downloaded release binaries.

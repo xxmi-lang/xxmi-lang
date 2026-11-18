@@ -10,6 +10,7 @@ xxmi lint [paths…]            Lint files/folders. Default path: .
     --rules XM201,XM202       only these
     --fix                     apply safe quick fixes in place
     --max-warnings N          exit 1 if exceeded
+    --spec FILE               use this spec.json instead of the built-in one
     --stdin --stdin-path P    lint the text on stdin as if it were the file P
 
 xxmi fmt [paths…]             Format in place

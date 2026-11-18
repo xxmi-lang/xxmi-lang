@@ -2,6 +2,7 @@
  * Thin LSP client (docs/08-editor-integration.md). Language features come from xxmi-lsp;
  * highlighting comes from lupomikti's "3DMigoto INI" extension (language id `migoto`).
  */
+import { chmodSync } from 'node:fs';
 import * as vscode from 'vscode';
 import {
   LanguageClient,
@@ -9,23 +10,39 @@ import {
   type LanguageClientOptions,
   type ServerOptions,
 } from 'vscode-languageclient/node';
+import { bundledBinaryPath } from './platform.ts';
 
 const HIGHLIGHTING_EXTENSION = 'AGMG.migoto-ini';
 const HIGHLIGHTING_URL = 'https://github.com/lupomikti/migoto-vscode';
 
 let client: LanguageClient | undefined;
 
-function serverOptions(context: vscode.ExtensionContext): ServerOptions {
+function serverOptions(context: vscode.ExtensionContext): ServerOptions | undefined {
   const custom = vscode.workspace.getConfiguration('xxmi').get<string>('lsp.path')?.trim();
-  if (custom) return { command: custom, args: ['--stdio'] };
-  const module = context.asAbsolutePath('dist/server.mjs');
-  // --liftoff-only: web-tree-sitter leaks native memory under V8's optimizing WASM tier
-  // (see packages/core/src/runtime.ts).
-  const options = { execArgv: ['--liftoff-only'] };
-  return {
-    run: { module, transport: TransportKind.stdio, options },
-    debug: { module, transport: TransportKind.stdio, options },
-  };
+  // `--stdio` alone is understood by both `xxmi` and a standalone `xxmi-lsp`.
+  if (custom) return { command: custom, args: ['--stdio'], transport: TransportKind.stdio };
+
+  const relative = bundledBinaryPath(process.platform, process.arch);
+  if (!relative) {
+    void vscode.window.showErrorMessage(
+      `XXMI: no bundled server for ${process.platform}-${process.arch}. Set "xxmi.lsp.path" to an xxmi executable.`,
+    );
+    return undefined;
+  }
+
+  const command = context.asAbsolutePath(relative);
+  ensureExecutable(command);
+  return { command, args: ['lsp', '--stdio'], transport: TransportKind.stdio };
+}
+
+/** A VSIX extracted by some tools loses the executable bit. */
+function ensureExecutable(path: string): void {
+  if (process.platform === 'win32') return;
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    // Missing or read-only: the client reports the failed launch.
+  }
 }
 
 async function start(context: vscode.ExtensionContext): Promise<void> {
@@ -36,7 +53,10 @@ async function start(context: vscode.ExtensionContext): Promise<void> {
       fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{ini,toml}'),
     },
   };
-  client = new LanguageClient('xxmi', 'XXMI', serverOptions(context), clientOptions);
+  const server = serverOptions(context);
+  if (!server) return;
+
+  client = new LanguageClient('xxmi', 'XXMI', server, clientOptions);
   await client.start();
 }
 
