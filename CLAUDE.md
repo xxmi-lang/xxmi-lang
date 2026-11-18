@@ -51,7 +51,9 @@ pnpm xxmi lint path/to/mod                                 # CLI from source (pa
 pnpm xxmi query symbol 'CommandList\ZZMI\SetTextures'      # read-only lookups (spec, library symbols)
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp   # the M6 questions against a running MCP server (docs/06)
 pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
-pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Bun); no --target: every release target
+pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Rust); no --target: every release target
+node rust/bench/parity.mjs                                 # Rust CLI vs TS CLI: lint, query, index
+cd rust && cargo test --release                            # Rust unit and integration tests
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx  # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages
 pnpm --filter ./packages/vscode run package                # VS Code .vsix; test:vscode runs it in a real VS Code
 XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts   # LSP performance targets (docs/03)

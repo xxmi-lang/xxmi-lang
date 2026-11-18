@@ -95,7 +95,7 @@ allowed to talk to the host):
 `"command": ["flatpak-spawn", "--host", "xxmi-lsp", "--stdio"]`. If that doesn't work, the
 distro's Kate package is the simpler route.
 
-**Not supported:** Alpine and other musl-based systems (the binaries need glibc).
+**Alpine and other musl-based systems:** the Linux binaries are statically linked (musl), so they don't need glibc.
 
 ## Windows
 

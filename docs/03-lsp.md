@@ -1,6 +1,6 @@
 # 03 — LSP server (`xxmi-lsp`)
 
-A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang/core` for everything. It ships as a Node package (for VS Code) and as a single-file binary (for Kate and Claude Code).
+A stdio language server. The shipped server is Rust (`rust/`, see `rust-port.md`), a single-file binary run as `xxmi-lsp` or `xxmi lsp --stdio` by Kate, Claude Code and VS Code. The TypeScript server (`packages/lsp`, built on `vscode-languageserver/node` and `@xxmi-lang/core`) is the reference it is checked against.
 
 ## Capabilities by phase
 
@@ -39,7 +39,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 - **Work queue:** document updates, saves and indexing run one at a time; requests wait for it. A failure is logged and never stops the queue or the process.
 - **Code actions:** "did you mean" quick fixes (XM102, XM105, XM201, XM202).
 - **Settings:** `xxmi.toml`, plus `workspace/configuration` section `xxmi` (`rules`), which wins.
-- **Node and WASM memory:** under Node, web-tree-sitter leaks about 0.2 MB of native memory per parse once V8 tiers its WASM up to the optimizing compiler (Node 24, web-tree-sitter 0.26 and 0.27; Bun doesn't leak). Node entry points therefore relaunch themselves with `--liftoff-only` (`packages/core/src/runtime.ts`), and the VS Code client passes it directly. Parsing isn't measurably slower.
+- **Node and WASM memory:** under Node, web-tree-sitter leaks about 0.2 MB of native memory per parse once V8 tiers its WASM up to the optimizing compiler (Node 24, web-tree-sitter 0.26 and 0.27; Bun doesn't leak). Node entry points therefore relaunch themselves with `--liftoff-only` (`packages/core/src/runtime.ts`), and the TypeScript server's VS Code client passed it directly. Parsing isn't measurably slower.
 
 Measured with `XXMI_PACKAGE_SRC=<ZZMI-Package>/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts` (macOS, Node 24, 2026-10-01):
 

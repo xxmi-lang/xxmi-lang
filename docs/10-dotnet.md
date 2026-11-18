@@ -17,7 +17,7 @@ Not included yet: a `XxmiQuery` wrapper. `xxmi query` exists now (`04-cli.md`, "
 |---|---|
 | `XxmiLang.Core` | The definitions, with no process or file access: result types (`XxmiDiagnostic`, `LintResult`, `TextRange`, `QuickFix`, `TextEdit`, `HoverResult`, `XxmiLocation`, `CompletionItem`, `OutlineSymbol`, `RenameCheck`, `WorkspaceEdit`, `XxmiCodeAction`), `TextEdits.Apply`, the interfaces `IXxmiLinter` and `IXxmiLanguageService`, and `XxmiJsonContext` (System.Text.Json source generation). Reference it alone to write code or fakes against the interfaces |
 | `XxmiLang` | The implementation, depending on `XxmiLang.Core`: `XxmiLinter`, `XxmiLanguageService`, the JSON-RPC client, `XxmiBinaryLocator`, `XxmiOptions` and the exceptions |
-| `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (about 60 to 95 MB; 24 to 38 MB as a package; no Node or Bun needed). Each package is far below nuget.org's 250 MB limit |
+| `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (about 2.6 MB; no Node needed). Each package is far below nuget.org's 250 MB limit |
 
 All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later. Each package has its own README, description and tags, and release notes pointing at the GitHub release. `XxmiLang` and `XxmiLang.Core` also publish symbol packages (`.snupkg`, source-linked to GitHub) so you can step into them.
 
@@ -32,7 +32,7 @@ dotnet add package XxmiLang
 dotnet add package XxmiLang.Native.win-x64        # the platform(s) you ship
 ```
 
-Add `XxmiLang` plus one `XxmiLang.Native.<rid>` per platform your app runs on (`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`). Each adds one binary (24 to 38 MB as a package). If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one. There is no meta package that pulls in all six (`XxmiLang.All` existed in 0.1.1 only and was removed in 0.1.2).
+Add `XxmiLang` plus one `XxmiLang.Native.<rid>` per platform your app runs on (`win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`). Each adds one binary (about 2.6 MB). If you publish per platform (`dotnet publish -r linux-x64`) NuGet only takes the matching one. There is no meta package that pulls in all six (`XxmiLang.All` existed in 0.1.1 only and was removed in 0.1.2).
 
 GitHub Packages (the repo's "Packages" sidebar) is a mirror for visibility. Installing from it needs a source `https://nuget.pkg.github.com/xxmi-lang/index.json` and a GitHub token with `read:packages`, even for public packages; nuget.org needs nothing, so prefer it.
 
@@ -44,7 +44,7 @@ folder as a local feed (`dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local
 machine, or put a `nuget.config` next to your `.slnx`):
 
 ```bash
-pnpm build && pnpm build:binaries --target host      # needs Bun
+pnpm build && pnpm build:binaries --target host      # needs Rust
 node scripts/pack-dotnet.ts --host --out ~/xxmi-nupkgs  # XxmiLang.Core, XxmiLang + this machine's runtime package
 node scripts/smoke-dotnet.ts --feed ~/xxmi-nupkgs       # optional: installs them in a fresh app and lints a fixture
 ```
@@ -141,7 +141,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 - **Linux and macOS: the exec bit.** NuGet doesn't restore Unix permissions reliably. Before the first run of a packaged binary the library sets the execute bit (`File.SetUnixFileMode`; it needs to own the file, which it does in `~/.nuget/packages` and in your output folder). If you copy `xxmi` around yourself, `chmod +x` it. A failure to start produces an `XxmiProcessException` that says so.
 - **macOS: Gatekeeper.** The binary is not signed or notarized. Files that arrive through NuGet aren't quarantined, so the packages work as is. A binary you download in a browser gets `com.apple.quarantine`, and macOS refuses to run it ("cannot be opened because the developer cannot be verified"): run `xattr -d com.apple.quarantine /path/to/xxmi` (or right-click, Open once).
 - **Windows.** `xxmi.exe` is unsigned, so SmartScreen may warn on a file downloaded in a browser ("Unblock" in Properties), and some antivirus products scan the first launch slowly. NuGet-delivered files aren't marked. Keep the app out of folders your antivirus watches closely if the first lint is slow.
-- **Linux libc.** The binaries are built for glibc. Alpine (musl) isn't supported; use a glibc image.
+- **Linux libc.** The Linux binaries are statically linked (musl), so they don't need glibc.
 - **Architectures.** x64 and arm64 only. On another machine `XxmiBinaryLocator.CurrentRuntimeIdentifier()` is null and the lookup reports "no xxmi build".
 - **.NET 10 only.** The packages target `net10.0`; there is no `netstandard2.0` or older-.NET build.
 - **Trimming and Native AOT** are supported. Both managed libraries set `IsAotCompatible` with the trim, AOT and single-file analyzer warnings (IL2xxx, IL3xxx) as errors. All JSON goes through `XxmiJsonContext` (System.Text.Json source generation, covering the lint output, the JSON-RPC envelopes and the LSP parameters and results); there is no reflection-based serialization, `dynamic` or `Activator`. The sample publishes with `dotnet publish -c Release -r <rid> -p:PublishAot=true` with zero warnings, and CI runs the native executable on all three OSes. The `xxmi` binary stays a separate file: a `-r <rid>` publish puts it next to the executable. If you serialize the result types yourself, use `XxmiJsonContext.Default` rather than reflection.
@@ -150,7 +150,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 
 - **A thin client, not a port.** All language logic stays in `packages/core`. The library only builds command lines, parses the stable JSON (`packages/cli/schema/lint-output.v1.json`; `XxmiLinter` refuses a `version` it doesn't know) and speaks LSP.
 - **A hand-written JSON-RPC client** (a few hundred lines: `Content-Length` framing, requests with cancellation, notifications, answering server requests) instead of StreamJsonRpc. The surface needed is tiny, and StreamJsonRpc pulls in Nerdbank.Streams, Newtonsoft.Json and more, which is heavy for a library whose job is to be easy to add. It is covered by in-memory pipe tests.
-- **The LSP over the CLI binary.** `xxmi lsp --stdio` (the CLI's subcommand; `xxmi-lsp` still exists for editors) means one 65 MB binary per platform instead of two.
+- **The LSP over the CLI binary.** `xxmi lsp --stdio` (the CLI's subcommand; `xxmi-lsp` still exists for editors) means one binary per platform instead of two.
 - **No long-lived lint server for `XxmiLinter`.** One process per call costs a few hundred milliseconds of startup, and keeps the linter stateless. Use the language service when you lint repeatedly.
 
 ## Testing

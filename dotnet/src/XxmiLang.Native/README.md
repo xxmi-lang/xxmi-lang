@@ -1,6 +1,6 @@
 # XxmiLang.Native
 
-The `xxmi` binary (self-contained, single file, no Node or Bun needed) for one platform, used by the
+The `xxmi` binary (self-contained, single file, no Node needed) for one platform, used by the
 [`XxmiLang`](https://www.nuget.org/packages/XxmiLang) package: a linter and language service client for
 **XXMI / 3DMigoto mod `.ini` files**. This package holds `runtimes/<rid>/native/xxmi[.exe]` and no
 assembly.
