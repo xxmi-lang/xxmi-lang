@@ -30,8 +30,8 @@ describe('spec/ in the repository', () => {
     const spec = loadSpec();
     const value = spec.commands.filter((c) => c.form === 'value').map((c) => c.name);
 
-    expect(value).toEqual(expect.arrayContaining(['snapshotoriginaltextures']));
-    expect(keyCommands(spec).map((c) => c.name)).not.toContain('snapshotoriginaltextures');
+    expect(value).toEqual(expect.arrayContaining(['snapshotinitialtextures']));
+    expect(keyCommands(spec).map((c) => c.name)).not.toContain('snapshotinitialtextures');
     expect(keyCommands(spec).map((c) => c.name)).toContain('store');
     expect(spec.commands.filter((c) => !isKeyCommand(c)).length).toBe(value.length);
     expect(valueCommands(spec).map((c) => c.name)).toEqual(value);

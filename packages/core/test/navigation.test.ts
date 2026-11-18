@@ -114,10 +114,16 @@ describe('MatchTextures and value-form run', () => {
     await workspace.closeDocument(join(MOD, 'match.ini'));
   });
 
-  it('gives the run value no target and hovers the spec command', async () => {
+  it('hovers the 1.3.2 name of a value-form run', async () => {
+    const text = '[CommandListM]\nrun = snapshotinitialtextures\n';
+    const file = await workspace.openDocument(join(MOD, 'initial.ini'), text, MOD);
+    expect(hover(workspace, file, at(1, 10))?.contents).toContain('Pre list only');
+    await workspace.closeDocument(join(MOD, 'initial.ini'));
+  });
+
+  it('gives the run value no target', async () => {
     const file = await workspace.openDocument(join(MOD, 'match.ini'), text, MOD);
     expect(targetAt(workspace, file, at(5, 10))).toBeUndefined();
-    expect(hover(workspace, file, at(5, 10))?.contents).toContain('snapshotoriginaltextures');
     await workspace.closeDocument(join(MOD, 'match.ini'));
   });
 });
@@ -157,8 +163,8 @@ describe('completion contexts', () => {
   it('does not offer value-form commands as keys', async () => {
     const labels = await complete('[CommandListA]\n', 1, 0);
     expect(labels).toContain('store');
-    expect(labels).not.toContain('snapshotoriginaltextures');
-    expect(labels).not.toContain('restoreoriginaltextures');
+    expect(labels).not.toContain('snapshotinitialtextures');
+    expect(labels).not.toContain('restoreinitialtextures');
   });
 
   it('offers variables in conditions', async () => {

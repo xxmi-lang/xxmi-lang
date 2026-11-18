@@ -1,0 +1,14 @@
+# Documentation for DLL enum tables, merged over spec/generated/enums.json.
+# Every statement here is checked against the XXMI DLL source (XXMI-Libs-Package, DirectX11/).
+
+[enums.ResourceFilterTypeNames]
+doc = """
+XXMI (DLL 1.3.2): what a filter operand names. `Filter` is a `[Filter…]` section; `Empty` is \
+`null`, accepted only as the source of a filter assignment (`FilterA = null`) to reset it."""
+
+[enums.ResourceFilterTargetEvaluationModeNames]
+doc = """
+XXMI (DLL 1.3.2): what an expression reads from a filter. `FilterIdentity` is `@FilterX`, the \
+numeric identity of the filter; `Format` is `FilterX->format`, the DXGI format number of its \
+`match_format`; `Confidence` is `FilterX->confidence`, its `match_confidence`. A `resource_filter` \
+operand in an expression is one of these."""

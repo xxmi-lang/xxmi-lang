@@ -1,0 +1,30 @@
+[
+  {
+    "id": "XM102",
+    "message": "Unknown key `match_format` in [ResourceBody]; the DLL ignores it.",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 0
+      },
+      "end": {
+        "line": 1,
+        "character": 12
+      }
+    }
+  },
+  {
+    "id": "XM102",
+    "message": "Unknown key `match_dhsh` in [FilterBody]; the DLL ignores it. Did you mean `match_dhash`?",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 0
+      },
+      "end": {
+        "line": 4,
+        "character": 10
+      }
+    }
+  }
+]

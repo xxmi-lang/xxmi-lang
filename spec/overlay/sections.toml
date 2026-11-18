@@ -32,6 +32,47 @@ filename = Textures/BodyDiffuse.dds"""
 [sections.Resource.keys.stride]
 doc = "Size in bytes of one element, e.g. the structure size of a `StructuredBuffer`."
 
+[sections.Filter]
+doc = """
+XXMI (DLL 1.3.2): describes a texture by its dHash, format and confidence, so that a slot \
+or `HammingDistance` can match it. `[Filter…]` is a prefix section. A filter is used as \
+the slot of a pixel-shader texture override, `ps-t[FilterX] = ResourceY`: at draw time the \
+DLL binds `ResourceY` to the `ps-t` slot whose initial texture is closest to the filter. \
+Only `ps-t` slots take a filter; another slot type gives "Work in progress - slot filtering \
+is only supported for ps-t slots". It is also the argument of `->HammingDistance(FilterX)`, \
+and can be read in expressions as `FilterX->format`, `FilterX->confidence` and `@FilterX` \
+(its numeric identity). Command lists can point a filter at another with `FilterA = FilterB` \
+(or `ref FilterB`), and reset it with `FilterA = null`. `copy` and `copy_desc` on a filter \
+are work in progress: the DLL logs "WIP: Filter `copy` is not supported" (or `copy_desc`) \
+and ignores the line."""
+example = """
+[FilterBodyDiffuse]
+match_format = BC7_UNORM
+match_dhash = 0123456789abcdef
+match_confidence = 0.8
+
+[TextureOverrideBody]
+hash = 1a2b3c4d
+snapshotinitialtextures
+ps-t[FilterBodyDiffuse] = ResourceNewDiffuse"""
+
+[sections.Filter.keys.match_format]
+doc = """
+DXGI format a texture must have to match: a format name as in `[Resource] format`. An \
+unknown name gives "Unknown match_format". Without it, formats aren't compared. Before DLL \
+1.3.2 this key was read in `[Resource]` sections."""
+
+[sections.Filter.keys.match_dhash]
+doc = """
+dHash (64-bit, in hex) of the texture to match, compared by Hamming distance. Before DLL \
+1.3.2 this key was read in `[Resource]` sections."""
+
+[sections.Filter.keys.match_confidence]
+doc = """
+Match threshold from 0.0 to 1.0 (clamped; default 0.75). A slot matches when its Hamming \
+distance is at most `(1 - confidence) * 64`, so 0.75 permits a distance of 16. Before DLL \
+1.3.2 this key was read in `[Resource]` sections."""
+
 [sections.TextureOverride.keys.hash]
 doc = """
 Hash of the resource this section matches, in hex (as shown by frame analysis and the \

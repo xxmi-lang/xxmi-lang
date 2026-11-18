@@ -149,7 +149,7 @@
       "xxmi": true
     },
     {
-      "name": "snapshotoriginaltextures",
+      "name": "snapshotinitialtextures",
       "kind": "general",
       "match": "exact",
       "values": [],
@@ -158,7 +158,7 @@
       "form": "value"
     },
     {
-      "name": "restoreoriginaltextures",
+      "name": "restoreinitialtextures",
       "kind": "general",
       "match": "exact",
       "values": [],
@@ -503,17 +503,10 @@
       "xxmi": true
     },
     {
-      "name": "getmatchformat",
-      "target": "resource",
-      "args": [],
-      "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
-    },
-    {
       "name": "hammingdistance",
       "target": "resource",
       "args": [
-        "resource"
+        "filter"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
       "xxmi": true
@@ -602,15 +595,6 @@
       "name": "srv_last_slot",
       "target": "shader",
       "args": [],
-      "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
-    },
-    {
-      "name": "matchtextures",
-      "target": "shader",
-      "args": [
-        "resource"
-      ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
       "xxmi": true
     },
