@@ -1,5 +1,5 @@
-//! Hostile input over the wire: the server must stay alive and answer every request, because a
-//! release build aborts on a panic and that ends the editor session.
+//! Hostile input over the wire: the server must stay alive and answer every request, because
+//! a crash ends the editor session.
 
 mod common;
 

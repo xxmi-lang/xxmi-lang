@@ -23,7 +23,7 @@ fn main() {
         .skip(1)
         .map(|a| a.to_string_lossy().into_owned())
         .collect();
-    exit(report(dispatch(&args)));
+    exit(run(&args));
 }
 
 /// The language server is the whole program when it is launched under its own name.
@@ -33,12 +33,15 @@ fn is_standalone_lsp() -> bool {
     stem.is_some_and(|stem| stem.eq_ignore_ascii_case("xxmi-lsp"))
 }
 
-/// The release profile aborts on panic, which would exit with a signal; exit 3 like the
-/// TypeScript CLI does for an internal error.
+/// A panic is an internal error like any other: exit 3, as the TypeScript CLI does.
+fn run(args: &[String]) -> i32 {
+    std::panic::catch_unwind(|| report(dispatch(args))).unwrap_or(3)
+}
+
+/// Only logs: the language server survives a panic, so the hook must not end the process.
 fn install_panic_hook() {
     std::panic::set_hook(Box::new(|info| {
         eprintln!("xxmi: internal error (please report it): {info}");
-        exit(3);
     }));
 }
 

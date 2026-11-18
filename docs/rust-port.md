@@ -36,6 +36,7 @@ node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakd
 | RSS after open / after 100 edits | 14.5 / 16.4 MB | 15.0 / 19.0 MB | < 200 MB |
 | cold start to first diagnostics | 0.1-0.3 s | 0.1-0.4 s (noisy) | < 1 s |
 | binary size | 2,275,760 B | 2,292,368 B | |
+| binary size with `panic = "unwind"` | 2,292,368 B | 2,573,536 B (+12%) | |
 | TS binary (stale v0.1.0 Bun) | 64,998,242 B | | |
 
 `lint` of ZZMI takes about 0.05 s against 0.15-0.2 s for the TS CLI.
@@ -43,4 +44,4 @@ What is left of an edit is the workspace-wide symbol table and usage (2.8 ms) an
 
 ## Intentional differences
 
-None visible in results: the stderr text of `query keys <unknown>` (exit code 3 is the same); the `xxmi.toml` error text and ambiguous-option wording come from the `toml` and argument-parser crates (exit code 2 is the same); `localeCompare` ordering is approximated rather than ICU; `reload` ignores include errors; `didOpen` does one update where TS does two (same final state); a panic aborts with exit 3 instead of a per-request fallback; JSON key order differs (compared sorted).
+None visible in results: the stderr text of `query keys <unknown>` (exit code 3 is the same); the `xxmi.toml` error text and ambiguous-option wording come from the `toml` and argument-parser crates (exit code 2 is the same); `localeCompare` ordering is approximated rather than ICU; `reload` ignores include errors; `didOpen` does one update where TS does two (same final state); a panic in the language server is caught per request (an `InternalError` reply) or per notification (the document is rebuilt from its last text), where TS lets the handler throw, and a panic in the CLI exits 3; JSON key order differs (compared sorted).

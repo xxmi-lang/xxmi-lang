@@ -19,8 +19,13 @@ pub struct Client {
 
 impl Client {
     pub fn start() -> Self {
+        Self::start_with_env(&[])
+    }
+
+    pub fn start_with_env(env: &[(&str, &str)]) -> Self {
         let mut child = Command::new(env!("CARGO_BIN_EXE_xxmi"))
             .args(["lsp", "--stdio"])
+            .envs(env.iter().copied())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()

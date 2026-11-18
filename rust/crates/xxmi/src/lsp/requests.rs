@@ -31,6 +31,7 @@ pub fn handle(server: &mut Server, request: Request) -> Response {
         "textDocument/completion" => with_position(server, request, json!([]), completion_at),
         "textDocument/documentSymbol" => document_symbols(server, request),
         "textDocument/codeAction" => code_actions(server, request),
+        "xxmi/test/panic" if server.inject_panics => panic!("injected panic"),
         method => Err((
             ErrorCode::MethodNotFound as i32,
             format!("Unhandled method {method}"),

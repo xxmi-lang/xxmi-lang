@@ -5,6 +5,7 @@
 
 mod convert;
 mod documents;
+mod guard;
 mod requests;
 mod server;
 mod uri;
@@ -18,10 +19,11 @@ use gen_lsp_types::{
     DidOpenTextDocumentParams, DidSaveTextDocumentParams, FileChangeType, InitializeParams,
     WorkspaceFolders,
 };
-use lsp_server::{Connection, Message, Notification, Request};
+use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 
+use guard::guarded;
 use server::Server;
 use uri::uri_to_path;
 
@@ -116,7 +118,7 @@ fn main_loop(connection: &Connection, mut server: Server) -> Result<(), BoxError
                 }
             }
             Message::Notification(notification) if notification.method == "exit" => return Ok(()),
-            Message::Notification(notification) => ignore_malformed(&mut server, notification),
+            Message::Notification(notification) => contain(&mut server, notification),
             Message::Response(response) => {
                 server.settings_response(&response.id, response.response_result.ok())
             }
@@ -133,9 +135,16 @@ fn handle_request(
     if connection.handle_shutdown(&request)? {
         return Ok(true);
     }
-    connection
-        .sender
-        .send(Message::Response(requests::handle(server, request)))?;
+
+    let id = request.id.clone();
+    let method = request.method.clone();
+    let response = guarded(|| requests::handle(server, request)).unwrap_or_else(|| {
+        eprintln!("xxmi-lsp: panic while handling {method}");
+        let message = format!("internal error while handling {method}");
+        Response::new_err(id, ErrorCode::InternalError as i32, message)
+    });
+
+    connection.sender.send(Message::Response(response))?;
     Ok(false)
 }
 
@@ -143,12 +152,27 @@ fn parse<P: DeserializeOwned>(notification: Notification) -> Result<P, BoxError>
     Ok(serde_json::from_value(notification.params)?)
 }
 
-/// A notification with params we can't read is dropped: it must not end the session.
-fn ignore_malformed(server: &mut Server, notification: Notification) {
+/// A notification with params we can't read is dropped, and one that panics costs its document
+/// the cached state: neither may end the session.
+fn contain(server: &mut Server, notification: Notification) {
     let method = notification.method.clone();
-    if let Err(error) = handle_notification(server, notification) {
-        eprintln!("xxmi-lsp: ignored {method}: {error}");
+    let uri = document_uri(&notification);
+
+    match guarded(|| handle_notification(server, notification)) {
+        Some(Ok(())) => {}
+        Some(Err(error)) => eprintln!("xxmi-lsp: ignored {method}: {error}"),
+        None => {
+            eprintln!("xxmi-lsp: panic while handling {method}");
+            if let Some(uri) = uri {
+                server.recover(&uri);
+            }
+        }
     }
+}
+
+fn document_uri(notification: &Notification) -> Option<String> {
+    let uri = notification.params.pointer("/textDocument/uri")?;
+    uri.as_str().map(str::to_string)
 }
 
 fn handle_notification(server: &mut Server, notification: Notification) -> Result<(), BoxError> {
@@ -180,6 +204,7 @@ fn handle_notification(server: &mut Server, notification: Notification) -> Resul
                 .collect();
             server.files_changed(changed);
         }
+        "xxmi/test/panic" if server.inject_panics => panic!("injected panic"),
         _ => {}
     }
     Ok(())

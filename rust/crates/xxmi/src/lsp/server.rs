@@ -12,6 +12,7 @@ use xxmi_core::workspace::{FileId, Workspace};
 
 use super::convert::publish;
 use super::documents::Documents;
+use super::guard::guarded;
 use super::uri::{path_to_uri, uri_to_path};
 
 const DEBOUNCE: Duration = Duration::from_millis(150);
@@ -38,6 +39,8 @@ pub struct Server<'a> {
     supports_configuration: bool,
     configuration_request: Option<RequestId>,
     next_request: i32,
+    /// Set by `XXMI_LSP_INJECT_PANIC`, so the tests can make a handler panic.
+    pub inject_panics: bool,
 }
 
 impl<'a> Server<'a> {
@@ -60,6 +63,7 @@ impl<'a> Server<'a> {
             supports_configuration,
             configuration_request: None,
             next_request: 0,
+            inject_panics: std::env::var_os("XXMI_LSP_INJECT_PANIC").is_some(),
         }
     }
 
@@ -104,7 +108,28 @@ impl<'a> Server<'a> {
             .map(|(uri, _)| uri.clone())
             .collect();
         for uri in due {
-            self.update(&uri);
+            if guarded(|| self.update(&uri)).is_none() {
+                eprintln!("xxmi-lsp: panic while linting {uri}");
+                self.recover(&uri);
+            }
+        }
+    }
+
+    /// After a panic the document's cached state can't be trusted: drop it and rebuild it from
+    /// the last text the client sent. A document that panics again stays unloaded until its
+    /// next change.
+    pub fn recover(&mut self, uri: &str) {
+        self.pending.remove(uri);
+        let path = uri_to_path(uri);
+
+        let resynced = guarded(|| {
+            self.workspace.close_document(&path);
+            self.update(uri);
+        });
+        if resynced.is_none() {
+            eprintln!("xxmi-lsp: {uri} panics again; leaving it unloaded");
+            let _ = guarded(|| self.workspace.close_document(&path));
+            self.send(publish(uri, &[]));
         }
     }
 
@@ -153,7 +178,7 @@ impl<'a> Server<'a> {
     }
 
     /// A change after a quiet period is linted at once (an agent's single edit gets diagnostics
-    /// while it's still looking); a burst of keystrokes is linted 150 ms after the last one.
+    /// while it's still looking); a burst of keystrokes is linted at the end of the debounce.
     pub fn did_change(&mut self, uri: &str, changes: Vec<super::documents::Change>) {
         if !trace::span("apply_change", || self.documents.change(uri, changes)) {
             return;
