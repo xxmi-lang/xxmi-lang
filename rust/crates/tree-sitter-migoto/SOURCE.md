@@ -1,7 +1,7 @@
 # Vendored grammar sources
 
 - Repository: https://github.com/xxmi-lang/tree-sitter-migoto.git (fork of https://github.com/lupomikti/tree-sitter-migoto)
-- Branch `xxmi`, commit `5d78a72`
+- Branch `xxmi`, commit `2a366ae`
 - Files: `src/parser.c`, `src/scanner.c` (external scanner) and `src/tree_sitter/*.h`, copied unmodified into `vendor/`
 - Generated with tree-sitter CLI as checked in upstream; regenerate there, then copy again
 

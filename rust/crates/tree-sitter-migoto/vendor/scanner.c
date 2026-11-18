@@ -224,6 +224,8 @@ static inline bool scan_end_of_line(TSLexer *lexer) {
     return false;
 }
 
+static bool scan_namespace_res_body(TSLexer *lexer, bool probe);
+
 static inline bool scan_namespace_res_start_end(TSLexer *lexer, unsigned position) {
     if (lexer->lookahead != '\\') {
         return false;
@@ -232,6 +234,12 @@ static inline bool scan_namespace_res_start_end(TSLexer *lexer, unsigned positio
     consume(lexer);
 
     bool res = true;
+
+    // A lone `\Name` has no namespace to open: the DLL looks it up as a plain section name
+    if (position == NAMESPACE_RESOLUTION_START) {
+        mark_end(lexer);
+        res = scan_namespace_res_body(lexer, true);
+    }
 
     // bake antiwhitespace detection into the rule for the end of namespace resolution
     if (position == NAMESPACE_RESOLUTION_END) {
@@ -242,12 +250,15 @@ static inline bool scan_namespace_res_start_end(TSLexer *lexer, unsigned positio
     return res;
 }
 
-static inline bool scan_namespace_res_content(TSLexer *lexer) {
+// Scans to the end of a namespace-qualified name and reports whether a closing backslash was seen.
+// In probe mode the token end is left alone so the caller can keep its own.
+static bool scan_namespace_res_body(TSLexer *lexer, bool probe) {
     bool index_flag = false;
+    bool found_end = false;
 
     for (;;) {
         if (is_eof(lexer)) {
-            return false;
+            return found_end;
         }
 
         switch (lexer->lookahead) {
@@ -274,7 +285,8 @@ static inline bool scan_namespace_res_content(TSLexer *lexer) {
             break;
         case '\\':
             if (!index_flag) {
-                mark_end(lexer);
+                found_end = true;
+                if (!probe) mark_end(lexer);
             }
             consume(lexer);
             break;
@@ -290,14 +302,22 @@ static inline bool scan_namespace_res_content(TSLexer *lexer) {
         case '%':
         case '!':
         case '\n':
-            lexer->result_symbol = NAMESPACE_RESOLUTION_CONTENT;
             consume(lexer);
-            return true;
+            return found_end;
         default:
             consume(lexer);
             break;
         }
     }
+}
+
+static inline bool scan_namespace_res_content(TSLexer *lexer) {
+    if (!scan_namespace_res_body(lexer, false)) {
+        return false;
+    }
+
+    lexer->result_symbol = NAMESPACE_RESOLUTION_CONTENT;
+    return true;
 }
 
 static inline bool scan_maybe_section_header(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool is_prefix_search) {

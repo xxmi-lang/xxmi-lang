@@ -31,7 +31,7 @@ describe('xxmi lint', () => {
     expect(out).toMatch(
       /XM201\/bad\.ini:3:7 {2}error {2}XM201 {2}Unresolved command list `CommandListMissing`\./,
     );
-    expect(out).toMatch(/1 file: 3 errors, 0 warnings, 0 info, 0 hints$/);
+    expect(out).toMatch(/1 file: 4 errors, 0 warnings, 0 info, 0 hints$/);
   });
 
   it('exits 0 with only warnings, 1 once --max-warnings is exceeded', async () => {
@@ -140,7 +140,7 @@ describe('xxmi lint --stdin', () => {
     );
     expect(code).toBe(1);
     expect(out).toMatch(/no-such-file\.ini:3:7 {2}error {2}XM201 {2}Unresolved command list/);
-    expect(out).toMatch(/1 file: 3 errors/);
+    expect(out).toMatch(/1 file: 4 errors/);
   });
 
   it('reports the same as linting the file on disk, and nothing for a clean text', async () => {
