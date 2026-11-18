@@ -4,7 +4,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 ## M0: Bootstrap and parser validation
 
-- Scaffold the monorepo per `00-overview.md` (pnpm workspaces, TS strict, vitest, eslint, prettier, GPL-3.0 LICENSE, CI on GitHub Actions for Windows, Linux and macOS).
+- Scaffold the monorepo per `00-overview.md` (pnpm workspaces, TS strict, vitest, eslint, prettier, GPL-3.0 LICENSE, CI on GitHub Actions for Windows, Linux and macOS; macOS legs are opt-in through "Run workflow").
 - `packages/core/parser`: load `tree-sitter-migoto` WASM through `web-tree-sitter`. Write a `parseFile` helper that reports ERROR/MISSING nodes.
 - `pnpm test:corpus`: parse every `.ini` under `corpus/` and under a configured ZZMI-Package checkout, then print the failure rate and the first error per file.
 - Fork `lupomikti/tree-sitter-migoto` per the fork policy in `01-language-model.md` §2, with the monthly upstream-merge job.
