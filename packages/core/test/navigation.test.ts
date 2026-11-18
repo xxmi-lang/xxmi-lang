@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import {
   completions,
   defaultSpec,
+  definition,
   hover,
   references,
   rename,
@@ -81,6 +82,46 @@ describe('hover', () => {
   });
 });
 
+describe('MatchTextures and value-form run', () => {
+  const text =
+    '[ResourceA]\n\n[ResourceB]\n\n[CommandListM]\nrun = snapshotoriginaltextures\nps->MatchTextures(ResourceA) = ResourceB\n';
+
+  it('resolves and finds the argument and the right-hand resource', async () => {
+    const file = await workspace.openDocument(join(MOD, 'match.ini'), text, MOD);
+    for (const [character, line] of [
+      [20, 0],
+      [33, 2],
+    ] as const) {
+      const target = targetAt(workspace, file, at(6, character));
+      if (target?.kind !== 'section') throw new Error('no resource target');
+      const refs = references(workspace, target, true);
+      expect(refs.map((r) => r.range.start.line)).toEqual([line, 6]);
+      expect(definition(workspace, target)?.range.start.line).toBe(line);
+    }
+    await workspace.closeDocument(join(MOD, 'match.ini'));
+  });
+
+  it('renames the MatchTextures argument with its section header', async () => {
+    const file = await workspace.openDocument(join(MOD, 'match.ini'), text, MOD);
+    const result = rename(workspace, file, at(6, 20), 'ResourceC');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const edits = result.edits
+      .get(file.path)
+      ?.map((e) => `${e.range.start.line}:${e.range.start.character}`);
+    // Edits start after the `Resource` section prefix; ResourceB on the right-hand side is untouched.
+    expect(edits).toEqual(['0:9', '6:26']);
+    await workspace.closeDocument(join(MOD, 'match.ini'));
+  });
+
+  it('gives the run value no target and hovers the spec command', async () => {
+    const file = await workspace.openDocument(join(MOD, 'match.ini'), text, MOD);
+    expect(targetAt(workspace, file, at(5, 10))).toBeUndefined();
+    expect(hover(workspace, file, at(5, 10))?.contents).toContain('snapshotoriginaltextures');
+    await workspace.closeDocument(join(MOD, 'match.ini'));
+  });
+});
+
 describe('completion contexts', () => {
   const complete = async (text: string, line: number, character: number) => {
     const file = await workspace.openDocument(join(MOD, 'scratch.ini'), text, MOD);
@@ -111,6 +152,13 @@ describe('completion contexts', () => {
   it('offers flow keywords and declarations at the start of a command-list line', async () => {
     const labels = await complete('[CommandListA]\n', 1, 0);
     expect(labels).toEqual(expect.arrayContaining(['if', 'elif', 'else', 'endif', 'local']));
+  });
+
+  it('does not offer value-form commands as keys', async () => {
+    const labels = await complete('[CommandListA]\n', 1, 0);
+    expect(labels).toContain('store');
+    expect(labels).not.toContain('snapshotoriginaltextures');
+    expect(labels).not.toContain('restoreoriginaltextures');
   });
 
   it('offers variables in conditions', async () => {

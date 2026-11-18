@@ -6,10 +6,16 @@ export interface ServerConfig {
   dataDir: string;
   /** Bearer token for `POST /admin/refresh`; the endpoint is disabled without one. */
   adminToken?: string;
+  /** Optional: only sent with the one GitHub API call (release metadata). */
   githubToken?: string;
   /** Minutes between checks for new commits; 0 disables polling (tests). */
   pollIntervalMin: number;
-  indexedTags: number;
+  /** Newest GitHub releases indexed next to the default branch (`INDEXED_TAGS` is the old name). */
+  indexedReleases: number;
+  /** Newest pre-releases indexed, when newer than the newest release. */
+  indexedPrereleases: number;
+  /** Size of a repo's bare git cache above which it is deleted and fetched afresh. */
+  gitCacheMaxMb: number;
   /** Requests per minute per client IP; 0 disables the limit. */
   rateLimitPerMin: number;
   rateLimitBurst: number;
@@ -42,7 +48,9 @@ export function loadConfig(env: Env = process.env): ServerConfig {
     host: env['HOST'] ?? '0.0.0.0',
     dataDir: env['DATA_DIR'] ?? './data',
     pollIntervalMin: int(env, 'POLL_INTERVAL_MIN', 15),
-    indexedTags: int(env, 'INDEXED_TAGS', 5),
+    indexedReleases: int(env, 'INDEXED_RELEASES', int(env, 'INDEXED_TAGS', 3)),
+    indexedPrereleases: int(env, 'INDEXED_PRERELEASES', 2),
+    gitCacheMaxMb: int(env, 'GIT_CACHE_MAX_MB', 512, 1),
     rateLimitPerMin: int(env, 'RATE_LIMIT_PER_MIN', 60),
     rateLimitBurst: int(env, 'RATE_LIMIT_BURST', 20, 1),
     trustedProxyHops: int(env, 'TRUSTED_PROXY_HOPS', 0),

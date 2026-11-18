@@ -86,9 +86,32 @@ describe('extractSpec on the synthetic DLL pair', () => {
   });
 
   it('reports the anchors the baseline lacks', () => {
-    expect(baselineWarnings).toEqual([
-      'CommandList.cpp: could not find function ResourceCopyTarget::ParseTargetMember',
-    ]);
+    expect(baselineWarnings).toEqual([]);
+  });
+
+  it('extracts resource and shader target members with their argument kinds', () => {
+    const member = (name: string) => spec.resourceMembers.find((m) => m.name === name);
+    expect(member('matchtextures')).toMatchObject({
+      args: ['resource'],
+      source: 'CommandList.cpp:ShaderTarget::ParseTargetMember',
+      xxmi: true,
+    });
+    expect(member('cb_mask')?.args).toEqual([]);
+    expect(member('matchtextures')?.target).toBe('shader');
+    expect(member('cb_mask')?.target).toBe('shader');
+    expect(member('region')?.target).toBe('resource');
+    expect(member('region')?.source).toBe('CommandList.cpp:ResourceCopyTarget::ParseTargetMember');
+  });
+
+  it('extracts keywords that only test the value', () => {
+    expect(spec.commands.find((c) => c.name === 'snapshotoriginaltextures')).toMatchObject({
+      kind: 'general',
+      match: 'exact',
+      xxmi: true,
+      form: 'value',
+    });
+    expect(spec.commands.find((c) => c.name === 'restoreoriginaltextures')?.form).toBe('value');
+    expect(spec.commands.find((c) => c.name === 'store')).not.toHaveProperty('form');
   });
 
   it('extracts keys from whitelists, getters, comparisons and literal sections', () => {
@@ -165,6 +188,8 @@ describe('extractSpec on the synthetic DLL pair', () => {
     expect(spec.resourceMembers.map((m) => `${m.name}(${m.args.join(',')})`)).toEqual([
       'size()',
       'region(unsigned,unsigned)',
+      'cb_mask()',
+      'matchtextures(resource)',
     ]);
     expect(spec.operators.precedence.map((p) => `${p.group}:${p.operators.join(' ')}`)).toEqual([
       'unary_operators:! -',
@@ -219,12 +244,22 @@ describe('source drift', () => {
   });
 
   it('records instead of failing in baseline mode', () => {
+    const dll = withEdit('CommandList.h', (t) =>
+      t.replace('VariableFlagNames', 'RenamedFlagNames'),
+    );
+    const { body, warnings } = extractBody(dll, false);
+    expect(body.commands.some((c) => c.name === 'locked')).toBe(false);
+    expect(warnings).toHaveLength(1);
+  });
+
+  it('stays quiet in baseline mode when an XXMI-only member table is absent', () => {
     const dll = withEdit('CommandList.cpp', (t) =>
-      t.replace('ResourceCopyTarget::ParseTargetMember', 'Renamed::Member'),
+      t.replaceAll('ParseTargetMember(const', 'RenamedMember(const'),
     );
     const { body, warnings } = extractBody(dll, false);
     expect(body.resourceMembers).toEqual([]);
-    expect(warnings).toHaveLength(1);
+    expect(warnings).toEqual([]);
+    expect(() => extractBody(dll, true)).toThrow(/ParseTargetMember/);
   });
 });
 
@@ -254,6 +289,19 @@ describe.skipIf(!dllRoot || !baselineRoot)('real DLL (docs/09-roadmap.md M1 acce
     expect(flag(s.sections, 'Pool')).toBe(true);
     expect(s.resourceMembers.length).toBeGreaterThan(0);
     expect(s.resourceMembers.every((m) => m.xxmi)).toBe(true);
+    for (const name of [
+      'cb_first_slot',
+      'cb_last_slot',
+      'cb_slot_count',
+      'srv_first_slot',
+      'srv_last_slot',
+      'srv_slot_count',
+      'cb_size',
+      'srv_mask',
+      'srv_type',
+    ]) {
+      expect(s.resourceMembers.map((m) => m.name)).toContain(name);
+    }
     // Vanilla 3DMigoto already has these; they must not be flagged.
     for (const name of [
       'run',

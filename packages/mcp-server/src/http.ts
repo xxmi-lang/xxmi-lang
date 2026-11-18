@@ -149,7 +149,7 @@ async function handleAdmin(
   } else if (!tokenMatches(req.headers.authorization, token)) {
     sendJson(res, 401, { error: 'invalid or missing bearer token' });
   } else {
-    const pass = deps.indexer.runOnce();
+    const pass = deps.indexer.refresh();
     if (url.searchParams.get('wait') === '1') {
       sendJson(res, 200, await pass);
     } else {

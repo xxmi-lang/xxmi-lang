@@ -1,0 +1,30 @@
+[
+  {
+    "id": "XM202",
+    "message": "Unresolved resource `ResourceMissing`.",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 18
+      },
+      "end": {
+        "line": 4,
+        "character": 33
+      }
+    }
+  },
+  {
+    "id": "XM202",
+    "message": "Unresolved resource `ResourceAlsoMissing`.",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 37
+      },
+      "end": {
+        "line": 4,
+        "character": 56
+      }
+    }
+  }
+]

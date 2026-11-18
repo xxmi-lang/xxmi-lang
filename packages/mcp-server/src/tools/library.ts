@@ -10,7 +10,7 @@ import * as z from 'zod/v4';
 import { permalink } from '../sources.ts';
 import { choosePackage, type PackageChoice } from './package.ts';
 import { defineTool } from './define.ts';
-import { nextCursorLine, pageOf, ToolError } from './shared.ts';
+import { nextCursorLine, pageOf, resolveSpec, ToolError } from './shared.ts';
 
 const formatField = z.enum(['text', 'json']).optional().describe('text (default) or json');
 const gameField = z.string().max(20).describe('game profile, e.g. zzmi');
@@ -33,7 +33,8 @@ export const libraryList = defineTool({
   },
   async run(ctx, args) {
     const choice = await choosePackage(ctx, args.game, args.ref, { needDocs: true });
-    const libs = listLibraries(choice.snapshot, ctx.lookup, choice.loaded?.pkg);
+    const { lookup } = await resolveSpec(ctx, undefined);
+    const libs = listLibraries(choice.snapshot, lookup, choice.loaded?.pkg);
     const page = pageOf(libs, args.cursor);
     const blocks = page.items.map((lib) => {
       const counts = Object.entries(lib.counts)

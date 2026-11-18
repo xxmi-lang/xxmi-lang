@@ -1,12 +1,13 @@
-# Weekly: re-extract spec/generated/ from the latest XXMI DLL source and open a PR when it changes.
+# Daily: re-extract spec/generated/ from the latest XXMI DLL source and open a PR when it changes.
 name: spec-extract
 
 on:
   schedule:
-    - cron: '0 4 * * 1'
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -88,24 +89,59 @@ jobs:
           MIGOTO_DLL_SRC: .dll/vanilla
 
       - name: Open PR
+        id: pr
         if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TEST_OUTCOME: ${{ steps.test.outcome }}
         run: |
+          set -euo pipefail
           commit=$(node -p "require('./spec/generated/meta.json').dll.commit")
           branch="spec/update-${commit:0:12}"
+          export BRANCH="$branch"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git add spec/generated
-          git commit -m "spec: regenerate from XXMI-Libs-Package ${commit:0:12}"
-          git push --force origin "$branch"
+
+          # meta.json has no run-specific fields, so identical content means nothing new to push.
+          pushed=false
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null \
+            && git fetch --depth 1 origin "$branch" \
+            && git diff --quiet FETCH_HEAD -- spec/generated; then
+            echo "spec branch already up to date"
+          else
+            git checkout -b "$branch"
+            git add spec/generated
+            git commit -m "spec: regenerate from XXMI-Libs-Package ${commit:0:12}"
+            git push --force origin "$branch"
+            pushed=true
+          fi
+
           body="Regenerated \`spec/generated/\` from SpectrumQT/XXMI-Libs-Package@${commit}.
 
           Tests against the new spec: **${TEST_OUTCOME}**. Review the diff for removed or renamed entries; overlays in \`spec/overlay/\` that point at removed entries make the tests fail."
-          if gh pr view "$branch" --json state -q .state 2>/dev/null | grep -q OPEN; then
-            echo "PR already open for $branch"
-          else
+          created=false
+          if [ "$(gh pr list --head "$branch" --state open --json number --jq length)" -eq 0 ]; then
             gh pr create --base main --head "$branch" --title "spec: regenerate from XXMI-Libs-Package ${commit:0:12}" --body "$body"
+            created=true
+          else
+            echo "PR already open for $branch"
           fi
+
+          if [ "$pushed" = true ] || [ "$created" = true ]; then
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+
+          current=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          gh pr list --author "app/github-actions" --state open --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("spec/update-")) | select(.headRefName != env.BRANCH) | .number' \
+            | while read -r old; do
+                gh pr close "$old" --delete-branch --comment "Superseded by #${current}."
+              done
+
+      # github.token events do not start workflows, so dispatch CI on the PR branch explicitly.
+      - name: Run CI on the spec branch
+        if: steps.pr.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: gh workflow run ci.yml --ref "$BRANCH"

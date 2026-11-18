@@ -51,9 +51,36 @@ namespace XxmiLang
             IReadOnlyList<string> arguments,
             string? workingDirectory,
             CancellationToken cancellationToken,
-            string? standardInput = null)
+            string? standardInput = null,
+            TimeSpan? timeout = null)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            using (var limit = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                if (timeout is { } span) limit.CancelAfter(span);
+                try
+                {
+                    return await RunCoreAsync(executable, arguments, workingDirectory, standardInput, limit.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    throw new XxmiProcessException(
+                        $"{Path.GetFileName(executable)} did not finish within {timeout}; it was killed. Raise XxmiOptions.ProcessTimeout if the input is that large.",
+                        -1,
+                        string.Empty);
+                }
+            }
+        }
+
+        // Every wait takes the token, and cancelling it kills the whole process tree first: a child that never exits,
+        // or a grandchild that keeps the pipes open, then can't leave the caller waiting for end of output.
+        private static async Task<ProcessOutput> RunCoreAsync(
+            string executable,
+            IReadOnlyList<string> arguments,
+            string? workingDirectory,
+            string? standardInput,
+            CancellationToken cancellationToken)
+        {
             using (var process = Start(CreateStartInfo(executable, arguments, workingDirectory)))
             using (cancellationToken.Register(() => Kill(process)))
             {
@@ -83,11 +110,18 @@ namespace XxmiLang
                     {
                     }
                 }
-                var text = await output.ConfigureAwait(false);
-                var errorText = await error.ConfigureAwait(false);
-                process.WaitForExit();
-                cancellationToken.ThrowIfCancellationRequested();
-                return new ProcessOutput(process.ExitCode, text, errorText);
+                try
+                {
+                    await Task.WhenAll(output, error).WaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // The registration above can lose the race with the exception it causes: it is disposed before it ran.
+                    Kill(process);
+                    throw;
+                }
+                return new ProcessOutput(process.ExitCode, output.Result, error.Result);
             }
         }
 

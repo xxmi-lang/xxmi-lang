@@ -57,29 +57,48 @@ export function loadGeneratedSpec(root = DEFAULT_SPEC_ROOT): Spec {
   };
 }
 
-/** The generated spec with every `overlay/*.toml` merged in file-name order. */
-export function loadSpec(root = DEFAULT_SPEC_ROOT): Spec {
-  const spec = loadGeneratedSpec(root);
+/** One parsed `overlay/*.toml` file. */
+export interface SpecOverlayFile {
+  file: string;
+  overlay: unknown;
+}
+
+/** Parses every `overlay/*.toml` under `root` in file-name order; unparsable files are problems. */
+export function readOverlays(root = DEFAULT_SPEC_ROOT): {
+  overlays: SpecOverlayFile[];
+  problems: string[];
+} {
   const dir = join(root, 'overlay');
+  const overlays: SpecOverlayFile[] = [];
+  const problems: string[] = [];
   let files: string[];
   try {
     files = readdirSync(dir)
       .filter((f) => f.endsWith('.toml'))
       .sort();
   } catch {
-    return spec; // No overlay directory: the generated spec as is.
+    return { overlays, problems }; // No overlay directory: nothing to merge.
   }
-  const problems: string[] = [];
   for (const file of files) {
-    let overlay: unknown;
     try {
-      overlay = parseToml(readFileSync(join(dir, file), 'utf8'));
+      overlays.push({ file, overlay: parseToml(readFileSync(join(dir, file), 'utf8')) });
     } catch (error) {
       problems.push(`${file}: ${error instanceof Error ? error.message : String(error)}`);
-      continue;
     }
-    problems.push(...applyOverlay(spec, overlay, file));
   }
+  return { overlays, problems };
+}
+
+/** Merges `overlays` into `spec` (mutating it) in the given order; returns the problems found. */
+export function applyOverlays(spec: Spec, overlays: readonly SpecOverlayFile[]): string[] {
+  return overlays.flatMap(({ file, overlay }) => applyOverlay(spec, overlay, file));
+}
+
+/** The generated spec with every `overlay/*.toml` merged in file-name order. */
+export function loadSpec(root = DEFAULT_SPEC_ROOT): Spec {
+  const spec = loadGeneratedSpec(root);
+  const { overlays, problems } = readOverlays(root);
+  problems.push(...applyOverlays(spec, overlays));
   if (problems.length > 0) throw new SpecOverlayError(problems);
   return spec;
 }
@@ -138,7 +157,11 @@ export function applyOverlay(spec: Spec, overlay: unknown, file: string): string
           break;
         case 'members':
           mergeNamed(spec.resourceMembers, name, raw, path, problem, ['args'], (e) =>
-            manualEntry<SpecResourceMember>(e, path, problem, [], { name, args: [] }),
+            manualEntry<SpecResourceMember>(e, path, problem, ['target'], {
+              name,
+              target: e.target as SpecResourceMember['target'],
+              args: [],
+            }),
           );
           break;
         case 'functions':

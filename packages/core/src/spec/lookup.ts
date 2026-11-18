@@ -20,6 +20,23 @@ const SECTION_SYMBOL: Record<string, SymbolKind> = {
   shaderregex: 'shaderregex',
 };
 
+/** Value-form commands (`form: "value"`) are matched on the value, so they are not keys. */
+export function isValueCommand(command: SpecCommand): boolean {
+  return command.form === 'value';
+}
+
+export function isKeyCommand(command: SpecCommand): boolean {
+  return !isValueCommand(command);
+}
+
+export function keyCommands(spec: Spec): SpecCommand[] {
+  return spec.commands.filter(isKeyCommand);
+}
+
+export function valueCommands(spec: Spec): SpecCommand[] {
+  return spec.commands.filter(isValueCommand);
+}
+
 export class SpecLookup {
   readonly spec: Spec;
   private readonly commandListSections: SpecSection[];
@@ -34,7 +51,7 @@ export class SpecLookup {
     this.commandListSections = spec.sections.filter((s) => s.kind === 'commandlist');
     this.regularSections = spec.sections.filter((s) => s.kind === 'regular');
     for (const c of spec.commands) {
-      if (c.kind === 'flow' || c.kind === 'prefix') continue;
+      if (c.kind === 'flow' || c.kind === 'prefix' || !isKeyCommand(c)) continue;
       if (c.match === 'exact') this.exactCommands.set(c.name.toLowerCase(), c);
       else this.prefixCommands.push(c);
     }

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { parse as parseToml } from 'smol-toml';
-import { applyOverlay, loadGeneratedSpec, loadSpec, type Spec } from '../src/index.ts';
+import {
+  applyOverlay,
+  isKeyCommand,
+  keyCommands,
+  loadGeneratedSpec,
+  loadSpec,
+  type Spec,
+  valueCommands,
+} from '../src/index.ts';
 
 const generated = loadGeneratedSpec();
 const fresh = (): Spec => structuredClone(generated);
@@ -16,6 +24,17 @@ describe('spec/ in the repository', () => {
     expect(spec.commands.find((c) => c.name === 'store')?.doc).toMatch(/buffer/);
     const resource = spec.sections.find((s) => s.name === 'Resource');
     expect(resource?.keys.find((k) => k.name === 'type')?.doc).toMatch(/StructuredBuffer/);
+  });
+
+  it('keeps value-form commands out of the key commands', () => {
+    const spec = loadSpec();
+    const value = spec.commands.filter((c) => c.form === 'value').map((c) => c.name);
+
+    expect(value).toEqual(expect.arrayContaining(['snapshotoriginaltextures']));
+    expect(keyCommands(spec).map((c) => c.name)).not.toContain('snapshotoriginaltextures');
+    expect(keyCommands(spec).map((c) => c.name)).toContain('store');
+    expect(spec.commands.filter((c) => !isKeyCommand(c)).length).toBe(value.length);
+    expect(valueCommands(spec).map((c) => c.name)).toEqual(value);
   });
 
   it('has a source and an xxmi flag on every generated entry', () => {

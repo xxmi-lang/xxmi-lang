@@ -35,6 +35,10 @@ bool ParseCommandListGeneralCommands(const wchar_t *section, const wchar_t *key,
 	}
 	if (!wcsncmp(key, L"commandlist", 11))
 		return ParseCopyCommandListCommand(section, key, val);
+	if (!wcscmp(val->c_str(), L"snapshotoriginaltextures"))
+		return AddCommandToList(new SnapshotOriginalTexturesOperation(), section);
+	if (!wcscmp(val->c_str(), L"restoreoriginaltextures"))
+		return AddCommandToList(new RestoreOriginalTexturesOperation(), section);
 	return ParseDrawCommand(section, key, val);
 }
 
@@ -64,6 +68,17 @@ IniParserResult ResourceCopyTarget::ParseTargetMember(const wchar_t*& target, si
 		{ L"->region", 8, ResourceCopyTargetEvaluationMode::RESOURCE_REGION, {{
 			MemberArg::Type::Unsigned,
 			MemberArg::Type::Unsigned
+		}} },
+	};
+	return SyntaxTarget::ParseTargetMember(members, target, length);
+}
+
+IniParserResult ShaderTarget::ParseTargetMember(const wchar_t*& target, size_t& length)
+{
+	static constexpr MemberInfo members[] = {
+		{ L"->cb_mask",       9, ShaderTargetEvaluationMode::DCL_CB_MASK },
+		{ L"->matchtextures", 15, ShaderTargetEvaluationMode::MATCH_TEXTURES, {{
+			MemberArg::Type::Resource,
 		}} },
 	};
 	return SyntaxTarget::ParseTargetMember(members, target, length);

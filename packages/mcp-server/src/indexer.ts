@@ -1,36 +1,60 @@
 /**
  * Polls the tracked repos and keeps the volume current (docs/06-mcp-server.md "Architecture").
- * Per pass: ask GitHub for the default branch head and the newest tags, download a tarball for
- * each commit that isn't on disk, build the symbol index for packages, and only then publish
- * the new state. Readers keep using the old checkout until the rename/state swap, and a failed
- * download leaves everything as it was.
+ * Per pass: `git ls-remote` each repo, work out the wanted versions, fetch and extract each
+ * missing commit, build the symbol index for packages, and only then publish the new state.
+ * Readers keep the old checkout until the swap, and a failed fetch leaves everything as it was.
+ * Specs per DLL version are built after publishing, so they never delay readiness.
  */
 import { rm } from 'node:fs/promises';
-import type { SymbolSnapshot } from '@xxmi-lang/core';
-import { Catalog, type RepoState, type StateFile } from './catalog.ts';
-import { extractTarball } from './extract.ts';
-import type { GitHubClient, RemoteRef } from './github.ts';
+import type { SpecLookup, SymbolSnapshot } from '@xxmi-lang/core';
+import { Catalog, type RepoState, type StateFile, type VersionRef } from './catalog.ts';
 import { errorMessage, type Logger } from './logger.ts';
 import { loadPackageCheckout } from './packages.ts';
-import { fullName, type TrackedRepo } from './repos.ts';
+import { refreshReleases, type ReleasesState } from './releases.ts';
+import { dllRepo, fullName, type TrackedRepo } from './repos.ts';
+import { selectVersions, tracksTags, type SelectionLimits } from './selection.ts';
+import { ensureSpecs, type SpecBuilder } from './specs/ensure.ts';
+import type { SpecRegistry } from './specs/registry.ts';
+import { buildInWorker } from './specs/runner.ts';
 import type { Store } from './store.ts';
+import type { RemoteRefs, SourceClient } from './upstream.ts';
 
 export interface IndexerOptions {
   store: Store;
   catalog: Catalog;
-  github: GitHubClient;
+  sources: SourceClient;
   logger: Logger;
   repos: readonly TrackedRepo[];
-  indexedTags: number;
+  limits: SelectionLimits;
+  gitCacheMaxMb: number;
   pollIntervalMin: number;
   /** Builds the symbol snapshot of a package checkout; replaceable in tests. */
   buildIndex?: (checkout: string, repo: TrackedRepo, sha: string) => Promise<SymbolSnapshot>;
+  /** What package checkouts are parsed with (the bundled spec's lookup). */
+  lookup: SpecLookup;
+  /** Where specs per DLL version are built and kept; without it the indexer builds none. */
+  specs?: SpecRegistry;
+  /** Builds one spec (in a worker thread by default); replaceable in tests. */
+  buildSpec?: SpecBuilder;
+  now?: () => number;
 }
 
 export interface PassResult {
   /** `owner/name@ref` for everything newly published. */
   published: string[];
   errors: string[];
+}
+
+interface Head {
+  refs: RemoteRefs;
+  version: VersionRef;
+}
+
+/** What to write into the next `state.json` for one repo; unset parts stay as they are. */
+interface StatePatch {
+  branch: VersionRef;
+  tags?: VersionRef[];
+  releases?: ReleasesState;
 }
 
 const RETRY_WHILE_NOT_READY_MS = 60_000;
@@ -48,6 +72,7 @@ export class Indexer {
   private timer: NodeJS.Timeout | undefined;
   private running: Promise<PassResult> | undefined;
   private started = false;
+  private forceReleases = false;
 
   constructor(options: IndexerOptions) {
     this.o = options;
@@ -81,41 +106,33 @@ export class Indexer {
     return this.running;
   }
 
+  /** A pass that also asks GitHub about releases again, even if the tags didn't change. */
+  refresh(): Promise<PassResult> {
+    this.forceReleases = true;
+    return this.running ? this.running.then(() => this.runOnce()) : this.runOnce();
+  }
+
   private async pass(): Promise<PassResult> {
     const result: PassResult = { published: [], errors: [] };
     const started = Date.now();
-    const heads = new Map<string, RemoteRef>();
+    const force = this.forceReleases;
+    this.forceReleases = false;
+    const heads = new Map<string, Head>();
     // The commits readers may still be using: they survive one more pass.
     const grace = this.keptNow();
 
     for (const repo of this.o.repos) {
-      await this.guard(repo, result, async () => {
-        const head = await this.o.github.head(repo);
-        // Nothing is published for a head that couldn't be fetched: readers keep the old one.
-        if (!(await this.ensure(repo, head, result))) return;
-        heads.set(repo.alias, head);
-        await this.publishState(repo, head, undefined);
-      });
+      await this.guard(repo, result, () => this.indexHead(repo, heads, result));
     }
 
     // Tags come second so the server is ready as soon as every default branch is in.
     for (const repo of this.o.repos) {
       const head = heads.get(repo.alias);
-      if (!head) continue;
-      await this.guard(repo, result, async () => {
-        const tags = await this.o.github.tags(repo, this.o.indexedTags);
-        const present: RemoteRef[] = [];
-        for (const tag of tags) {
-          if (tag.sha === head.sha) {
-            present.push(tag);
-            continue;
-          }
-          if (await this.ensure(repo, tag, result)) present.push(tag);
-        }
-        await this.publishState(repo, head, present);
-      });
+      if (!head || !tracksTags(repo.role)) continue;
+      await this.guard(repo, result, () => this.indexTags(repo, head, result, force));
     }
 
+    await this.buildSpecs();
     await this.prune(grace);
     this.o.logger.info('index pass finished', {
       ms: Date.now() - started,
@@ -123,6 +140,22 @@ export class Indexer {
       errors: result.errors.length,
     });
     return result;
+  }
+
+  /** A failing build is recorded, never an error of the pass, and nothing here gates readiness. */
+  private async buildSpecs(): Promise<void> {
+    if (!this.o.specs) return;
+    try {
+      await ensureSpecs({
+        registry: this.o.specs,
+        catalog: this.o.catalog,
+        repos: this.o.repos,
+        build: this.o.buildSpec ?? buildInWorker,
+        logger: this.o.logger,
+      });
+    } catch (error) {
+      this.o.logger.warn('spec builds failed', { error: errorMessage(error) });
+    }
   }
 
   private async guard(
@@ -139,66 +172,129 @@ export class Indexer {
     }
   }
 
-  /** Makes sure `ref` is on disk; returns false when it couldn't be fetched. */
-  private async ensure(repo: TrackedRepo, ref: RemoteRef, result: PassResult): Promise<boolean> {
-    if (this.o.store.hasCheckout(repo, ref.sha)) return true;
+  private async indexHead(
+    repo: TrackedRepo,
+    heads: Map<string, Head>,
+    result: PassResult,
+  ): Promise<void> {
+    const refs = await this.o.sources.listRefs(repo);
+    const wanted: VersionRef = { name: refs.defaultBranch, sha: refs.head, kind: 'head' };
+
+    // Nothing is published for a head that couldn't be fetched: readers keep the old one.
+    const version = await this.ensure(repo, wanted, result);
+    if (!version) return;
+    heads.set(repo.alias, { refs, version });
+    await this.publishState(repo, { branch: version });
+  }
+
+  private async indexTags(
+    repo: TrackedRepo,
+    head: Head,
+    result: PassResult,
+    force: boolean,
+  ): Promise<void> {
+    const releases = await refreshReleases(
+      this.o.sources,
+      repo,
+      head.refs.tags.map((t) => t.name),
+      this.o.catalog.snapshot().releases[repo.alias],
+      { logger: this.o.logger, now: (this.o.now ?? Date.now)(), force },
+    );
+
+    const wanted = selectVersions(repo.role, head.refs.tags, releases, this.o.limits);
+    const present: VersionRef[] = [];
+    for (const version of wanted) {
+      const ensured = await this.ensure(repo, version, result);
+      if (ensured) present.push(ensured);
+    }
+    await this.publishState(repo, { branch: head.version, tags: present, releases });
+  }
+
+  /** Makes sure `version` is on disk; returns it with its commit info, or undefined on failure. */
+  private async ensure(
+    repo: TrackedRepo,
+    version: VersionRef,
+    result: PassResult,
+  ): Promise<VersionRef | undefined> {
+    if (this.o.store.hasCheckout(repo, version.sha)) {
+      return { ...version, ...this.knownCommitInfo(repo, version.sha) };
+    }
     try {
-      await this.fetchAndIndex(repo, ref);
-      result.published.push(`${fullName(repo)}@${ref.name}`);
-      return true;
+      const info = await this.fetchAndIndex(repo, version);
+      result.published.push(`${fullName(repo)}@${version.name}`);
+      return { ...version, ...info };
     } catch (error) {
-      result.errors.push(`${fullName(repo)}@${ref.name}: ${errorMessage(error)}`);
+      result.errors.push(`${fullName(repo)}@${version.name}: ${errorMessage(error)}`);
       this.o.logger.warn('fetch failed', {
         repo: fullName(repo),
-        ref: ref.name,
+        ref: version.name,
         error: errorMessage(error),
       });
-      return false;
+      return undefined;
     }
   }
 
-  private async fetchAndIndex(repo: TrackedRepo, ref: RemoteRef): Promise<void> {
+  private async fetchAndIndex(
+    repo: TrackedRepo,
+    version: VersionRef,
+  ): Promise<Pick<VersionRef, 'committedAt' | 'subject'>> {
     const started = Date.now();
     const staging = this.o.store.newStagingDir(repo);
     try {
-      const bytes = await extractTarball(
-        await this.o.github.tarball(repo, ref.sha),
-        staging,
-        repo.role,
-      );
-      if (repo.role === 'package') {
-        const build =
-          this.o.buildIndex ??
-          (async (dir, r, sha) => (await loadPackageCheckout(dir, r, sha)).snapshot);
-        await this.o.store.writeIndex(repo, ref.sha, await build(staging, repo, ref.sha));
-      }
-      await this.o.store.commitCheckout(repo, ref.sha, staging);
+      const bytes = await this.o.sources.materialize(repo, version.sha, staging);
+      const commit = await this.o.sources.commitInfo(repo, version.sha);
+      if (repo.role === 'package') await this.writePackageIndex(repo, version.sha, staging);
+      await this.o.store.commitCheckout(repo, version.sha, staging);
       this.o.logger.info('indexed', {
         repo: fullName(repo),
-        ref: ref.name,
-        sha: ref.sha,
+        ref: version.name,
+        sha: version.sha,
         bytes,
         ms: Date.now() - started,
       });
+      return { committedAt: commit.date, subject: commit.subject };
     } finally {
       await rm(staging, { recursive: true, force: true });
     }
   }
 
-  /** Swaps the catalog to the new refs, keeping the previous tags if tags weren't fetched. */
-  private async publishState(
+  private async writePackageIndex(repo: TrackedRepo, sha: string, checkout: string): Promise<void> {
+    const build =
+      this.o.buildIndex ??
+      (async (dir, r, s) => (await loadPackageCheckout(dir, r, s, this.o.lookup)).snapshot);
+    await this.o.store.writeIndex(repo, sha, await build(checkout, repo, sha));
+  }
+
+  /** Commit details of a version already published, so unchanged commits aren't re-read. */
+  private knownCommitInfo(
     repo: TrackedRepo,
-    head: RemoteRef,
-    tags: RemoteRef[] | undefined,
-  ): Promise<void> {
+    sha: string,
+  ): Pick<VersionRef, 'committedAt' | 'subject'> {
+    const entry = this.o.catalog.repoState(repo);
+    const known = [entry?.branch, ...(entry?.tags ?? [])].find((v) => v?.sha === sha);
+    return {
+      ...(known?.committedAt ? { committedAt: known.committedAt } : {}),
+      ...(known?.subject ? { subject: known.subject } : {}),
+    };
+  }
+
+  /** Swaps the catalog to the new refs, keeping what the patch leaves out. */
+  private async publishState(repo: TrackedRepo, patch: StatePatch): Promise<void> {
     const current = this.o.catalog.snapshot();
     const previous = current.repos[repo.alias];
     const entry: RepoState = {
-      branch: head,
-      tags: tags ?? previous?.tags ?? [],
-      indexedAt: previous?.branch.sha === head.sha ? previous.indexedAt : new Date().toISOString(),
+      branch: patch.branch,
+      tags: patch.tags ?? previous?.tags ?? [],
+      indexedAt:
+        previous?.branch.sha === patch.branch.sha ? previous.indexedAt : new Date().toISOString(),
     };
-    const next: StateFile = { version: 1, repos: { ...current.repos, [repo.alias]: entry } };
+    const next: StateFile = {
+      version: 1,
+      repos: { ...current.repos, [repo.alias]: entry },
+      releases: patch.releases
+        ? { ...current.releases, [repo.alias]: patch.releases }
+        : current.releases,
+    };
     await this.o.catalog.publish(next);
   }
 
@@ -212,9 +308,30 @@ export class Indexer {
         const keep = new Set([...this.o.catalog.keptShas(repo), ...(grace.get(repo.alias) ?? [])]);
         const removed = await this.o.store.prune(repo, keep);
         if (removed.length > 0) this.o.logger.info('pruned', { repo: fullName(repo), removed });
+        await this.trimGitCache(repo);
       } catch (error) {
         this.o.logger.warn('prune failed', { repo: fullName(repo), error: errorMessage(error) });
       }
+    }
+    await this.pruneSpecs();
+  }
+
+  private async pruneSpecs(): Promise<void> {
+    const repo = dllRepo(this.o.repos);
+    if (!this.o.specs || !repo) return;
+    try {
+      const removed = await this.o.specs.retain(this.o.catalog.keptShas(repo));
+      if (removed.length > 0) this.o.logger.info('pruned specs', { removed });
+    } catch (error) {
+      this.o.logger.warn('spec prune failed', { error: errorMessage(error) });
+    }
+  }
+
+  /** The bare clone only grows; past the limit it is dropped and the next fetch rebuilds it. */
+  private async trimGitCache(repo: TrackedRepo): Promise<void> {
+    const maxBytes = this.o.gitCacheMaxMb * 1024 * 1024;
+    if (await this.o.sources.trimCache(repo, maxBytes)) {
+      this.o.logger.info('git cache dropped', { repo: fullName(repo) });
     }
   }
 }

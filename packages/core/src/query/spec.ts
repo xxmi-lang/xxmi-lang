@@ -4,7 +4,7 @@
  * command like `commandlistFoo` finds `commandlist`.
  */
 import { SpecLookup } from '../spec/lookup.ts';
-import type { Documented, Sourced, Spec, SpecSection } from '../spec/types.ts';
+import type { Documented, MemberTarget, Sourced, Spec, SpecSection } from '../spec/types.ts';
 
 export const SPEC_ENTRY_KINDS = [
   'section',
@@ -30,6 +30,10 @@ export interface SpecEntry extends Documented {
   facts: string[];
   /** Keyword values (commands) or enum values. */
   values?: string[];
+  /** Commands the DLL matches on the value alone (`form: "value"`); absent for key commands. */
+  form?: 'value';
+  /** For members: whether the DLL reads it on a resource or on a shader stage. */
+  target?: MemberTarget;
 }
 
 export interface SpecQuery {
@@ -37,6 +41,8 @@ export interface SpecQuery {
   kind?: SpecEntryKind;
   /** Restricts `key` lookups to the section named (or whose prefix matches) this. */
   section?: string;
+  /** Restricts `member` lookups to resource or shader members. */
+  target?: MemberTarget;
 }
 
 /** `[Name]`, `->Name` and surrounding space removed. */
@@ -114,11 +120,13 @@ function lookupCommands(spec: Spec, lookup: SpecLookup, name: string): SpecEntry
     ...base(c),
     facts: [
       `${c.kind} command`,
+      ...(c.form === 'value' ? ['written as the value, whatever the key is'] : []),
       c.match === 'prefix' ? 'matches by prefix' : 'exact name',
       ...(c.argCount === undefined ? [] : [`${c.argCount} comma-separated arguments`]),
       ...(c.indirect ? ['first argument is an indirect-arguments resource'] : []),
     ],
     ...(c.values.length > 0 ? { values: c.values.map((v) => v.name) } : {}),
+    ...(c.form ? { form: c.form } : {}),
   }));
 }
 
@@ -142,7 +150,12 @@ function lookupOperators(spec: Spec, name: string): SpecEntry[] {
     });
 }
 
-function lookupNamed(spec: Spec, kind: 'function' | 'member' | 'enum', name: string): SpecEntry[] {
+function lookupNamed(
+  spec: Spec,
+  kind: 'function' | 'member' | 'enum',
+  name: string,
+  target?: MemberTarget,
+): SpecEntry[] {
   const lower = name.toLowerCase();
   if (kind === 'function') {
     return spec.functions
@@ -151,12 +164,16 @@ function lookupNamed(spec: Spec, kind: 'function' | 'member' | 'enum', name: str
   }
   if (kind === 'member') {
     return spec.resourceMembers
-      .filter((m) => m.name.toLowerCase() === lower)
+      .filter((m) => m.name.toLowerCase() === lower && (!target || m.target === target))
       .map((m) => ({
         kind,
         name: `->${m.name}`,
+        target: m.target,
         ...base(m),
-        facts: [`arguments: ${m.args.length > 0 ? m.args.join(', ') : 'none'}`],
+        facts: [
+          `${m.target} member`,
+          `arguments: ${m.args.length > 0 ? m.args.join(', ') : 'none'}`,
+        ],
       }));
   }
   return spec.enums
@@ -186,7 +203,7 @@ export function lookupSpec(spec: Spec, q: SpecQuery, lookup = new SpecLookup(spe
       case 'operator':
         return lookupOperators(spec, name);
       default:
-        return lookupNamed(spec, kind, name);
+        return lookupNamed(spec, kind, name, q.target);
     }
   });
 }
@@ -196,6 +213,10 @@ export interface SpecListItem {
   /** First line of the doc, or empty when the entry has no overlay doc. */
   summary: string;
   xxmi: boolean;
+  /** Members only. */
+  target?: MemberTarget;
+  /** Commands only: written as the value rather than a key. */
+  form?: 'value';
 }
 
 function summarize(doc: string | undefined): string {
@@ -212,10 +233,18 @@ export function listSpec(
   section?: string,
   lookup = new SpecLookup(spec),
 ): SpecListItem[] {
-  const item = (e: { name: string; doc?: string | undefined; xxmi: boolean }): SpecListItem => ({
+  const item = (e: {
+    name: string;
+    doc?: string | undefined;
+    xxmi: boolean;
+    target?: MemberTarget;
+    form?: 'value';
+  }): SpecListItem => ({
     name: e.name,
     summary: summarize(e.doc),
     xxmi: e.xxmi,
+    ...(e.target ? { target: e.target } : {}),
+    ...(e.form ? { form: e.form } : {}),
   });
   switch (kind) {
     case 'section':
