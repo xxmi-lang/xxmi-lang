@@ -45,12 +45,15 @@ pub struct ScannedIni {
     /// From the start of the file to the first section header (or end of file).
     pub preamble_chunk: Span,
     pub sections: Vec<ScannedSection>,
+    /// `;` lines, for suppression directives.
+    pub comments: Vec<ScannedLine>,
 }
 
 pub fn scan_ini(text: &str) -> ScannedIni {
     let bytes = text.as_bytes();
     let mut preamble = Vec::new();
     let mut sections: Vec<ScannedSection> = Vec::new();
+    let mut comments = Vec::new();
     let mut first_header = text.len();
 
     let mut line_start = 0;
@@ -67,7 +70,7 @@ pub fn scan_ini(text: &str) -> ScannedIni {
                 value: None,
             };
             match bytes[content.start] {
-                b';' => {}
+                b';' => comments.push(line),
                 b'[' => {
                     if let Some(last) = sections.last_mut() {
                         last.chunk.end = line_start;
@@ -109,6 +112,7 @@ pub fn scan_ini(text: &str) -> ScannedIni {
             end: first_header,
         },
         sections,
+        comments,
     }
 }
 

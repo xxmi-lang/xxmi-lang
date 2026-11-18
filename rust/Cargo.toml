@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.2"
 edition = "2024"
 rust-version = "1.92"
 license = "GPL-3.0-or-later"
@@ -15,6 +15,7 @@ tree-sitter-language = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 line-index = "0.1"
+toml = { version = "1", features = ["preserve_order"] }
 
 [profile.release]
 opt-level = "s"

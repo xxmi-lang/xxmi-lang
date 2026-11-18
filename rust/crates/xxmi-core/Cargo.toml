@@ -1,6 +1,6 @@
 [package]
 name = "xxmi-core"
-description = "Spec-driven lint core for XXMI / 3DMigoto mod .ini files (Rust spike)"
+description = "Spec-driven lint core for XXMI / 3DMigoto mod .ini files"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,5 +12,6 @@ build = "build.rs"
 line-index.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+toml.workspace = true
 tree-sitter.workspace = true
 tree-sitter-migoto = { path = "../tree-sitter-migoto" }

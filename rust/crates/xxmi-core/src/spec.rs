@@ -1,15 +1,14 @@
-//! The parts of the bundled spec the lint rules read, loaded once from the embedded JSON.
-
-use std::sync::OnceLock;
-
+//! The parts of the merged spec the lint rules read (shape of packages/core/src/spec/types.ts).
+//!
 use serde::Deserialize;
 
-const BUNDLED_SPEC: &str = include_str!(env!("XXMI_SPEC_JSON"));
-
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Spec {
     pub sections: Vec<SpecSection>,
+    pub builtin_sections: Vec<SpecBuiltinSection>,
     pub commands: Vec<SpecCommand>,
+    pub enums: Vec<SpecEnum>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -27,16 +26,28 @@ pub struct SpecSection {
     pub prefix: bool,
     pub kind: SectionKind,
     pub allows_bare_lines: bool,
+    #[serde(default)]
+    pub allows_duplicate_keys: bool,
     pub keys: Vec<SpecKey>,
     #[serde(default)]
-    pub removed_keys: Vec<SpecKey>,
+    pub removed_keys: Vec<SpecRemovedKey>,
     #[serde(default)]
     pub dynamic_keys: Vec<SpecDynamicKeys>,
 }
 
-/// A key, or a removed key: only the name is read.
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpecKey {
+    pub name: String,
+    /// `enum:<EnumTableName>` for enum-valued keys, else a plain type name.
+    pub value_type: String,
+    /// The DLL reads every occurrence of the key.
+    #[serde(default)]
+    pub repeatable: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpecRemovedKey {
     pub name: String,
 }
 
@@ -50,6 +61,11 @@ pub struct SpecDynamicKeys {
 pub enum DynamicKeyKind {
     Variable,
     IniParam,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpecBuiltinSection {
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -70,14 +86,26 @@ pub enum MatchKind {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpecCommand {
     pub name: String,
     pub kind: CommandKind,
     #[serde(rename = "match")]
     pub match_kind: MatchKind,
+    /// Keyword values the DLL recognises specially (`handling = skip`, ...).
+    #[serde(default)]
+    pub values: Vec<SpecCommandValue>,
+    pub arg_count: Option<usize>,
     /// `value`: the DLL matches the right-hand side, so the name is not a key.
     #[serde(default)]
     pub form: Option<CommandForm>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpecCommandValue {
+    pub name: String,
+    #[serde(rename = "match")]
+    pub match_kind: MatchKind,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -92,7 +120,26 @@ impl SpecCommand {
     }
 }
 
-pub fn spec() -> &'static Spec {
-    static SPEC: OnceLock<Spec> = OnceLock::new();
-    SPEC.get_or_init(|| serde_json::from_str(BUNDLED_SPEC).expect("the bundled spec parses"))
+#[derive(Debug, Deserialize)]
+pub struct SpecEnum {
+    pub name: String,
+    pub values: Vec<SpecEnumValue>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SpecEnumValue {
+    pub name: String,
+}
+
+impl Spec {
+    /// Parses a merged spec (the JSON shape of `dist/spec.json`).
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
+    }
+
+    /// Gives the spec the process lifetime, which the section and command references of a model
+    /// need; a lint run loads at most one.
+    pub fn leak(self) -> &'static Spec {
+        Box::leak(Box::new(self))
+    }
 }
