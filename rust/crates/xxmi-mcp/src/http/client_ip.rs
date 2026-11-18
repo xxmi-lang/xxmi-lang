@@ -6,6 +6,9 @@ use axum::extract::ConnectInfo;
 use axum::extract::Request;
 use axum::http::HeaderMap;
 
+/// Longer than any address; a key this long is a header stuffed by the client.
+const MAX_KEY_CHARS: usize = 64;
+
 fn forwarded_chain(headers: &HeaderMap) -> Vec<String> {
     let joined: Vec<&str> = headers
         .get_all("x-forwarded-for")
@@ -34,6 +37,7 @@ pub fn client_ip(headers: &HeaderMap, socket: Option<&str>, hops: usize) -> Stri
         .len()
         .checked_sub(hops)
         .and_then(|at| chain.get(at).cloned())
+        .filter(|entry| entry.len() <= MAX_KEY_CHARS)
         .unwrap_or(fallback)
 }
 
@@ -66,6 +70,13 @@ mod tests {
         let honest = forwarded("1.1.1.1");
         let spoofed = forwarded("6.6.6.6, 1.1.1.1");
         assert_eq!(client_ip(&honest, None, 1), client_ip(&spoofed, None, 1));
+    }
+
+    #[test]
+    fn an_oversized_entry_is_not_a_key() {
+        let headers = forwarded(&"9".repeat(65));
+
+        assert_eq!(client_ip(&headers, Some("9.9.9.9"), 1), "9.9.9.9");
     }
 
     #[test]
