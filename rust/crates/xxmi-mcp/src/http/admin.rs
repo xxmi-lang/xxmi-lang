@@ -8,7 +8,7 @@ use axum::response::Response;
 use serde_json::json;
 
 use crate::app::AppState;
-use crate::mcp::json_response;
+use crate::mcp::{allow_post, json_response};
 
 use super::routes::not_found;
 
@@ -50,14 +50,10 @@ pub async fn refresh(State(state): State<Arc<AppState>>, request: Request) -> Re
         return not_found().await;
     };
     if request.method() != Method::POST {
-        let mut response = json_response(
+        return allow_post(json_response(
             StatusCode::METHOD_NOT_ALLOWED,
             &json!({ "error": "use POST" }),
-        );
-        response
-            .headers_mut()
-            .insert(header::ALLOW, "POST".parse().expect("static header value"));
-        return response;
+        ));
     }
     if !same_token(bearer(request.headers()).as_bytes(), token.as_bytes()) {
         let body = json!({ "error": "invalid or missing bearer token" });

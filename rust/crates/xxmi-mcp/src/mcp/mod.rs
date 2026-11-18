@@ -7,4 +7,4 @@ mod params;
 mod post;
 mod resources;
 
-pub use post::{handle, json_response};
+pub use post::{allow_post, handle, json_response};

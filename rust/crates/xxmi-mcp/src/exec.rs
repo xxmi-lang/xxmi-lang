@@ -151,13 +151,17 @@ impl GitCommand {
     }
 }
 
-fn failed_exit(call: &Call<'_>, stderr: &[u8], code: Option<i32>) -> ExecError {
-    let text = String::from_utf8_lossy(stderr);
-    let detail = if text.trim().is_empty() {
+/// Git's own explanation, or its exit code when it said nothing.
+fn failure_detail(stderr: &str, code: Option<i32>) -> String {
+    if stderr.trim().is_empty() {
         format!("exit {}", code.map_or("?".to_string(), |c| c.to_string()))
     } else {
-        text.into_owned()
-    };
+        stderr.to_string()
+    }
+}
+
+fn failed_exit(call: &Call<'_>, stderr: &[u8], code: Option<i32>) -> ExecError {
+    let detail = failure_detail(&String::from_utf8_lossy(stderr), code);
     ExecError::failure(call.label, &detail, false)
 }
 
@@ -198,14 +202,7 @@ impl Streamed {
         if status.success() {
             return Ok(());
         }
-        let detail = if stderr.trim().is_empty() {
-            format!(
-                "exit {}",
-                status.code().map_or("?".to_string(), |c| c.to_string())
-            )
-        } else {
-            stderr
-        };
+        let detail = failure_detail(&stderr, status.code());
         Err(ExecError::failure(&self.label, &detail, false))
     }
 

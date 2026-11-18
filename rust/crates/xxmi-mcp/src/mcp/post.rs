@@ -1,7 +1,10 @@
 //! The HTTP layer of `/mcp`: method, body, headers and batches, before any request is dispatched.
 
+// The rejections are returned as-is to the client, so boxing them would only add an allocation.
+#![allow(clippy::result_large_err)]
+
 use axum::body::{Body, to_bytes};
-use axum::http::{HeaderMap, Method, StatusCode, header};
+use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde_json::Value;
 
@@ -22,6 +25,14 @@ pub fn json_response(status: StatusCode, body: &Value) -> Response {
         body.to_string(),
     )
         .into_response()
+}
+
+/// A 405 names the method it accepts.
+pub fn allow_post(mut response: Response) -> Response {
+    response
+        .headers_mut()
+        .insert(header::ALLOW, HeaderValue::from_static("POST"));
+    response
 }
 
 fn rejection(status: StatusCode, code: i64, message: &str) -> Response {
@@ -55,10 +66,7 @@ fn is_initialize(message: &Message) -> bool {
     matches!(message, Message::Request(r) if r.method == "initialize" && params_issues(r.params.as_ref()).is_empty())
 }
 
-/// Checks the headers and the message shapes; the error is the response to send.
-// The rejection is returned as-is to the client, so boxing it would only add an allocation.
-#[allow(clippy::result_large_err)]
-fn admit(headers: &HeaderMap, body: &Value) -> Result<Vec<Message>, Response> {
+fn check_media(headers: &HeaderMap) -> Result<(), Response> {
     if !accepts_both(headers) {
         return Err(rejection(
             StatusCode::NOT_ACCEPTABLE,
@@ -73,7 +81,10 @@ fn admit(headers: &HeaderMap, body: &Value) -> Result<Vec<Message>, Response> {
             "Unsupported Media Type: Content-Type must be application/json",
         ));
     }
+    Ok(())
+}
 
+fn parse_batch(body: &Value) -> Result<Vec<Message>, Response> {
     let items: Vec<&Value> = match body {
         Value::Array(items) => items.iter().collect(),
         single => vec![single],
@@ -87,14 +98,16 @@ fn admit(headers: &HeaderMap, body: &Value) -> Result<Vec<Message>, Response> {
     }
 
     let messages: Option<Vec<Message>> = items.into_iter().map(classify).collect();
-    let Some(messages) = messages else {
-        return Err(rejection(
+    messages.ok_or_else(|| {
+        rejection(
             StatusCode::BAD_REQUEST,
             PARSE_ERROR,
             "Parse error: Invalid JSON-RPC message",
-        ));
-    };
+        )
+    })
+}
 
+fn check_protocol(headers: &HeaderMap, messages: &[Message]) -> Result<(), Response> {
     if messages.iter().any(is_initialize) {
         if messages.len() > 1 {
             return Err(rejection(
@@ -106,6 +119,14 @@ fn admit(headers: &HeaderMap, body: &Value) -> Result<Vec<Message>, Response> {
     } else if let Some(message) = unsupported_version(headers) {
         return Err(rejection(StatusCode::BAD_REQUEST, SERVER_ERROR, &message));
     }
+    Ok(())
+}
+
+/// Checks the headers and the message shapes; the error is the response to send.
+fn admit(headers: &HeaderMap, body: &Value) -> Result<Vec<Message>, Response> {
+    check_media(headers)?;
+    let messages = parse_batch(body)?;
+    check_protocol(headers, &messages)?;
     Ok(messages)
 }
 
@@ -139,15 +160,11 @@ pub async fn handle(
     body: Body,
 ) -> Response {
     if method != Method::POST {
-        let mut response = rejection(
+        return allow_post(rejection(
             StatusCode::METHOD_NOT_ALLOWED,
             SERVER_ERROR,
             "Method not allowed: this server is stateless, use POST.",
-        );
-        response
-            .headers_mut()
-            .insert(header::ALLOW, "POST".parse().expect("static header value"));
-        return response;
+        ));
     }
 
     let limit = state.ctx.config.max_body_bytes;
