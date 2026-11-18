@@ -35,15 +35,22 @@ pub fn read_overlays(root: &Path) -> (Vec<OverlayFile>, Vec<String>) {
     files.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
 
     for file in files {
-        let parsed = fs::read_to_string(dir.join(&file))
-            .map_err(|e| e.to_string())
-            .and_then(|text| text.parse::<Table>().map_err(|e| e.to_string()));
-        match parsed {
-            Ok(overlay) => overlays.push(OverlayFile { file, overlay }),
+        let text = fs::read_to_string(dir.join(&file)).map_err(|e| e.to_string());
+        match text.and_then(|text| parse_overlay(&file, &text)) {
+            Ok(overlay) => overlays.push(overlay),
             Err(message) => problems.push(format!("{file}: {message}")),
         }
     }
     (overlays, problems)
+}
+
+/// Parses the text of one overlay file; for callers that embed the overlays.
+pub fn parse_overlay(file: &str, text: &str) -> Result<OverlayFile, String> {
+    let overlay = text.parse::<Table>().map_err(|e| e.to_string())?;
+    Ok(OverlayFile {
+        file: file.to_string(),
+        overlay,
+    })
 }
 
 /// Merges `overlays` into `spec` in the given order; returns the problems found.
