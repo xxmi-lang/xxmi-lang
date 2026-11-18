@@ -286,6 +286,14 @@ jobs:
 
       - run: pnpm build
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - run: pnpm build:binaries --target host
+
       - run: xvfb-run -a pnpm --filter ./packages/vscode test:vscode
 
       - run: pnpm --filter ./packages/vscode run package
