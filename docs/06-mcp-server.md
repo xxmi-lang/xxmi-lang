@@ -86,7 +86,9 @@ restartPolicyType = "ON_FAILURE"
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`, `INDEXED_TAGS=5`.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
-- Deploy on push to `main` via Railway's GitHub integration. CI runs tests first.
+- Deploys run from `.github/workflows/deploy.yml` after `ci` passes on `main` (also after re-runs), or by hand via "Run workflow" with an optional `sha`. A commit that is no longer `main`'s HEAD is skipped, so an older commit never replaces a newer one.
+- Needs the repo secret `RAILWAY_PROJECT_TOKEN`: a Railway project token for the production environment (project settings → Tokens).
+- Railway's own autodeploy is disabled for the service.
 
 ## Client setup (for the README)
 

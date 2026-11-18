@@ -1,0 +1,76 @@
+name: deploy
+
+# Deploys the hosted MCP server (docs/06-mcp-server.md) to Railway after CI passes on main, including
+# re-runs of CI. Railway's own autodeploy is off for the service, so this is the only deploy path.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit to deploy (empty: current main HEAD)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+# One deploy at a time; a queued deploy waits instead of cancelling a running one.
+concurrency:
+  group: railway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      RAILWAY_SERVICE_ID: 9c455220-d228-4d1c-a293-ff5e4eb89026
+      RAILWAY_ENVIRONMENT_ID: fab24064-0e24-460d-ae21-dc5c15efea19
+      MCP_URL: https://xxmi-mcp-production.up.railway.app
+    steps:
+      - name: Check the Railway token is set
+        env:
+          RAILWAY_PROJECT_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_PROJECT_TOKEN" ]; then
+            echo "::error::Repository secret RAILWAY_PROJECT_TOKEN is not set (docs/06-mcp-server.md, Deployment)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve the commit
+        id: sha
+        env:
+          REPO: ${{ github.repository }}
+          INPUT_SHA: ${{ inputs.sha }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          main=$(git ls-remote "https://github.com/$REPO" refs/heads/main | cut -f1)
+          [ -n "$main" ] || { echo "::error::Could not read main from GitHub"; exit 1; }
+
+          sha=${INPUT_SHA:-$RUN_SHA}
+          sha=${sha:-$main}
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+          if [ "$sha" != "$main" ]; then
+            echo "::notice::$sha is not the current main HEAD ($main); not deploying it"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy and wait for health
+        if: steps.sha.outputs.skip != 'true'
+        env:
+          RAILWAY_PROJECT_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
+          SHA: ${{ steps.sha.outputs.sha }}
+        run: scripts/railway-deploy.sh "$SHA"
