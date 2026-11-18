@@ -2,6 +2,7 @@
 
 `rust/` ports the TypeScript core, CLI and language server: `tree-sitter-migoto` (C parser via `cc`, grammar commit e0df4ec), `xxmi-core` (spec, model, workspace, 19 rules, lint engine) and `xxmi` (the binary: `lint`, `query`, `index`, `lsp`).
 The TypeScript implementation stays the reference. The release pipeline and the MCP server are not ported.
+`xxmi-spec-extractor` (below) is the first piece the MCP server will use.
 
 ## Ported
 
@@ -10,6 +11,8 @@ The TypeScript implementation stays the reference. The release pipeline and the 
   Edits reparse only the changed sections of the open document.
 - `build.rs` embeds `packages/core/dist/spec.json` and `snapshots/zzmi.json`, so run `pnpm build` first.
 
+- `xxmi-spec-extractor` ports `packages/spec-extractor` and the overlay merge of `packages/core/src/spec/load.ts`. It is a library plus its own binary, `xxmi-spec-extract` (not part of `xxmi` and not shipped in releases), with the flags and exit codes of `pnpm spec:extract`. Extra flags: `--full <file>` writes the overlay-merged spec as compact JSON (`--spec-root <dir>`, default `spec`), and `--dll-commit`, `--dll-commit-date`, `--dll-repository` (and `--baseline-*`) stand in for git metadata when a source is not a checkout.
+
 ## Build and verify
 
 ```bash
@@ -17,6 +20,7 @@ cd rust && cargo build --release && cargo clippy --release -- -D warnings && car
 node rust/bench/parity.mjs        # lint, query, index against the TS CLI
 node rust/bench/lsp-parity.mjs    # starts the TS and the Rust server on the same sessions
 node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakdown of an edit
+node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and four tags
 ```
 
 `cargo test` runs the rule goldens (`fixtures/rules`, `fixtures/xxmi-1.3.1`, quick fixes against `fixed.ini`), the LSP protocol session, and the robustness suites (core fuzz, hostile LSP input).
@@ -25,6 +29,8 @@ node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakd
 
 - `parity.mjs`: fixtures 85 files, 178 diagnostics, and ZZMI 19 files, 17 diagnostics; 0 mismatches, byte-identical output.
 - `lsp-parity.mjs`: 31,945 responses (documentSymbol, hover, definition, references, completion, rename, codeAction, published diagnostics after open, edit and close), 0 mismatches; it exits 1 on any difference.
+
+- `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
 
 ## Speed and size (Apple M3 Max; 5,048-line document next to ZZMI)
 
@@ -38,6 +44,8 @@ node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakd
 | binary size | 2,275,760 B | 2,292,368 B | |
 | binary size with `panic = "unwind"` | 2,292,368 B | 2,573,536 B (+12%) | |
 | TS binary (stale v0.1.0 Bun) | 64,998,242 B | | |
+
+Spec extraction at `master` (both DLL and baseline, overlays merged; wall time and peak RSS from `/usr/bin/time`): TS 0.60 s, 287 MB; Rust 0.34 s, 13 MB.
 
 `lint` of ZZMI takes about 0.05 s against 0.15-0.2 s for the TS CLI.
 What is left of an edit is the workspace-wide symbol table and usage (2.8 ms) and the per-file rules, which run on every edit.
