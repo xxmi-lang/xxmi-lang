@@ -15,6 +15,7 @@ pub mod ratelimit;
 pub mod repos;
 pub mod schema;
 pub mod selection;
+pub mod serve;
 pub mod sources;
 pub mod spec_build;
 pub mod spec_ensure;

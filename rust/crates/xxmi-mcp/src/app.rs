@@ -8,11 +8,12 @@ use axum::http::StatusCode;
 use axum::middleware::{from_fn_with_state, map_response};
 use axum::response::Response;
 use axum::routing::any;
+use tokio::sync::Semaphore;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::timeout::TimeoutLayer;
 
-use crate::http::{admin, log, rate_limit, routes};
+use crate::http::{admin, inflight, log, rate_limit, routes};
 use crate::indexer::Indexer;
 use crate::jsonrpc::{INTERNAL_ERROR, INVALID_REQUEST, transport_error};
 use crate::mcp::json_response;
@@ -25,15 +26,18 @@ const REQUEST_TIMEOUT_SLACK_MS: u64 = 5_000;
 pub struct AppState {
     pub ctx: Arc<ToolContext>,
     pub limiter: Mutex<RateLimiter>,
+    pub inflight: Arc<Semaphore>,
     pub indexer: Arc<dyn Indexer>,
 }
 
 impl AppState {
     pub fn new(ctx: ToolContext, indexer: Arc<dyn Indexer>) -> Arc<Self> {
         let limiter = RateLimiter::new(ctx.config.rate_limit_per_min, ctx.config.rate_limit_burst);
+        let inflight = Arc::new(Semaphore::new(ctx.config.max_inflight));
         Arc::new(Self {
             ctx: Arc::new(ctx),
             limiter: Mutex::new(limiter),
+            inflight,
             indexer,
         })
     }
@@ -66,7 +70,8 @@ pub fn router(state: Arc<AppState>) -> Router {
     let limited = Router::new()
         .route("/mcp", any(routes::mcp_endpoint))
         .route("/admin/refresh", any(admin::refresh))
-        .route_layer(from_fn_with_state(state.clone(), rate_limit::limit));
+        .route_layer(from_fn_with_state(state.clone(), rate_limit::limit))
+        .route_layer(from_fn_with_state(state.clone(), inflight::shed));
 
     Router::new()
         .route("/", any(routes::index))

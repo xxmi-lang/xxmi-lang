@@ -5,6 +5,7 @@ use std::sync::Arc;
 use serde::Serialize;
 use serde_json::{Map, Value};
 
+use super::blocking::BlockingGate;
 use crate::catalog::{Catalog, CatalogError};
 use crate::config::Config;
 use crate::logger::Logger;
@@ -19,6 +20,7 @@ pub struct ToolContext {
     /// Every spec the server can answer with; tools pick one through `resolve_spec`.
     pub specs: SpecRegistry,
     pub packages: PackageCache,
+    pub blocking: BlockingGate,
 }
 
 impl ToolContext {
@@ -39,6 +41,8 @@ pub struct ToolOutput {
 pub struct ToolError {
     pub message: String,
     pub expected: bool,
+    /// The server is saturated: the caller should retry, and gets a protocol error, not a result.
+    pub busy: bool,
 }
 
 impl ToolError {
@@ -46,6 +50,7 @@ impl ToolError {
         Self {
             message: message.into(),
             expected: true,
+            busy: false,
         }
     }
 
@@ -53,6 +58,14 @@ impl ToolError {
         Self {
             message: message.into(),
             expected: false,
+            busy: false,
+        }
+    }
+
+    pub fn busy() -> Self {
+        Self {
+            busy: true,
+            ..Self::new("Server busy: too many tool calls in progress, retry shortly.")
         }
     }
 }

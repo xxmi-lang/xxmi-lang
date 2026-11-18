@@ -1,5 +1,6 @@
 //! The nine tools: argument validation against the published schemas, dispatch, and the timeout.
 
+mod blocking;
 mod library;
 mod lint;
 mod package;
@@ -8,14 +9,18 @@ mod source;
 mod spec_tools;
 mod versions;
 
+use std::future::Future;
 use std::sync::{Arc, LazyLock};
 use std::time::Duration;
 
 use serde_json::{Map, Value};
 
+pub use blocking::{BlockingGate, MAX_BLOCKING_THREADS};
 pub use shared::{Args, ToolContext, ToolError, ToolOutput, ToolResult};
 
 use crate::schema;
+
+use blocking::run_blocking;
 
 pub const TOOLS_LIST_JSON: &str = include_str!("../protocol/tools_list.json");
 
@@ -63,13 +68,6 @@ fn sync_tool(name: &str) -> Option<SyncTool> {
     })
 }
 
-/// The core's documents are not `Send`, so a tool runs start to finish on one blocking thread.
-async fn run_blocking(ctx: Arc<ToolContext>, run: SyncTool, args: Args) -> ToolResult {
-    tokio::task::spawn_blocking(move || run(&ctx, &args))
-        .await
-        .map_err(|e| ToolError::internal(format!("tool task failed: {e}")))?
-}
-
 async fn dispatch(ctx: Arc<ToolContext>, name: &str, args: Args) -> ToolResult {
     match sync_tool(name) {
         Some(run) => run_blocking(ctx, run, args).await,
@@ -77,15 +75,25 @@ async fn dispatch(ctx: Arc<ToolContext>, name: &str, args: Args) -> ToolResult {
     }
 }
 
-/// Runs a validated call. A call that outlives the timeout answers with an error and leaves its
-/// thread to finish on its own.
-pub async fn execute(ctx: Arc<ToolContext>, name: &str, args: Args) -> ToolResult {
-    let limit = Duration::from_millis(ctx.config.tool_timeout_ms);
-    match tokio::time::timeout(limit, dispatch(ctx, name, args)).await {
+/// Answers with an error once `limit` has passed. The dropped call stops waiting on its work: a
+/// queued blocking task is skipped, a subprocess is killed (`kill_on_drop`), and a running one
+/// finishes on its own.
+pub async fn with_timeout(
+    name: &str,
+    limit: Duration,
+    call: impl Future<Output = ToolResult>,
+) -> ToolResult {
+    match tokio::time::timeout(limit, call).await {
         Ok(result) => result,
         Err(_) => Err(ToolError::new(format!(
             "{name} timed out after {} ms",
             limit.as_millis()
         ))),
     }
+}
+
+/// Runs a validated call within the tool timeout.
+pub async fn execute(ctx: Arc<ToolContext>, name: &str, args: Args) -> ToolResult {
+    let limit = Duration::from_millis(ctx.config.tool_timeout_ms);
+    with_timeout(name, limit, dispatch(ctx, name, args)).await
 }

@@ -14,6 +14,8 @@ path = "src/main.rs"
 [dependencies]
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 http-body-util = "0.1"
+hyper = { version = "1", features = ["http1", "server"] }
+hyper-util = { version = "0.1", features = ["tokio", "server-graceful", "service"] }
 mimalloc = "0.1"
 regex = "1"
 serde.workspace = true
@@ -22,6 +24,7 @@ tar = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "process", "signal", "sync", "time", "io-util", "fs"] }
 tokio-util = { version = "0.7", features = ["io-util"] }
 toml.workspace = true
+tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.6", features = ["catch-panic", "limit", "timeout"] }
 ureq = { version = "3", features = ["json"] }
 xxmi-core = { path = "../xxmi-core" }
@@ -29,4 +32,3 @@ xxmi-spec-extractor = { path = "../xxmi-spec-extractor" }
 
 [dev-dependencies]
 tempfile = "3"
-tower = { version = "0.5", features = ["util"] }

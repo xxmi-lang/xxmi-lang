@@ -22,6 +22,8 @@ pub struct Config {
     pub tool_timeout_ms: u64,
     pub search_timeout_ms: u64,
     pub indexer_enabled: bool,
+    /// Requests in flight on `/mcp` and `/admin/refresh` before new ones get a 503.
+    pub max_inflight: usize,
     /// Package snapshots kept in memory, least recently used out first.
     pub package_cache_entries: usize,
     /// Tokio worker threads: `WORKER_THREADS`, else the available parallelism capped at 4.
@@ -76,6 +78,7 @@ impl Config {
             tool_timeout_ms: int(env, "TOOL_TIMEOUT_MS", 15_000, 100)?,
             search_timeout_ms: int(env, "SEARCH_TIMEOUT_MS", 2_000, 100)?,
             indexer_enabled: env("INDEXER").as_deref() != Some("off"),
+            max_inflight: int(env, "MAX_INFLIGHT", 512, 1)? as usize,
             package_cache_entries: int(env, "PACKAGE_CACHE_ENTRIES", 64, 1)? as usize,
             worker_threads: int(env, "WORKER_THREADS", default_workers as u64, 1)? as usize,
         })

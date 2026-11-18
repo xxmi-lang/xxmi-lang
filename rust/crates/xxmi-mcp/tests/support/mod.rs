@@ -22,7 +22,7 @@ use xxmi_mcp::logger::Logger;
 use xxmi_mcp::packages::PackageCache;
 use xxmi_mcp::specs::{NoVersionSpecs, SpecRegistry};
 use xxmi_mcp::store::Store;
-use xxmi_mcp::tools::ToolContext;
+use xxmi_mcp::tools::{BlockingGate, ToolContext};
 
 const SHA_HEAD: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SHA_TAG: &str = "cccccccccccccccccccccccccccccccccccccccc";
@@ -136,6 +136,11 @@ impl Indexer for NoIndexer {
 }
 
 pub async fn app(dir: &Path, env: &[(&str, &str)]) -> Router {
+    app_with_state(dir, env).await.0
+}
+
+/// The router and the state behind it, for tests that reach into the limits.
+pub async fn app_with_state(dir: &Path, env: &[(&str, &str)]) -> (Router, Arc<AppState>) {
     make_volume(dir);
     let config = config(dir, env);
     let ctx = ToolContext {
@@ -144,8 +149,10 @@ pub async fn app(dir: &Path, env: &[(&str, &str)]) -> Router {
         logger: Logger::default(),
         specs: SpecRegistry::new(Box::new(NoVersionSpecs)),
         packages: PackageCache::default(),
+        blocking: BlockingGate::default(),
     };
-    router(AppState::new(ctx, Arc::new(NoIndexer)))
+    let state = AppState::new(ctx, Arc::new(NoIndexer));
+    (router(state.clone()), state)
 }
 
 pub struct Reply {

@@ -1,6 +1,5 @@
 //! `xxmi-mcp`: the hosted MCP server. Configuration is environment-only.
 
-use std::net::SocketAddr;
 use std::process::ExitCode;
 use std::sync::Arc;
 
@@ -16,19 +15,17 @@ use xxmi_mcp::indexer::{IndexerOptions, PollingIndexer};
 use xxmi_mcp::logger::Logger;
 use xxmi_mcp::packages::PackageCache;
 use xxmi_mcp::selection::SelectionLimits;
+use xxmi_mcp::serve::{HEADER_READ_TIMEOUT, serve as serve_http};
 use xxmi_mcp::spec_build::{SpecBuilder, builder_id};
 use xxmi_mcp::spec_store::VolumeSpecs;
 use xxmi_mcp::specs::SpecRegistry;
 use xxmi_mcp::store::Store;
-use xxmi_mcp::tools::ToolContext;
+use xxmi_mcp::tools::{BlockingGate, MAX_BLOCKING_THREADS, ToolContext};
 use xxmi_mcp::upstream::GitSources;
 use xxmi_mcp::upstream::releases::GithubReleases;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
-
-/// Tool calls park on blocking threads; a small pool keeps their memory bounded.
-const MAX_BLOCKING_THREADS: usize = 8;
 
 fn startup_failed(error: &str) -> ExitCode {
     let line = json!({ "level": "error", "msg": "startup failed", "error": error });
@@ -98,6 +95,7 @@ async fn serve(config: Config) -> std::io::Result<()> {
         logger,
         specs: SpecRegistry::new(Box::new(specs)),
         packages: PackageCache::new(package_cache_entries),
+        blocking: BlockingGate::default(),
     };
     let app = router(AppState::new(ctx, indexer.clone()));
 
@@ -112,10 +110,14 @@ async fn serve(config: Config) -> std::io::Result<()> {
         indexer.start();
     }
 
-    let service = app.into_make_service_with_connect_info::<SocketAddr>();
-    axum::serve(listener, service)
-        .with_graceful_shutdown(shutdown_signal(logger))
-        .await
+    serve_http(
+        listener,
+        app,
+        HEADER_READ_TIMEOUT,
+        logger,
+        shutdown_signal(logger),
+    )
+    .await
 }
 
 fn main() -> ExitCode {

@@ -5,7 +5,7 @@ use std::time::Instant;
 use serde_json::{Value, json};
 
 use crate::app::AppState;
-use crate::jsonrpc::{INTERNAL_ERROR, METHOD_NOT_FOUND, Request, failure, success};
+use crate::jsonrpc::{INTERNAL_ERROR, METHOD_NOT_FOUND, Request, SERVER_ERROR, failure, success};
 use crate::tools::{self, ToolError};
 use crate::zod::{Issue, issues_message};
 
@@ -77,6 +77,10 @@ async fn call_tool(state: &AppState, request: &Request) -> Value {
                 output.text
             };
             success(&request.id, text_result(text, false))
+        }
+        Err(error) if error.busy => {
+            logger.warn("tool rejected", json!({ "tool": name, "reason": "busy" }));
+            failure(&request.id, SERVER_ERROR, &error.message)
         }
         Err(error) => {
             logger.info(

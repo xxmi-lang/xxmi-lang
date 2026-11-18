@@ -1405,6 +1405,8 @@ version = "0.2.1"
 dependencies = [
  "axum",
  "http-body-util",
+ "hyper",
+ "hyper-util",
  "mimalloc",
  "regex",
  "serde",
