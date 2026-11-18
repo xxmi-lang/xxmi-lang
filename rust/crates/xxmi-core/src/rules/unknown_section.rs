@@ -5,16 +5,12 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use super::{Finding, RuleContext};
+use crate::spec::Spec;
 use crate::suggest::edit_distance;
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
-    let names: Vec<&str> = context
-        .lookup
-        .spec()
-        .sections
-        .iter()
-        .map(|s| s.name.as_str())
-        .collect();
+    let spec = context.lookup.spec();
+    let names: Vec<&str> = spec.sections.iter().map(|s| s.name.as_str()).collect();
 
     context
         .file
@@ -23,7 +19,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
         .filter(|section| section.spec.is_none())
         .map(|section| {
             let name = context.file.slice(section.name);
-            let hint = match suggest_cached(name, &names) {
+            let hint = match suggest_cached(spec, name, &names) {
                 Some(found) => format!(" Did you mean a [{found}…] section?"),
                 None => String::new(),
             };
@@ -35,18 +31,26 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
         .collect()
 }
 
+/// Distinct misspelt names a session keeps suggestions for before starting over.
+const CACHE_LIMIT: usize = 1024;
+
 /// A misspelt header stays in the file edit after edit, and `suggest` is the costliest thing a
-/// lint does with it. The names come from the one bundled spec, so the name alone is the key.
-fn suggest_cached(name: &str, names: &[&str]) -> Option<String> {
+/// lint does with it. `spec` keys the entry to the loaded spec, whose names the answer depends on.
+fn suggest_cached(spec: &Spec, name: &str, names: &[&str]) -> Option<String> {
     thread_local! {
-        static SUGGESTIONS: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
+        static SUGGESTIONS: RefCell<HashMap<(usize, String), Option<String>>> =
+            RefCell::new(HashMap::new());
     }
+    let key = (std::ptr::from_ref(spec) as usize, name.to_string());
     SUGGESTIONS.with_borrow_mut(|cache| {
-        if let Some(found) = cache.get(name) {
+        if let Some(found) = cache.get(&key) {
             return found.clone();
         }
         let found = suggest(name, names).map(str::to_string);
-        cache.insert(name.to_string(), found.clone());
+        if cache.len() >= CACHE_LIMIT {
+            cache.clear();
+        }
+        cache.insert(key, found.clone());
         found
     })
 }
