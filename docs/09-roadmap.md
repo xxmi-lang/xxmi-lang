@@ -65,7 +65,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 - `xxmi-lsp` with the phase 1 capabilities in `03-lsp.md`.
 - VS Code client extension; Kate config snippet; Claude Code plugin with `.lsp.json` and the `xxmi-ini-authoring` skill.
-- Single-file binaries for every target listed in `00-overview.md` via `bun build --compile` (since replaced by the Rust build, `rust-port.md`), attached to GitHub releases as one zip per platform (`scripts/bundle-release.ts`). The grammar `.wasm` must be embedded in the binary (not loaded from a path next to it); test the compiled binary, not just `node dist/`.
+- Single-file binaries for every target listed in `00-overview.md` (built with cargo, `rust-port.md`), attached to GitHub releases as one zip per platform (`scripts/bundle-release.ts`). The grammar `.wasm` must be embedded in the binary (not loaded from a path next to it); test the compiled binary, not just `node dist/`.
 - README: install steps for each editor, credits to lupomikti and the XXMI/AGMG maintainers.
 
 **Accept:** in VS Code and Kate on a real ZZZ mod: diagnostics appear, go-to-definition into ZZMI libraries works, and renaming a CommandList updates all references across files. In Claude Code, an edit that introduces an unresolved `run =` produces an XM201 diagnostic in the agent's context. `claude plugin validate ./plugin` passes. The performance targets in `03-lsp.md` hold.
