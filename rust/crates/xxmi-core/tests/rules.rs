@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use xxmi_core::diagnostic::Position;
 use xxmi_core::lint::{LintOptions, lint_paths};
 use xxmi_core::paths::{display_path, resolve_path};
+use xxmi_core::workspace::snapshot::Snapshots;
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
@@ -23,7 +24,7 @@ fn read_json(path: &Path) -> Vec<Value> {
 fn options(rules: Option<Vec<String>>) -> LintOptions {
     LintOptions {
         rules,
-        snapshots: &[],
+        snapshots: Snapshots::Bundled(&[]),
         ..LintOptions::bundled()
     }
 }

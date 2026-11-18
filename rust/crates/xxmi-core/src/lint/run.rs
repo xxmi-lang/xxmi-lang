@@ -14,7 +14,7 @@ use super::{FileResult, LintError, LintOptions, LintResult, Summary, collect_ini
 
 /// Lints files and folders.
 pub fn lint_paths(paths: &[PathBuf], options: &LintOptions) -> Result<LintResult, LintError> {
-    let mut workspace = Workspace::new(options.lookup, options.snapshots);
+    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
 
     let mut targets = Vec::new();
     for path in paths {
@@ -45,7 +45,7 @@ pub fn lint_text(
     encoding: Encoding,
     options: &LintOptions,
 ) -> Result<LintResult, LintError> {
-    let mut workspace = Workspace::new(options.lookup, options.snapshots);
+    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
     let full = resolve_path(path);
     workspace.set_overlay(&full, text);
 
@@ -63,7 +63,7 @@ pub fn lint_texts(
     configs: &ConfigLoader,
 ) -> Result<LintResult, LintError> {
     let resolver = PathResolver::in_memory(files.iter().map(|(path, _)| path.as_path()));
-    let mut workspace = Workspace::with_resolver(options.lookup, options.snapshots, resolver);
+    let mut workspace = Workspace::with_resolver(options.lookup, &options.snapshots, resolver);
 
     let mut ordered: Vec<&(PathBuf, String)> = files.iter().collect();
     ordered.sort_by_key(|(path, _)| !is_d3dx(path));

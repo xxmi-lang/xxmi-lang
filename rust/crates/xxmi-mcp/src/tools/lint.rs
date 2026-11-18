@@ -2,7 +2,6 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
-use std::slice;
 use std::time::Instant;
 
 use serde_json::{Map, Value, json};
@@ -126,7 +125,7 @@ pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
         overrides: HashMap::new(),
         rule_prefixes: None,
         lookup: spec.lookup,
-        snapshots: slice::from_ref(choice.snapshot),
+        snapshots: choice.snapshots.clone(),
     };
 
     let started = Instant::now();
@@ -153,7 +152,7 @@ pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
     if let Value::Object(map) = &mut doc {
         map.insert(
             "package".into(),
-            serde_json::to_value(&choice.snapshot.source).unwrap_or(Value::Null),
+            serde_json::to_value(&choice.snapshot().source).unwrap_or(Value::Null),
         );
         if dropped > 0 {
             map.insert("truncated".into(), dropped.into());

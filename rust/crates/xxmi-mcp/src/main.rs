@@ -84,6 +84,7 @@ async fn serve(config: Config) -> std::io::Result<()> {
     let catalog = Arc::new(Catalog::load(store.clone()).await);
     let ready = catalog.ready();
     let (port, host, indexer_enabled) = (config.port, config.host.clone(), config.indexer_enabled);
+    let package_cache_entries = config.package_cache_entries;
 
     let specs = Arc::new(VolumeSpecs::new(
         store.clone(),
@@ -96,7 +97,7 @@ async fn serve(config: Config) -> std::io::Result<()> {
         catalog,
         logger,
         specs: SpecRegistry::new(Box::new(specs)),
-        packages: PackageCache::default(),
+        packages: PackageCache::new(package_cache_entries),
     };
     let app = router(AppState::new(ctx, indexer.clone()));
 

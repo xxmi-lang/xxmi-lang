@@ -20,8 +20,8 @@ fn package_label(choice: &PackageChoice) -> String {
         .map_or("bundled snapshot", |r| r.name.as_str());
     format!(
         "{} @ {at} ({})",
-        choice.snapshot.name,
-        short(&choice.snapshot.source.commit)
+        choice.snapshot().name,
+        short(&choice.snapshot().source.commit)
     )
 }
 
@@ -29,7 +29,7 @@ pub fn library_list(ctx: &ToolContext, args: &Args) -> ToolResult {
     let choice = choose_package(ctx, args.required("game"), args.str("ref"), true)?;
     let lookup = ctx.resolve_spec(None)?.lookup;
     let core = choice.loaded.as_ref().map(|l| l.core());
-    let libraries = list_libraries(choice.snapshot, lookup, core.as_ref());
+    let libraries = list_libraries(choice.snapshot(), lookup, core.as_ref());
     let (page, next_cursor) = page_of(libraries, args.str("cursor"))?;
 
     let mut head = vec![format!("package: {}", package_label(&choice))];
@@ -39,7 +39,7 @@ pub fn library_list(ctx: &ToolContext, args: &Args) -> ToolResult {
     let text: Vec<String> = head.into_iter().chain(blocks).chain(tail).collect();
 
     let data = json!({
-        "package": to_data(&choice.snapshot.source),
+        "package": to_data(&choice.snapshot().source),
         "note": choice.note,
         "libraries": to_data(&page),
         "nextCursor": next_cursor,
@@ -94,10 +94,10 @@ pub fn library_symbol(ctx: &ToolContext, args: &Args) -> ToolResult {
     let choice = choose_package(ctx, args.required("game"), args.str("ref"), true)?;
     let info = match &choice.loaded {
         Some(loaded) => describe_symbol(&loaded.core(), name),
-        None => describe_snapshot_symbol(choice.snapshot, name),
+        None => describe_snapshot_symbol(choice.snapshot(), name),
     };
     let Some(info) = info else {
-        let near = suggestions(choice.snapshot, name);
+        let near = suggestions(choice.snapshot(), name);
         let similar = if near.is_empty() {
             String::new()
         } else {
@@ -121,7 +121,7 @@ pub fn library_symbol(ctx: &ToolContext, args: &Args) -> ToolResult {
     let text = render_symbol_with(&info, link.as_deref(), choice.note.as_deref());
 
     let data: Value = json!({
-        "package": to_data(&choice.snapshot.source),
+        "package": to_data(&choice.snapshot().source),
         "packageDir": package_dir,
         "note": choice.note,
         "symbol": to_data(&info),

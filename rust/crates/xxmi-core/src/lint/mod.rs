@@ -19,7 +19,7 @@ use crate::defaults::{bundled_lookup, bundled_snapshots};
 use crate::diagnostic::Diagnostic;
 use crate::encoding::Encoding;
 use crate::lookup::Lookup;
-use crate::workspace::snapshot::SymbolSnapshot;
+use crate::workspace::snapshot::Snapshots;
 
 pub use collect::collect_ini_files;
 pub use config::{ConfigError, ConfigLoader, RuleSetting};
@@ -34,7 +34,7 @@ pub struct LintOptions {
     /// Only run rules whose id starts with one of these.
     pub rule_prefixes: Option<Vec<&'static str>>,
     pub lookup: &'static Lookup,
-    pub snapshots: &'static [SymbolSnapshot],
+    pub snapshots: Snapshots,
 }
 
 impl LintOptions {
@@ -45,7 +45,7 @@ impl LintOptions {
             overrides: HashMap::new(),
             rule_prefixes: None,
             lookup: bundled_lookup(),
-            snapshots: bundled_snapshots(),
+            snapshots: bundled_snapshots().into(),
         }
     }
 }

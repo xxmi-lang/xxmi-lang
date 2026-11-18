@@ -29,7 +29,7 @@ fn ini_files(dir: &Path, found: &mut Vec<PathBuf>) {
 /// Runs every position-based feature at positions in, on the edge of and past the text.
 fn exercise(text: &str) {
     let options = LintOptions::bundled();
-    let mut workspace = Workspace::new(options.lookup, options.snapshots);
+    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
     let path = Path::new("/xxmi-robustness/Mods/a.ini");
     workspace.set_overlay(path, text.to_string());
     let Ok(id) = workspace.add_target(path, path.parent().unwrap()) else {
@@ -101,7 +101,7 @@ fn degenerate_texts() {
 fn long_single_line() {
     let text = format!("[A]\nk = {}", "x".repeat(200_000));
     let options = LintOptions::bundled();
-    let mut workspace = Workspace::new(options.lookup, options.snapshots);
+    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
     let path = Path::new("/xxmi-robustness/Mods/long.ini");
     workspace.set_overlay(path, text);
     let id = workspace.add_target(path, path.parent().unwrap()).unwrap();

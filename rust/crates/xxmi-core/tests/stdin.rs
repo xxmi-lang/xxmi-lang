@@ -4,11 +4,12 @@ use std::path::Path;
 
 use xxmi_core::encoding::Encoding;
 use xxmi_core::lint::{LintOptions, LintResult, lint_text};
+use xxmi_core::workspace::snapshot::Snapshots;
 
 fn lint(text: &str, encoding: Encoding) -> LintResult {
     let options = LintOptions {
         rules: Some(vec!["XM101".to_string(), "XM002".to_string()]),
-        snapshots: &[],
+        snapshots: Snapshots::Bundled(&[]),
         ..LintOptions::bundled()
     };
     lint_text(

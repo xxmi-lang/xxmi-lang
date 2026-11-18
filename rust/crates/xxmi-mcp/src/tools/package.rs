@@ -1,6 +1,8 @@
 //! Picks the package index a `game` / `ref` pair refers to, falling back to the bundled snapshot.
 
-use xxmi_core::workspace::snapshot::SymbolSnapshot;
+use std::slice;
+
+use xxmi_core::workspace::snapshot::{Snapshots, SymbolSnapshot};
 
 use crate::bundled::bundled_snapshot;
 use crate::catalog::ResolvedRef;
@@ -11,12 +13,19 @@ use crate::specs::short;
 use super::shared::{ToolContext, ToolError};
 
 pub struct PackageChoice {
-    pub snapshot: &'static SymbolSnapshot,
+    pub snapshots: Snapshots,
     /// Absent while only the bundled snapshot is available.
     pub resolved: Option<ResolvedRef>,
     pub loaded: Option<LoadedIndex>,
     /// Shown to the caller when the answer is degraded.
     pub note: Option<String>,
+}
+
+impl PackageChoice {
+    /// The one package snapshot this choice stands for.
+    pub fn snapshot(&self) -> &SymbolSnapshot {
+        &self.snapshots.as_slice()[0]
+    }
 }
 
 pub fn supported_games() -> Vec<&'static str> {
@@ -59,7 +68,7 @@ fn indexed_choice(
         .snapshot(&resolved, loaded.as_ref())
         .map_err(io_error)?;
     Ok(PackageChoice {
-        snapshot,
+        snapshots: snapshot.into(),
         resolved: Some(resolved),
         loaded,
         note: None,
@@ -94,7 +103,7 @@ fn bundled_choice(
         short(&snapshot.source.commit)
     );
     Ok(PackageChoice {
-        snapshot,
+        snapshots: Snapshots::Bundled(slice::from_ref(snapshot)),
         resolved: None,
         loaded: None,
         note: Some(note),
