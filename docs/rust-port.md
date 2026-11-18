@@ -1,6 +1,6 @@
 # Rust port
 
-`rust/` ports the TypeScript core, CLI and language server: `tree-sitter-migoto` (C parser via `cc`, grammar commit 80dc79a), `xxmi-core` (spec, model, workspace, 19 rules, lint engine) and `xxmi` (the binary: `lint`, `query`, `index`, `lsp`).
+`rust/` ports the TypeScript core, CLI and language server: `tree-sitter-migoto` (C parser via `cc`, grammar commit e0df4ec), `xxmi-core` (spec, model, workspace, 19 rules, lint engine) and `xxmi` (the binary: `lint`, `query`, `index`, `lsp`).
 The TypeScript implementation stays the reference. The release pipeline and the MCP server are not ported.
 
 ## Ported
