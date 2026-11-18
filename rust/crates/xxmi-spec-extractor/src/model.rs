@@ -1,0 +1,214 @@
+//! The spec's JSON shape (packages/core/src/spec/types.ts). Field order is the key order of the
+//! TypeScript extractor's objects, so serialized output matches it byte for byte.
+
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
+
+/// Documentation fields only overlays provide, in the order they were first set.
+#[derive(Debug, Clone, Default)]
+pub struct Docs(pub Vec<(String, String)>);
+
+impl Docs {
+    pub fn set(&mut self, field: &str, value: String) {
+        match self.0.iter_mut().find(|(name, _)| name == field) {
+            Some(slot) => slot.1 = value,
+            None => self.0.push((field.to_string(), value)),
+        }
+    }
+}
+
+impl Serialize for Docs {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(self.0.len()))?;
+        for (field, value) in &self.0 {
+            map.serialize_entry(field, value)?;
+        }
+        map.end()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MatchKind {
+    Exact,
+    Prefix,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpecKey {
+    pub name: String,
+    pub value_type: String,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repeatable: Option<bool>,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecDynamicKeys {
+    pub kind: String,
+    pub source: String,
+    pub xxmi: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecRemovedKey {
+    pub name: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpecSection {
+    pub name: String,
+    pub prefix: bool,
+    pub kind: String,
+    pub allows_bare_lines: bool,
+    pub allows_duplicate_keys: bool,
+    pub keys: Vec<SpecKey>,
+    pub removed_keys: Vec<SpecRemovedKey>,
+    pub dynamic_keys: Vec<SpecDynamicKeys>,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecBuiltinSection {
+    pub name: String,
+    pub source: String,
+    pub xxmi: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecCommandValue {
+    pub name: String,
+    #[serde(rename = "match")]
+    pub match_kind: MatchKind,
+    pub source: String,
+    pub xxmi: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpecCommand {
+    pub name: String,
+    pub kind: String,
+    #[serde(rename = "match")]
+    pub match_kind: MatchKind,
+    pub values: Vec<SpecCommandValue>,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arg_count: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indirect: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub form: Option<&'static str>,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecResourceMember {
+    pub name: String,
+    pub target: String,
+    pub args: Vec<String>,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecFunction {
+    pub name: String,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecOperatorToken {
+    pub token: String,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecPrecedenceLevel {
+    pub level: usize,
+    pub group: String,
+    pub associativity: &'static str,
+    pub unary: bool,
+    pub operators: Vec<String>,
+    pub source: String,
+    pub xxmi: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecOperators {
+    pub tokens: Vec<SpecOperatorToken>,
+    pub precedence: Vec<SpecPrecedenceLevel>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecEnumValue {
+    pub name: String,
+    pub source: String,
+    pub xxmi: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpecEnum {
+    pub name: String,
+    pub values: Vec<SpecEnumValue>,
+    pub source: String,
+    pub xxmi: bool,
+    #[serde(flatten)]
+    pub docs: Docs,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GitInfo {
+    pub repository: String,
+    pub commit: String,
+    #[serde(rename = "commitDate")]
+    pub commit_date: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpecMeta {
+    pub extractor_version: u32,
+    pub dll: GitInfo,
+    /// Vanilla 3DMigoto checkout used to decide `xxmi` flags.
+    pub baseline: GitInfo,
+}
+
+/// A spec without its `meta`: what one DLL checkout yields.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpecBody {
+    pub sections: Vec<SpecSection>,
+    pub builtin_sections: Vec<SpecBuiltinSection>,
+    pub commands: Vec<SpecCommand>,
+    pub resource_members: Vec<SpecResourceMember>,
+    pub functions: Vec<SpecFunction>,
+    pub operators: SpecOperators,
+    pub enums: Vec<SpecEnum>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Spec {
+    pub meta: SpecMeta,
+    #[serde(flatten)]
+    pub body: SpecBody,
+}
