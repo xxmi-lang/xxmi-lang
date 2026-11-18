@@ -76,10 +76,8 @@ pub async fn ensure_specs(deps: &EnsureDeps<'_>) -> Vec<String> {
     built
 }
 
-/// Records the outcome either way: a failed build is not retried until its inputs change.
-async fn build_one(deps: &EnsureDeps<'_>, input: BuildInput) {
-    let started = std::time::Instant::now();
-    let header = |status: &str| SpecHeader {
+fn header_of(deps: &EnsureDeps<'_>, input: &BuildInput, status: &str) -> SpecHeader {
+    SpecHeader {
         dll_sha: input.dll.commit.clone(),
         baseline_sha: input.baseline.commit.clone(),
         builder: deps.specs.builder().to_string(),
@@ -87,24 +85,32 @@ async fn build_one(deps: &EnsureDeps<'_>, input: BuildInput) {
         status: status.to_string(),
         error: None,
         warnings: Vec::new(),
-    };
+    }
+}
 
-    let stored = match deps.builder.build(input.clone()).await {
+async fn build_stored(deps: &EnsureDeps<'_>, input: &BuildInput) -> StoredSpec {
+    match deps.builder.build(input.clone()).await {
         Ok(built) => StoredSpec {
             header: SpecHeader {
                 warnings: built.warnings.into_iter().take(MAX_WARNINGS).collect(),
-                ..header("ok")
+                ..header_of(deps, input, "ok")
             },
             spec: Some(built.spec),
         },
         Err(error) => StoredSpec {
             header: SpecHeader {
                 error: Some(error.chars().take(MAX_ERROR_CHARS).collect()),
-                ..header("failed")
+                ..header_of(deps, input, "failed")
             },
             spec: None,
         },
-    };
+    }
+}
+
+/// Records the outcome either way: a failed build is not retried until its inputs change.
+async fn build_one(deps: &EnsureDeps<'_>, input: BuildInput) {
+    let started = std::time::Instant::now();
+    let stored = build_stored(deps, &input).await;
 
     let (status, error) = (stored.header.status.clone(), stored.header.error.clone());
     match deps.specs.record(stored).await {

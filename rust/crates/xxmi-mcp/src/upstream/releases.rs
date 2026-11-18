@@ -52,53 +52,67 @@ struct ApiRelease {
     published_at: Option<String>,
 }
 
-/// The newest 30 releases of `repo`; `token` is sent only when configured.
-pub fn fetch_releases(repo: &TrackedRepo, token: Option<&str>) -> Result<Vec<ReleaseInfo>, String> {
-    let url = format!("{API}/repos/{}/releases?per_page=30", repo.full_name());
+fn releases_request(
+    url: &str,
+    token: Option<&str>,
+) -> ureq::RequestBuilder<ureq::typestate::WithoutBody> {
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .timeout_global(Some(TIMEOUT))
         .http_status_as_error(false)
         .build()
         .into();
-    let mut request = agent
-        .get(&url)
+    let request = agent
+        .get(url)
         .header("user-agent", "xxmi-mcp")
         .header("accept", "application/vnd.github+json");
-    if let Some(token) = token {
-        request = request.header("authorization", format!("Bearer {token}"));
+    match token {
+        Some(token) => request.header("authorization", format!("Bearer {token}")),
+        None => request,
     }
+}
 
-    let mut response = request.call().map_err(|e| e.to_string())?;
+fn status_error(response: &ureq::http::Response<ureq::Body>, url: &str) -> String {
+    let status = response.status().as_u16();
+    let limited = response
+        .headers()
+        .get("x-ratelimit-remaining")
+        .is_some_and(|v| v == "0");
+    let note = if limited {
+        " (API rate limit reached)"
+    } else {
+        ""
+    };
+    format!("GitHub {status} for {url}{note}")
+}
+
+fn release_info(release: ApiRelease) -> ReleaseInfo {
+    ReleaseInfo {
+        tag: release.tag_name,
+        meta: ReleaseMeta {
+            name: release.name,
+            prerelease: release.prerelease,
+            draft: release.draft,
+            published_at: release.published_at,
+        },
+    }
+}
+
+/// The newest 30 releases of `repo`; `token` is sent only when configured.
+pub fn fetch_releases(repo: &TrackedRepo, token: Option<&str>) -> Result<Vec<ReleaseInfo>, String> {
+    let url = format!("{API}/repos/{}/releases?per_page=30", repo.full_name());
+    let mut response = releases_request(&url, token)
+        .call()
+        .map_err(|e| e.to_string())?;
     let status = response.status().as_u16();
     if status >= 400 {
-        let limited = response
-            .headers()
-            .get("x-ratelimit-remaining")
-            .is_some_and(|v| v == "0");
-        let note = if limited {
-            " (API rate limit reached)"
-        } else {
-            ""
-        };
-        return Err(format!("GitHub {status} for {url}{note}"));
+        return Err(status_error(&response, &url));
     }
 
     let list: Vec<ApiRelease> = response
         .body_mut()
         .read_json()
         .map_err(|_| format!("unexpected releases response (HTTP {status})"))?;
-    Ok(list
-        .into_iter()
-        .map(|r| ReleaseInfo {
-            tag: r.tag_name,
-            meta: ReleaseMeta {
-                name: r.name,
-                prerelease: r.prerelease,
-                draft: r.draft,
-                published_at: r.published_at,
-            },
-        })
-        .collect())
+    Ok(list.into_iter().map(release_info).collect())
 }
 
 fn same_set(a: &[String], b: &[String]) -> bool {

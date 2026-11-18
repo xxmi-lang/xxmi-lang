@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 use crate::app::AppState;
 use crate::jsonrpc::{INTERNAL_ERROR, METHOD_NOT_FOUND, Request, SERVER_ERROR, failure, success};
-use crate::tools::{self, ToolError};
+use crate::tools::{self, Args, ToolError, ToolResult};
 use crate::zod::{Issue, issues_message};
 
 use super::{initialize, params, resources};
@@ -39,35 +39,37 @@ fn failure_text(name: &str, error: &ToolError) -> String {
     }
 }
 
-async fn call_tool(state: &AppState, request: &Request) -> Value {
-    let call = match params::tool_call(request.params.as_ref()) {
-        Ok(call) => call,
-        Err(issues) => return invalid_params(&request.id, &issues),
-    };
+/// The tool and its checked arguments; the error is the response to send instead.
+fn validated_call(request: &Request) -> Result<(String, Args), Value> {
+    let call = params::tool_call(request.params.as_ref())
+        .map_err(|issues| invalid_params(&request.id, &issues))?;
     let name = call.name;
     if !tools::is_tool(&name) {
-        return success(
-            &request.id,
-            text_result(format!("MCP error -32602: Tool {name} not found"), true),
-        );
+        let text = format!("MCP error -32602: Tool {name} not found");
+        return Err(success(&request.id, text_result(text, true)));
     }
-    let args = match tools::validate_arguments(&name, &call.arguments) {
-        Ok(args) => args,
+
+    match tools::validate_arguments(&name, &call.arguments) {
+        Ok(args) => Ok((name, args)),
         Err(messages) => {
             let text = format!(
                 "MCP error -32602: Input validation error: Invalid arguments for tool {name}: {}",
                 messages.join("\n")
             );
-            return success(&request.id, text_result(text, true));
+            Err(success(&request.id, text_result(text, true)))
         }
-    };
+    }
+}
 
-    let as_json = args.wants_json();
-    let started = Instant::now();
-    let outcome = tools::execute(state.ctx.clone(), &name, args).await;
-    let ms = started.elapsed().as_millis() as u64;
+fn tool_reply(
+    state: &AppState,
+    request: &Request,
+    name: &str,
+    as_json: bool,
+    outcome: ToolResult,
+    ms: u64,
+) -> Value {
     let logger = &state.ctx.logger;
-
     match outcome {
         Ok(output) => {
             logger.info("tool", json!({ "tool": name, "ms": ms, "ok": true }));
@@ -93,9 +95,22 @@ async fn call_tool(state: &AppState, request: &Request) -> Value {
                     json!({ "tool": name, "error": error.message }),
                 );
             }
-            success(&request.id, text_result(failure_text(&name, &error), true))
+            success(&request.id, text_result(failure_text(name, &error), true))
         }
     }
+}
+
+async fn call_tool(state: &AppState, request: &Request) -> Value {
+    let (name, args) = match validated_call(request) {
+        Ok(call) => call,
+        Err(response) => return response,
+    };
+
+    let as_json = args.wants_json();
+    let started = Instant::now();
+    let outcome = tools::execute(state.ctx.clone(), &name, args).await;
+    let ms = started.elapsed().as_millis() as u64;
+    tool_reply(state, request, &name, as_json, outcome, ms)
 }
 
 fn read_resource(state: &AppState, request: &Request) -> Value {

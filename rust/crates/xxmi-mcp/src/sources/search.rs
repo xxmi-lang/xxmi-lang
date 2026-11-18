@@ -8,7 +8,8 @@ use std::time::Duration;
 use serde::Serialize;
 use serde_json::Value;
 use tokio::io::AsyncReadExt;
-use tokio::process::Command;
+use tokio::process::{Child, ChildStderr, ChildStdout, Command};
+use tokio::task::JoinHandle;
 use tokio::time::Instant;
 
 use super::SourceError;
@@ -80,8 +81,8 @@ struct RgRun {
     cut_off: bool,
 }
 
-async fn run_rg(root: &Path, args: &[String], timeout: Duration) -> Result<RgRun, SourceError> {
-    let mut child = Command::new("rg")
+fn spawn_rg(root: &Path, args: &[String]) -> Result<Child, SourceError> {
+    Command::new("rg")
         .args(args)
         .current_dir(root)
         .stdin(Stdio::null())
@@ -94,44 +95,52 @@ async fn run_rg(root: &Path, args: &[String], timeout: Duration) -> Result<RgRun
                 "search is unavailable: ripgrep (rg) is not installed on the server".into(),
             ),
             _ => SourceError(format!("search failed to start: {e}")),
-        })?;
+        })
+}
 
-    let mut stderr_pipe = child.stderr.take();
-    let stderr_task = tokio::spawn(async move {
+fn collect_stderr(pipe: Option<ChildStderr>) -> JoinHandle<String> {
+    tokio::spawn(async move {
         let mut text = Vec::new();
-        if let Some(pipe) = stderr_pipe.as_mut() {
+        if let Some(mut pipe) = pipe {
             let _ = pipe.read_to_end(&mut text).await;
         }
         String::from_utf8_lossy(&text).into_owned()
-    });
+    })
+}
 
+/// Reads until EOF, the deadline or the output cap; true when it stopped early.
+async fn read_stdout(mut pipe: ChildStdout, timeout: Duration) -> (Vec<u8>, bool) {
     let mut stdout = Vec::new();
-    let mut cut_off = false;
-    if let Some(mut pipe) = child.stdout.take() {
-        let deadline = Instant::now() + timeout;
-        let mut chunk = vec![0u8; 64 * 1024];
-        loop {
-            tokio::select! {
-                read = pipe.read(&mut chunk) => match read {
-                    Ok(0) | Err(_) => break,
-                    Ok(n) => stdout.extend_from_slice(&chunk[..n]),
-                },
-                () = tokio::time::sleep_until(deadline) => {
-                    cut_off = true;
-                    break;
-                }
-            }
-            if stdout.len() > MAX_OUTPUT_BYTES {
-                stdout.truncate(MAX_OUTPUT_BYTES);
-                cut_off = true;
-                break;
-            }
+    let deadline = Instant::now() + timeout;
+    let mut chunk = vec![0u8; 64 * 1024];
+
+    loop {
+        tokio::select! {
+            read = pipe.read(&mut chunk) => match read {
+                Ok(0) | Err(_) => return (stdout, false),
+                Ok(n) => stdout.extend_from_slice(&chunk[..n]),
+            },
+            () = tokio::time::sleep_until(deadline) => return (stdout, true),
+        }
+        if stdout.len() > MAX_OUTPUT_BYTES {
+            stdout.truncate(MAX_OUTPUT_BYTES);
+            return (stdout, true);
         }
     }
+}
 
+async fn run_rg(root: &Path, args: &[String], timeout: Duration) -> Result<RgRun, SourceError> {
+    let mut child = spawn_rg(root, args)?;
+    let stderr_task = collect_stderr(child.stderr.take());
+
+    let (stdout, cut_off) = match child.stdout.take() {
+        Some(pipe) => read_stdout(pipe, timeout).await,
+        None => (Vec::new(), false),
+    };
     if cut_off {
         let _ = child.kill().await;
     }
+
     let exit_code = child.wait().await.ok().and_then(|status| status.code());
     let stderr = stderr_task.await.unwrap_or_default();
     Ok(RgRun {
@@ -183,12 +192,47 @@ fn line_text(data: &Value) -> String {
     raw.strip_suffix('\r').unwrap_or(raw).to_string()
 }
 
+/// Collects one file's matches and their surrounding lines as ripgrep reports them.
+#[derive(Default)]
+struct RgParser {
+    matches: Vec<SearchMatch>,
+    pending: Vec<ContextLine>,
+    // False between the end of one file's results and the first match of the next.
+    open: bool,
+}
+
+impl RgParser {
+    fn add_context(&mut self, path: Option<&String>, line: u64, text: String) {
+        let open = self.open;
+        let after = self.matches.last_mut().filter(|last| {
+            open && Some(&last.path) == path && line > last.line && line <= last.line + CONTEXT
+        });
+        match after {
+            Some(last) => last.context.push(ContextLine { line, text }),
+            None => self.pending.push(ContextLine { line, text }),
+        }
+    }
+
+    fn add_match(&mut self, path: String, line: u64, text: String) {
+        self.open = true;
+        let before = self.pending.drain(..).filter(|c| c.line < line).collect();
+        self.matches.push(SearchMatch {
+            path,
+            line,
+            text,
+            context: before,
+        });
+    }
+
+    fn end_file(&mut self) {
+        self.pending.clear();
+        self.open = false;
+    }
+}
+
 /// Matches with their context, in output order, and whether more than `max_results` exist.
 fn parse_rg(stdout: &str, max_results: usize) -> (Vec<SearchMatch>, bool) {
-    let mut matches: Vec<SearchMatch> = Vec::new();
-    let mut pending: Vec<ContextLine> = Vec::new();
-    // False between the end of one file's results and the first match of the next.
-    let mut open = false;
+    let mut parser = RgParser::default();
 
     for raw in stdout.split('\n').filter(|l| !l.is_empty()) {
         // A line cut off by the kill does not parse.
@@ -201,37 +245,16 @@ fn parse_rg(stdout: &str, max_results: usize) -> (Vec<SearchMatch>, bool) {
         let line = data.get("line_number").and_then(Value::as_u64);
 
         match (kind, line) {
-            ("context", Some(line)) => {
-                let text = line_text(data);
-                let after = matches.last_mut().filter(|last| {
-                    open && Some(&last.path) == path.as_ref()
-                        && line > last.line
-                        && line <= last.line + CONTEXT
-                });
-                match after {
-                    Some(last) => last.context.push(ContextLine { line, text }),
-                    None => pending.push(ContextLine { line, text }),
-                }
-            }
+            ("context", Some(line)) => parser.add_context(path.as_ref(), line, line_text(data)),
             ("match", Some(line)) if path.is_some() => {
-                if matches.len() >= max_results {
-                    return (matches, true);
+                if parser.matches.len() >= max_results {
+                    return (parser.matches, true);
                 }
-                open = true;
-                let before = pending.drain(..).filter(|c| c.line < line).collect();
-                matches.push(SearchMatch {
-                    path: path.unwrap_or_default(),
-                    line,
-                    text: line_text(data),
-                    context: before,
-                });
+                parser.add_match(path.unwrap_or_default(), line, line_text(data));
             }
-            ("end", _) => {
-                pending.clear();
-                open = false;
-            }
+            ("end", _) => parser.end_file(),
             _ => {}
         }
     }
-    (matches, false)
+    (parser.matches, false)
 }

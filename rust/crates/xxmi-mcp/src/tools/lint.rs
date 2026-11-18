@@ -8,7 +8,9 @@ use serde_json::{Map, Value, json};
 use xxmi_core::lint::format::{format_json, format_text};
 use xxmi_core::lint::{ConfigLoader, LintOptions, LintResult, lint_texts};
 
-use super::package::choose_package;
+use crate::specs::ResolvedSpec;
+
+use super::package::{PackageChoice, choose_package};
 use super::shared::{Args, ToolContext, ToolError, ToolOutput, ToolResult, with_spec};
 
 /// Where the submitted files live for the linter; nothing at or below it is ever read.
@@ -107,19 +109,20 @@ fn relative_to_root(path: &Path) -> String {
     relative.to_string_lossy().replace(MAIN_SEPARATOR, "/")
 }
 
-pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
-    let Some(Value::Object(submitted)) = args.0.get("files") else {
-        return Err(ToolError::new("files is empty"));
-    };
-    let files = check_lint_input(ctx, submitted)?;
-    let spec = ctx.resolve_spec(args.str("dll_ref"))?;
-    let choice = choose_package(ctx, args.required("game"), args.str("package_ref"), false)?;
-
+fn virtual_files(files: &[(String, String)]) -> Vec<(PathBuf, String)> {
     let root = PathBuf::from(VIRTUAL_ROOT);
-    let virtual_files: Vec<(PathBuf, String)> = files
+    files
         .iter()
         .map(|(path, text)| (root.join(path), text.clone()))
-        .collect();
+        .collect()
+}
+
+fn run_lint(
+    ctx: &ToolContext,
+    files: &[(String, String)],
+    spec: &ResolvedSpec,
+    choice: &PackageChoice,
+) -> Result<LintResult, ToolError> {
     let options = LintOptions {
         rules: None,
         overrides: HashMap::new(),
@@ -129,8 +132,9 @@ pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
     };
 
     let started = Instant::now();
-    let mut result = lint_texts(&virtual_files, &options, &ConfigLoader::disabled())
+    let result = lint_texts(&virtual_files(files), &options, &ConfigLoader::disabled())
         .map_err(|e| ToolError::internal(e.to_string()))?;
+
     // Sizes and counts only: the submitted text must never reach the logs.
     ctx.logger.info(
         "lint_ini",
@@ -142,13 +146,19 @@ pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
             "warnings": result.summary.warning,
         }),
     );
+    Ok(result)
+}
 
-    let dropped = cap_diagnostics(&mut result);
+fn lint_document(
+    result: &LintResult,
+    choice: &PackageChoice,
+    dropped: usize,
+) -> Result<Value, ToolError> {
     let path_of = |path: &Path| relative_to_root(path);
-    let mut doc: Value = serde_json::from_str(
-        &format_json(&result, &path_of).map_err(|e| ToolError::internal(e.to_string()))?,
-    )
-    .map_err(|e| ToolError::internal(e.to_string()))?;
+    let json = format_json(result, &path_of).map_err(|e| ToolError::internal(e.to_string()))?;
+    let mut doc: Value =
+        serde_json::from_str(&json).map_err(|e| ToolError::internal(e.to_string()))?;
+
     if let Value::Object(map) = &mut doc {
         map.insert(
             "package".into(),
@@ -158,19 +168,32 @@ pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
             map.insert("truncated".into(), dropped.into());
         }
     }
+    Ok(doc)
+}
 
-    let mut lines = vec![format_text(&result, &path_of)];
+fn lint_text_report(result: &LintResult, choice: PackageChoice, dropped: usize) -> String {
+    let path_of = |path: &Path| relative_to_root(path);
+    let mut lines = vec![format_text(result, &path_of)];
     if dropped > 0 {
         lines.push(format!("({dropped} more diagnostics not shown)"));
     }
     lines.extend(choice.note);
-    Ok(with_spec(
-        ToolOutput {
-            text: lines.join("\n"),
-            data: doc,
-        },
-        &spec,
-    ))
+    lines.join("\n")
+}
+
+pub fn lint_ini(ctx: &ToolContext, args: &Args) -> ToolResult {
+    let Some(Value::Object(submitted)) = args.0.get("files") else {
+        return Err(ToolError::new("files is empty"));
+    };
+    let files = check_lint_input(ctx, submitted)?;
+    let spec = ctx.resolve_spec(args.str("dll_ref"))?;
+    let choice = choose_package(ctx, args.required("game"), args.str("package_ref"), false)?;
+
+    let mut result = run_lint(ctx, &files, &spec, &choice)?;
+    let dropped = cap_diagnostics(&mut result);
+    let data = lint_document(&result, &choice, dropped)?;
+    let text = lint_text_report(&result, choice, dropped);
+    Ok(with_spec(ToolOutput { text, data }, &spec))
 }
 
 #[cfg(test)]
