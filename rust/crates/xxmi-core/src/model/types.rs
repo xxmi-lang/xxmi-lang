@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use line_index::{LineIndex, TextSize, WideEncoding};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::diagnostic::{Position, Range};
 use crate::encoding::Encoding;
@@ -12,7 +12,7 @@ use crate::scan::{ScannedLine, Span};
 use crate::spec::SpecSection;
 
 /// What a reference or a declared section can point at.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SymbolKind {
     CommandList,
@@ -124,6 +124,8 @@ pub struct VariableDeclaration {
     pub span: Span,
     pub section: Option<usize>,
     pub scope: Scope,
+    pub persist: bool,
+    pub locked: bool,
 }
 
 pub struct IniFile {

@@ -4,8 +4,10 @@
 mod args;
 mod error;
 mod help;
+mod index_command;
 mod js_number;
 mod lint_command;
+mod query_command;
 
 use std::process::exit;
 
@@ -39,9 +41,11 @@ fn dispatch(args: &[String]) -> Result<i32, CliError> {
 
     match command.as_str() {
         "lint" => lint_command::run(rest),
-        "query" | "index" | "lsp" => Err(CliError::Usage(format!(
-            "`xxmi {command}` is not implemented in the Rust build yet"
-        ))),
+        "query" => query_command::run(rest),
+        "index" => index_command::run(rest),
+        "lsp" => Err(CliError::Usage(
+            "`xxmi lsp` is not implemented in the Rust build yet".to_string(),
+        )),
         "--version" | "-v" => {
             println!("{}", env!("CARGO_PKG_VERSION"));
             Ok(0)

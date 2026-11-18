@@ -2,7 +2,7 @@
 //! loads files with the namespaces the DLL would give them, follows `[Include]` like
 //! `ParseIncludedIniFiles`, and builds the symbol table.
 
-mod package;
+pub mod package;
 pub mod snapshot;
 pub mod symbols;
 pub mod usage;
@@ -105,8 +105,8 @@ impl Workspace {
     pub fn symbols(&self) -> &SymbolTable {
         self.symbols.get_or_init(|| {
             let mut table = SymbolTable::new(self.lookup);
-            for file in &self.files {
-                table.add_file(file);
+            for (id, file) in self.files.iter().enumerate() {
+                table.add_file(id, file);
             }
             for snapshot in self.snapshots {
                 if !snapshot.namespaces.iter().any(|ns| table.has_namespace(ns)) {
@@ -140,7 +140,7 @@ impl Workspace {
     }
 
     /// Loads d3dx.ini and everything it `include`s (not `include_recursive` folders).
-    fn load_package(&mut self, root: &Path) -> io::Result<()> {
+    pub fn load_package(&mut self, root: &Path) -> io::Result<()> {
         if !self.loaded_packages.insert(root.to_path_buf()) {
             return Ok(());
         }

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Parity check between the TypeScript CLI and the Rust binary: runs `xxmi lint --format json` with
 // both on fixtures/ and on a ZZMI package, and compares every diagnostic (id, severity, message,
-// range, fix). Exits 1 on any mismatch.
+// range, fix). Then compares `xxmi query` (text and --json: stdout, stderr and exit code) over every
+// spec category and library symbols, and `xxmi index` output semantically. Exits 1 on any mismatch.
 //
 //   cargo build --release --manifest-path rust/Cargo.toml && node rust/bench/parity.mjs
 //
@@ -9,7 +10,8 @@
 // full mismatch list to a file.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -80,6 +82,99 @@ function compare(target, ts, rust) {
   return mismatches;
 }
 
+function cli(which, args) {
+  const [command, prefix] = commands[which];
+  const run = spawnSync(command, [...prefix, ...args], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 30 });
+  return { status: run.status, stdout: run.stdout, stderr: run.stderr };
+}
+
+/** A deterministic spread of `count` items. */
+function sample(items, count) {
+  const step = Math.max(1, Math.floor(items.length / count));
+  return items.filter((_, i) => i % step === 0).slice(0, count);
+}
+
+function querySet() {
+  const spec = JSON.parse(readFileSync(join(root, 'packages/core/dist/spec.json'), 'utf8'));
+  const snapshot = JSON.parse(readFileSync(join(root, 'packages/core/snapshots/zzmi.json'), 'utf8'));
+  const commandNames = [
+    ...spec.commands.map((c) => c.name),
+    ...spec.functions.map((f) => f.name),
+    ...spec.resourceMembers.map((m) => `->${m.name}`),
+  ];
+  const queries = [
+    ['section-kinds'],
+    ...spec.sections.map((s) => ['keys', s.name]),
+    ['keys', '[Resource]'],
+    ['keys', 'NoSuchSection'],
+    ['keys'],
+    ...[...new Set(commandNames)].map((name) => ['command', name]),
+    ['command', 'commandlistFoo'],
+    ['command', 'nothing-like-this'],
+    ['command'],
+    ...spec.operators.tokens.map((t) => ['operator', t.token]),
+    ['operator', '???'],
+    ['symbol', 'CommandList\\ZZMI\\SetTextures'],
+    ['symbol', '$\\TTL\\alpha'],
+    ['symbol', 'CommandList\\Nope\\Nothing'],
+    ['symbol'],
+    ['library'],
+    ['library', 'ttl'],
+    ['library', 'nolib'],
+    ['refs', 'x'],
+    ['bogus'],
+    [],
+  ];
+  for (const s of sample(snapshot.sections, 25)) queries.push(['symbol', s.qualifiedName]);
+  for (const v of sample(snapshot.variables, 25)) queries.push(['symbol', v.key]);
+
+  const withPackage = zzmi && existsSync(zzmi) ? ['--package', zzmi] : [];
+  const out = [];
+  for (const q of queries) {
+    out.push(q, [...q, '--json']);
+    if (['symbol', 'library'].includes(q[0])) out.push([...q, ...withPackage], [...q, ...withPackage, '--json']);
+  }
+  return out;
+}
+
+function compareQueries() {
+  const mismatches = [];
+  const queries = querySet();
+  for (const args of queries) {
+    const ts = cli('ts', ['query', ...args]);
+    const rust = cli('rust', ['query', ...args]);
+    const label = `query ${args.join(' ')}`;
+    if (ts.status !== rust.status) mismatches.push(`${label}: exit ${ts.status} vs ${rust.status}`);
+    else if (ts.stdout !== rust.stdout) mismatches.push(`${label}: stdout differs`);
+    else if (ts.stderr !== rust.stderr && ts.status !== 3 && ts.status !== 2) {
+      mismatches.push(`${label}: stderr ${JSON.stringify(ts.stderr)} vs ${JSON.stringify(rust.stderr)}`);
+    }
+  }
+  console.log(`query: ${queries.length} invocations, ${mismatches.length} mismatches`);
+  return mismatches;
+}
+
+function compareIndex() {
+  if (!existsSync(zzmi)) return [];
+  const dir = mkdtempSync(join(tmpdir(), 'xxmi-index-'));
+  const outputs = {};
+  for (const which of ['ts', 'rust']) {
+    const out = join(dir, `${which}.json`);
+    const run = cli(which, ['index', zzmi, '--out', out, '--name', 'zzmi']);
+    outputs[which] = { run, text: existsSync(out) ? readFileSync(out, 'utf8') : '' };
+  }
+  const { ts, rust } = outputs;
+  const mismatches = [];
+  if (ts.run.status !== rust.run.status) mismatches.push(`index: exit ${ts.run.status} vs ${rust.run.status}`);
+  const message = (run) => run.stderr.replace(/→ .*/, '→ OUT');
+  if (message(ts.run) !== message(rust.run)) mismatches.push(`index: stderr ${ts.run.stderr} vs ${rust.run.stderr}`);
+  const same = JSON.stringify(JSON.parse(ts.text)) === JSON.stringify(JSON.parse(rust.text));
+  if (!same) mismatches.push('index: snapshot JSON differs');
+  console.log(`index ${zzmi}: ${mismatches.length} mismatches, byte-identical output: ${ts.text === rust.text}`);
+  rmSync(dir, { recursive: true, force: true });
+  return mismatches;
+}
+
 let failed = false;
 const report = [];
 for (const target of targets) {
@@ -96,5 +191,9 @@ for (const target of targets) {
   report.push(...mismatches.map((m) => `${target}: ${m}`));
   failed ||= mismatches.length > 0;
 }
+const other = [...compareQueries(), ...compareIndex()];
+for (const line of other.slice(0, 20)) console.log(`  ${line}`);
+report.push(...other);
+failed ||= other.length > 0;
 if (process.env.PARITY_REPORT) writeFileSync(process.env.PARITY_REPORT, report.join('\n'));
 process.exit(failed ? 1 : 0);

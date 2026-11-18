@@ -12,4 +12,6 @@ name = "xxmi"
 path = "src/main.rs"
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
 xxmi-core = { path = "../xxmi-core" }

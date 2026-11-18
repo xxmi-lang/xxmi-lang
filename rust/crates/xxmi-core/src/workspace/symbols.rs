@@ -10,15 +10,44 @@ use std::collections::{HashMap, HashSet};
 use crate::lookup::Lookup;
 use crate::model::{IniFile, Reference, Scope, SymbolKind};
 
+use super::FileId;
 use super::snapshot::SymbolSnapshot;
 
+/// Where a symbol is declared: a loaded file, or an entry of a library snapshot (the DLL's
+/// built-in sections use the snapshot name `builtin`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Origin {
+    File {
+        file: FileId,
+        section: Option<usize>,
+    },
+    Snapshot {
+        name: String,
+        path: String,
+        line: u32,
+    },
+}
+
+#[derive(Debug, Clone)]
 pub struct SectionSymbol {
     pub kind: SymbolKind,
     /// As the DLL stores it, e.g. `CommandList\ZZMI\SetTextures`.
     pub qualified_name: String,
+    pub origin: Origin,
 }
 
-/// What a variable reference resolved to; all rules need is which declaration was used.
+#[derive(Debug, Clone)]
+pub struct VariableSymbol {
+    /// As the DLL stores it, lower-cased: `$\ttl\alpha`, or `$name` for d3dx.ini globals.
+    pub key: String,
+    pub persist: bool,
+    pub locked: bool,
+    pub origin: Origin,
+    /// File and index into `IniFile::variables`.
+    pub declaration: Option<(FileId, usize)>,
+}
+
+/// What a variable reference resolved to; all the rules need is which declaration was used.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ResolvedVariable {
     /// A local of the referencing section, by the byte offset of its declaration.
@@ -37,10 +66,43 @@ pub fn global_variable_key(name: &str, namespace: &str) -> String {
     format!("$\\{}\\{bare}", namespace.to_lowercase())
 }
 
+/// Lists grouped by key, iterated in the order the keys first appeared (a JavaScript `Map`).
+struct Grouped<V> {
+    order: Vec<String>,
+    groups: HashMap<String, Vec<V>>,
+}
+
+impl<V> Grouped<V> {
+    fn new() -> Self {
+        Self {
+            order: Vec::new(),
+            groups: HashMap::new(),
+        }
+    }
+
+    fn push(&mut self, key: String, value: V) {
+        match self.groups.get_mut(&key) {
+            Some(list) => list.push(value),
+            None => {
+                self.order.push(key.clone());
+                self.groups.insert(key, vec![value]);
+            }
+        }
+    }
+
+    fn get(&self, key: &str) -> &[V] {
+        self.groups.get(key).map_or(&[], Vec::as_slice)
+    }
+
+    fn values(&self) -> impl Iterator<Item = &V> {
+        self.order.iter().flat_map(|key| &self.groups[key])
+    }
+}
+
 pub struct SymbolTable {
     lookup: &'static Lookup,
-    sections: HashMap<String, Vec<SectionSymbol>>,
-    variables: HashSet<String>,
+    sections: Grouped<SectionSymbol>,
+    variables: Grouped<VariableSymbol>,
     namespaces: HashSet<String>,
 }
 
@@ -48,25 +110,43 @@ impl SymbolTable {
     pub fn new(lookup: &'static Lookup) -> Self {
         Self {
             lookup,
-            sections: HashMap::new(),
-            variables: HashSet::new(),
+            sections: Grouped::new(),
+            variables: Grouped::new(),
             namespaces: HashSet::new(),
         }
     }
 
-    pub fn add_file(&mut self, file: &IniFile) {
+    pub fn add_file(&mut self, id: FileId, file: &IniFile) {
         if !file.namespace.is_empty() {
             self.namespaces.insert(file.namespace.to_lowercase());
         }
 
-        for section in &file.sections {
+        for (index, section) in file.sections.iter().enumerate() {
             if let Some(kind) = section.kind {
-                self.add_section(kind, section.qualified_name.clone());
+                self.add_section(SectionSymbol {
+                    kind,
+                    qualified_name: section.qualified_name.clone(),
+                    origin: Origin::File {
+                        file: id,
+                        section: Some(index),
+                    },
+                });
             }
         }
-        for declaration in file.variables.iter().filter(|v| v.scope == Scope::Global) {
-            self.variables
-                .insert(global_variable_key(&declaration.name, &file.namespace));
+        for (index, declaration) in file.variables.iter().enumerate() {
+            if declaration.scope != Scope::Global {
+                continue;
+            }
+            self.add_variable(VariableSymbol {
+                key: global_variable_key(&declaration.name, &file.namespace),
+                persist: declaration.persist,
+                locked: declaration.locked,
+                origin: Origin::File {
+                    file: id,
+                    section: declaration.section,
+                },
+                declaration: Some((id, index)),
+            });
         }
     }
 
@@ -75,10 +155,20 @@ impl SymbolTable {
             self.namespaces.insert(namespace.to_lowercase());
         }
         for section in &snapshot.sections {
-            self.add_section(section.kind, section.qualified_name.clone());
+            self.add_section(SectionSymbol {
+                kind: section.kind,
+                qualified_name: section.qualified_name.clone(),
+                origin: snapshot_origin(snapshot, &section.path, section.line),
+            });
         }
         for variable in &snapshot.variables {
-            self.variables.insert(variable.key.clone());
+            self.add_variable(VariableSymbol {
+                key: variable.key.clone(),
+                persist: variable.persist,
+                locked: variable.locked,
+                origin: snapshot_origin(snapshot, &variable.path, variable.line),
+                declaration: None,
+            });
         }
     }
 
@@ -87,25 +177,51 @@ impl SymbolTable {
         self.namespaces.contains(&namespace.to_lowercase())
     }
 
+    /// All sections declared under a qualified name (more than one means a duplicate).
+    pub fn sections_named(&self, qualified_name: &str) -> &[SectionSymbol] {
+        self.sections.get(&qualified_name.to_lowercase())
+    }
+
     pub fn all_sections(&self) -> impl Iterator<Item = &SectionSymbol> {
-        self.sections.values().flatten()
+        self.sections.values()
+    }
+
+    pub fn all_variables(&self) -> impl Iterator<Item = &VariableSymbol> {
+        self.variables.values()
     }
 
     /// Resolves a section reference made from `namespace`. The DLL's own built-in sections resolve
     /// to a symbol too.
     pub fn resolve_section(&self, kind: SymbolKind, text: &str, namespace: &str) -> Option<String> {
+        self.resolve_section_symbol(kind, text, namespace)
+            .map(|symbol| symbol.qualified_name)
+    }
+
+    pub fn resolve_section_symbol(
+        &self,
+        kind: SymbolKind,
+        text: &str,
+        namespace: &str,
+    ) -> Option<SectionSymbol> {
         for candidate in self.section_candidates(text, namespace) {
             let found = self
                 .sections
                 .get(&candidate.to_lowercase())
-                .and_then(|list| list.iter().find(|s| s.kind == kind));
+                .iter()
+                .find(|s| s.kind == kind);
             if let Some(found) = found {
-                return Some(found.qualified_name.clone());
+                return Some(found.clone());
             }
         }
-        self.lookup
-            .is_builtin_section(text)
-            .then(|| text.to_string())
+        self.lookup.is_builtin_section(text).then(|| SectionSymbol {
+            kind,
+            qualified_name: text.to_string(),
+            origin: Origin::Snapshot {
+                name: "builtin".to_string(),
+                path: "d3d11.dll".to_string(),
+                line: 0,
+            },
+        })
     }
 
     /// Candidate stored names for a section reference, in DLL lookup order.
@@ -128,36 +244,72 @@ impl SymbolTable {
         reference: &Reference,
         file: &IniFile,
     ) -> Option<ResolvedVariable> {
-        let lower = reference.text.to_lowercase();
-        let local = file.variables.iter().find(|v| {
-            v.scope == Scope::Local
-                && v.section == reference.section
-                && v.span.start <= reference.span.start
-                && v.name.to_lowercase() == lower
-        });
-        if let Some(local) = local {
-            return Some(ResolvedVariable::Local(local.span.start));
+        if let Some(local) = find_local(reference, file) {
+            return Some(ResolvedVariable::Local(file.variables[local].span.start));
         }
+        self.find_global(reference, file)
+            .map(|symbol| ResolvedVariable::Global(symbol.key.clone()))
+    }
 
+    /// `resolve_variable` with the symbol, for navigation. `id` is the file the reference is in.
+    pub fn resolve_variable_symbol(
+        &self,
+        reference: &Reference,
+        id: FileId,
+        file: &IniFile,
+    ) -> Option<VariableSymbol> {
+        if let Some(local) = find_local(reference, file) {
+            return Some(VariableSymbol {
+                key: reference.text.to_lowercase(),
+                persist: false,
+                locked: false,
+                origin: Origin::File {
+                    file: id,
+                    section: file.variables[local].section,
+                },
+                declaration: Some((id, local)),
+            });
+        }
+        self.find_global(reference, file).cloned()
+    }
+
+    fn find_global(&self, reference: &Reference, file: &IniFile) -> Option<&VariableSymbol> {
         let mut candidates = Vec::new();
         if !file.namespace.is_empty() {
             candidates.push(global_variable_key(&reference.text, &file.namespace));
         }
-        candidates.push(lower);
+        candidates.push(reference.text.to_lowercase());
         candidates
-            .into_iter()
-            .find(|key| self.variables.contains(key))
-            .map(ResolvedVariable::Global)
+            .iter()
+            .find_map(|key| self.variables.get(key).first())
     }
 
-    fn add_section(&mut self, kind: SymbolKind, qualified_name: String) {
+    fn add_section(&mut self, symbol: SectionSymbol) {
         self.sections
-            .entry(qualified_name.to_lowercase())
-            .or_default()
-            .push(SectionSymbol {
-                kind,
-                qualified_name,
-            });
+            .push(symbol.qualified_name.to_lowercase(), symbol);
+    }
+
+    fn add_variable(&mut self, symbol: VariableSymbol) {
+        self.variables.push(symbol.key.clone(), symbol);
+    }
+}
+
+/// The local declared earlier in the reference's own section under the same name.
+fn find_local(reference: &Reference, file: &IniFile) -> Option<usize> {
+    let lower = reference.text.to_lowercase();
+    file.variables.iter().position(|v| {
+        v.scope == Scope::Local
+            && v.section == reference.section
+            && v.span.start <= reference.span.start
+            && v.name.to_lowercase() == lower
+    })
+}
+
+fn snapshot_origin(snapshot: &SymbolSnapshot, path: &str, line: u32) -> Origin {
+    Origin::Snapshot {
+        name: snapshot.name.clone(),
+        path: path.to_string(),
+        line,
     }
 }
 

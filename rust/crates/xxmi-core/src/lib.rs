@@ -10,6 +10,7 @@ pub mod lookup;
 pub mod model;
 pub mod parse;
 pub mod paths;
+pub mod query;
 pub mod rules;
 pub mod scan;
 pub mod spec;

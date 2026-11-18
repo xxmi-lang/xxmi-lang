@@ -110,6 +110,7 @@ impl Walker<'_, '_> {
 
     fn visit_declaration(&mut self, node: Node) {
         if let Some(variable) = node.child_by_field_name("variable") {
+            let has_flag = |flag: &str| node.children(&mut node.walk()).any(|c| c.kind() == flag);
             self.variables.push(VariableDeclaration {
                 name: self.text_of(variable).trim().to_string(),
                 span: self.span_of(variable),
@@ -119,6 +120,8 @@ impl Walker<'_, '_> {
                 } else {
                     Scope::Global
                 },
+                persist: has_flag("persist"),
+                locked: has_flag("locked"),
             });
         }
 
