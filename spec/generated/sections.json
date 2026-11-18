@@ -922,24 +922,6 @@
           "xxmi": true
         },
         {
-          "name": "match_format",
-          "valueType": "enum:DXGIFormats",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
-          "name": "match_dhash",
-          "valueType": "hash",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
-          "name": "match_confidence",
-          "valueType": "float",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
           "name": "color_space",
           "valueType": "enum:CustomColorSpaceNames",
           "source": "IniHandler.cpp:ParseResourceSection",
@@ -1067,24 +1049,6 @@
           "xxmi": false
         },
         {
-          "name": "match_format",
-          "valueType": "enum:DXGIFormats",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
-          "name": "match_dhash",
-          "valueType": "hash",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
-          "name": "match_confidence",
-          "valueType": "float",
-          "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
-        },
-        {
           "name": "color_space",
           "valueType": "enum:CustomColorSpaceNames",
           "source": "IniHandler.cpp:ParseResourceSection",
@@ -1184,6 +1148,18 @@
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
       "xxmi": false
+    },
+    {
+      "name": "Filter",
+      "prefix": true,
+      "kind": "regular",
+      "allowsBareLines": false,
+      "allowsDuplicateKeys": false,
+      "keys": [],
+      "removedKeys": [],
+      "dynamicKeys": [],
+      "source": "IniHandler.cpp:RegularSections",
+      "xxmi": true
     },
     {
       "name": "Key",
