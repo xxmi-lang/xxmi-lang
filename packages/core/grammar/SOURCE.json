@@ -4,8 +4,8 @@
   "upstream": "https://github.com/lupomikti/tree-sitter-migoto",
   "upstreamVersion": "0.9.4",
   "branch": "xxmi",
-  "commit": "2a366ae9368d64ff673ce6fdb9c47aeb7bdc4828",
+  "commit": "e0df4ecf01997cb7c31946f32d484ffdae4b0173",
   "dirty": false,
   "treeSitterCli": "0.26.13",
-  "sha256": "8966ff6095c2d750300081acf6b8a89a4b52098c4aa8c5abf747976eb54259b7"
+  "sha256": "2ff0482bc6bb31da7602625b078cca1471bd51bb1324b12d05dcd480f327fd8e"
 }

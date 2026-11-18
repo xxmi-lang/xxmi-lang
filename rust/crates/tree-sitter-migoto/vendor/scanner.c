@@ -23,6 +23,7 @@ typedef enum {
     CUSTOMSHADER_CALLABLE_PREFIX,
     CUSTOMRESOURCE_HEADER_PREFIX,
     RESOURCEPOOL_HEADER_PREFIX,
+    FILTER_HEADER_PREFIX,
     NAMESPACE_RESOLUTION_START,
     NAMESPACE_RESOLUTION_CONTENT,
     NAMESPACE_RESOLUTION_END,
@@ -55,6 +56,7 @@ const char *SECTION_PREFIX_NAMES[] = {
     "include",
     "preset",
     "pool",
+    "filter",
     "key",
     0
 };
@@ -81,6 +83,7 @@ const char *SECTION_NAMES[] = {
     "convergencemap",
     "resource",
     "pool",
+    "filter",
     "preset",
     "loader",
     "input",
@@ -320,6 +323,25 @@ static inline bool scan_namespace_res_content(TSLexer *lexer) {
     return true;
 }
 
+// A filter name needs a character after "Filter" (ResourceFilterTarget::ParseTarget),
+// and `filter_index` is the TextureOverride/ShaderOverride key, not a filter.
+// Runs after mark_end, so what it consumes is not part of the token.
+static inline bool scan_filter_name_ahead(TSLexer *lexer) {
+    const char *index_key = "_index";
+    int matched = 0;
+
+    while (index_key[matched] && towlower(lexer->lookahead) == index_key[matched]) {
+        consume(lexer);
+        matched++;
+    }
+
+    if (matched > 0 && !index_key[matched]) {
+        return !(iswspace(lexer->lookahead) || lexer->lookahead == '=' || is_eof(lexer));
+    }
+
+    return matched > 0 || !(iswspace(lexer->lookahead) || lexer->lookahead == ']' || is_eof(lexer));
+}
+
 static inline bool scan_maybe_section_header(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool is_prefix_search) {
     // Prefix Search indicates that we are looking to return a specific token for the prefix
     // instead of returning a generic "this is a valid header name" for a single token
@@ -339,7 +361,8 @@ static inline bool scan_maybe_section_header(Scanner *scanner, TSLexer *lexer, c
             valid_symbols[COMMANDLIST_CALLABLE_PREFIX] ||
             valid_symbols[CUSTOMSHADER_CALLABLE_PREFIX] ||
             valid_symbols[CUSTOMRESOURCE_HEADER_PREFIX] ||
-            valid_symbols[RESOURCEPOOL_HEADER_PREFIX]
+            valid_symbols[RESOURCEPOOL_HEADER_PREFIX] ||
+            valid_symbols[FILTER_HEADER_PREFIX]
         ))
         {
             skip(lexer);
@@ -360,7 +383,7 @@ static inline bool scan_maybe_section_header(Scanner *scanner, TSLexer *lexer, c
     // otherwise we can start searching
     // would love to just use strchr here, but wasm with wasi-sdk doesn't have support for it
     if (!iswalpha(lexer->lookahead) ||
-        memchr("stcbplrhki", towlower(lexer->lookahead), 11) == NULL)
+        memchr("stcbplrhkif", towlower(lexer->lookahead), 12) == NULL)
     {
         return false;
     }
@@ -544,6 +567,14 @@ callable:
             search_lengths[1] = 8; // Resource
         }
         break;
+    case 'f':
+        if (is_prefix_search) {
+            if (!valid_symbols[FILTER_HEADER_PREFIX]) return false;
+            lexer->result_symbol = FILTER_HEADER_PREFIX;
+        }
+        target_term = "filter";
+        search_lengths[0] = 6;
+        break;
     case 'h':
         // There are no prefixes that start with 'h'
         if (is_prefix_search) return false;
@@ -593,6 +624,9 @@ callable:
 
     if (target_term && !strcmp(strlwr(scanner->word.contents), target_term)) {
         reset(scanner);
+        if (is_prefix_search && lexer->result_symbol == FILTER_HEADER_PREFIX) {
+            return scan_filter_name_ahead(lexer);
+        }
         return true;
     }
     else if (!target_term) {
@@ -923,6 +957,7 @@ static inline bool scan_custom_resource_identifier(TSLexer *lexer) {
         // mixing whitespace significance in some places but not in others
         switch (lookahead) {
         case '[':
+        case ']':
         case '$':
         case '=':
         case '+':
@@ -1212,7 +1247,8 @@ bool tree_sitter_migoto_external_scanner_scan(void *payload, TSLexer *lexer, con
         valid_symbols[KEY_HEADER_PREFIX] || valid_symbols[PRESET_HEADER_PREFIX] ||
         valid_symbols[INCLUDE_HEADER_PREFIX] || valid_symbols[COMMANDLIST_HEADER_PREFIX] ||
         valid_symbols[COMMANDLIST_CALLABLE_PREFIX] || valid_symbols[CUSTOMSHADER_CALLABLE_PREFIX] ||
-        valid_symbols[CUSTOMRESOURCE_HEADER_PREFIX] || valid_symbols[RESOURCEPOOL_HEADER_PREFIX]
+        valid_symbols[CUSTOMRESOURCE_HEADER_PREFIX] || valid_symbols[RESOURCEPOOL_HEADER_PREFIX] ||
+        valid_symbols[FILTER_HEADER_PREFIX]
     );
 
     if (is_prefix_search) {

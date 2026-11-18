@@ -62,6 +62,7 @@ export const SECTION_KEY_SOURCES: Record<string, KeySource[]> = {
     { file: INI, fn: ['ParseResourceSection', 'ParseResourceSections'] },
     { file: INI, fn: 'ParseResourceInitialData' },
   ],
+  Filter: [{ file: INI, fn: 'ParseFilterSection' }],
   // A pool's resource template is parsed with ParseResourceSection(section_name, L"template").
   Pool: [
     { file: INI, fn: 'ParseResourcePoolSection' },

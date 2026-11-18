@@ -45,7 +45,7 @@ async function describeRepo(ctx: ToolContext, repo: TrackedRepo) {
 
 type RepoDescription = Awaited<ReturnType<typeof describeRepo>>;
 
-/** `spec: master ok, v1.3.1 ok, v1.2.3 failed (reason)`, for the DLL repo only. */
+/** `spec: master ok, v1.3.2 ok, v1.2.3 failed (reason)`, for the DLL repo only. */
 function specStatusLine(r: RepoDescription): string[] {
   if (r.role !== 'dll' || !r.default) return [];
   const versions = [r.default, ...r.tags] as { name: string; spec?: string; specError?: string }[];

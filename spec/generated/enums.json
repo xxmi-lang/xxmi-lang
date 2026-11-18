@@ -646,6 +646,45 @@
       "xxmi": false
     },
     {
+      "name": "ResourceFilterTypeNames",
+      "values": [
+        {
+          "name": "Filter",
+          "source": "CommandList.h:ResourceFilterTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "Empty",
+          "source": "CommandList.h:ResourceFilterTypeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:ResourceFilterTypeNames",
+      "xxmi": true
+    },
+    {
+      "name": "ResourceFilterTargetEvaluationModeNames",
+      "values": [
+        {
+          "name": "FilterIdentity",
+          "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "Format",
+          "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
+          "xxmi": true
+        },
+        {
+          "name": "Confidence",
+          "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
+          "xxmi": true
+        }
+      ],
+      "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
+      "xxmi": true
+    },
+    {
       "name": "ParamOverrideTypeNames",
       "values": [
         {
@@ -855,6 +894,11 @@
         },
         {
           "name": "fps",
+          "source": "CommandList.h:ParamOverrideTypeNames",
+          "xxmi": true
+        },
+        {
+          "name": "resource_filter",
           "source": "CommandList.h:ParamOverrideTypeNames",
           "xxmi": true
         }

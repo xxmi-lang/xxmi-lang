@@ -8,6 +8,12 @@ on:
     # Weekly: parse the latest ZZMI-Package, not just the pinned commit.
     - cron: '0 5 * * 1'
   workflow_dispatch:
+    inputs:
+      # macOS runners are opt-in: hosted macOS queues have stalled whole runs.
+      macos:
+        description: Also run the macOS legs
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ fromJSON(inputs.macos && '["ubuntu-latest","windows-latest","macos-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -65,6 +71,19 @@ jobs:
             /Injector/
             /util.h
           sparse-checkout-cone-mode: false
+
+      # The checkout is one commit without tags; spec-build-tags.test.ts needs these.
+      - name: Fetch DLL release tags
+        shell: bash
+        run: |
+          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
+              refs/tags/v1.2.0:refs/tags/v1.2.0 \
+              refs/tags/v1.2.1:refs/tags/v1.2.1 \
+              refs/tags/v1.2.2:refs/tags/v1.2.2 \
+              refs/tags/v1.2.3:refs/tags/v1.2.3 \
+              refs/tags/v1.3.0:refs/tags/v1.3.0 \
+              refs/tags/v1.3.1:refs/tags/v1.3.1 \
+              refs/tags/v1.3.2:refs/tags/v1.3.2
 
       - name: Check out 3Dmigoto (vanilla baseline)
         uses: actions/checkout@v7
@@ -146,7 +165,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ fromJSON(inputs.macos && '["ubuntu-latest","windows-latest","macos-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -211,7 +230,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ fromJSON(inputs.macos && '["ubuntu-latest","windows-latest","macos-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
     env:
       XXMI_PATH: ${{ github.workspace }}/dist/bin/xxmi${{ matrix.os == 'windows-latest' && '.exe' || '' }}

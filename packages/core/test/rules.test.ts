@@ -96,7 +96,7 @@ describe('XM102 did-you-mean', () => {
   it('never suggests a value-form command for a misspelled key', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'xm102-'));
     const path = join(dir, 'mod.ini');
-    writeFileSync(path, '[CommandListA]\nrestoreoriginaltexture = 1\n');
+    writeFileSync(path, '[CommandListA]\nrestoreinitialtexture = 1\n');
 
     try {
       const { files } = await lintPaths([path], { rules: ['XM102'], snapshots: [] });
@@ -104,7 +104,7 @@ describe('XM102 did-you-mean', () => {
 
       expect(messages).toHaveLength(1);
       expect(messages[0]).toMatch(/^Unrecognised entry/);
-      expect(messages[0]).not.toContain('restoreoriginaltextures');
+      expect(messages[0]).not.toContain('restoreinitialtextures');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
