@@ -5,27 +5,32 @@
  */
 import { chmodSync, copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { BUNDLED_ARCH, BUNDLED_OS, binaryName } from '../src/platform.ts';
+import {
+  RELEASE_TARGETS,
+  type ReleaseTarget,
+  releaseBinaryName,
+  targetName,
+} from '../../../scripts/platforms.ts';
+import { binaryName } from '../src/platform.ts';
 
 const root = resolve(import.meta.dirname, '..');
 const source = resolve(root, '../../dist/bin');
 const target = join(root, 'bin');
 rmSync(target, { recursive: true, force: true });
 
-const staged: string[] = [];
-for (const os of BUNDLED_OS) {
-  for (const arch of BUNDLED_ARCH) {
-    const exe = binaryName(os).replace('xxmi', '');
-    const from = join(source, `xxmi-${os}-${arch}${exe}`);
-    if (!existsSync(from)) continue;
-    const dir = join(target, `${os}-${arch}`);
-    mkdirSync(dir, { recursive: true });
-    const to = join(dir, binaryName(os));
-    copyFileSync(from, to);
-    chmodSync(to, 0o755);
-    staged.push(`${os}-${arch}`);
-  }
+function stage(t: ReleaseTarget): boolean {
+  const from = join(source, releaseBinaryName(t));
+  if (!existsSync(from)) return false;
+
+  const dir = join(target, targetName(t));
+  mkdirSync(dir, { recursive: true });
+  const to = join(dir, binaryName(t.os));
+  copyFileSync(from, to);
+  chmodSync(to, 0o755);
+  return true;
 }
+
+const staged = RELEASE_TARGETS.filter(stage).map(targetName);
 
 if (staged.length === 0) {
   console.error(

@@ -14,16 +14,12 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { OS_BY_NODE_PLATFORM, RELEASE_TARGETS, targetName } from './platforms.ts';
 
 /** Release target -> Rust target triple. */
-export const TARGETS: Record<string, string> = {
-  'windows-x64': 'x86_64-pc-windows-msvc',
-  'windows-arm64': 'aarch64-pc-windows-msvc',
-  'linux-x64': 'x86_64-unknown-linux-musl',
-  'linux-arm64': 'aarch64-unknown-linux-musl',
-  'macos-x64': 'x86_64-apple-darwin',
-  'macos-arm64': 'aarch64-apple-darwin',
-};
+export const TARGETS: Record<string, string> = Object.fromEntries(
+  RELEASE_TARGETS.map((t) => [targetName(t), t.triple]),
+);
 
 const USAGE = `Usage: pnpm build:binaries [--target <list>] [--out dir]
 
@@ -64,12 +60,11 @@ function tripleOf(target: string): string | undefined {
 
 /** The release name of this machine, e.g. macos-arm64. */
 function hostName(): string {
-  const names: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
-  const os = names[process.platform];
+  const os = OS_BY_NODE_PLATFORM[process.platform];
   if (!os || (process.arch !== 'x64' && process.arch !== 'arm64')) {
     throw new Error(`no release name for ${process.platform}-${process.arch}`);
   }
-  return `${os}-${process.arch}`;
+  return targetName({ os, arch: process.arch });
 }
 
 /** cargo's output for one target; `triple` undefined means this machine. */

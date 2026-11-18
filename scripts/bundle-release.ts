@@ -26,6 +26,13 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import {
+  OS_BY_NODE_PLATFORM,
+  RELEASE_TARGETS,
+  exeSuffix,
+  releaseBinaryName,
+  targetName,
+} from './platforms.ts';
 
 const REPO = resolve(import.meta.dirname, '..');
 const { values } = parseArgs({
@@ -41,16 +48,6 @@ if (!values.version) throw new Error('--version is required');
 const version = values.version;
 const binDir = resolve(values.bin ?? join(REPO, 'dist/bin'));
 const out = resolve(values.out ?? join(REPO, 'dist/release'));
-
-// Also the target name build-binaries.ts writes the binary under.
-const PLATFORMS = [
-  'windows-x64',
-  'windows-arm64',
-  'linux-x64',
-  'linux-arm64',
-  'macos-x64',
-  'macos-arm64',
-];
 
 const README = `xxmi-lang ${version}
 
@@ -91,16 +88,13 @@ function bundle(zipName: string, binary: string, exe: string): void {
 
 try {
   if (values.host) {
-    const os = ({ win32: 'windows', darwin: 'macos', linux: 'linux' } as Record<string, string>)[
-      process.platform
-    ];
+    const os = OS_BY_NODE_PLATFORM[process.platform];
     if (!os) throw new Error(`unsupported platform ${process.platform}`);
-    const exe = process.platform === 'win32' ? '.exe' : '';
+    const exe = exeSuffix(os);
     bundle(`${os}-${process.arch}`, join(binDir, `xxmi${exe}`), exe);
   } else {
-    for (const zipName of PLATFORMS) {
-      const exe = zipName.startsWith('windows') ? '.exe' : '';
-      bundle(zipName, join(binDir, `xxmi-${zipName}${exe}`), exe);
+    for (const t of RELEASE_TARGETS) {
+      bundle(targetName(t), join(binDir, releaseBinaryName(t)), exeSuffix(t.os));
     }
   }
   if (values.vsix) {
