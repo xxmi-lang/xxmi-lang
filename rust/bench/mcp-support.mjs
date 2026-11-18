@@ -1,6 +1,6 @@
 // Shared by mcp-parity.mjs and mcp-load.mjs: a fixture data volume and the two servers on it.
 
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +35,35 @@ export function makeVolume(dir) {
     };
   }
   writeFileSync(join(dir, 'state.json'), JSON.stringify(state));
+}
+
+const REFS = process.env.XXMI_REFS ?? resolve(root, '../xxmi-refs');
+const REMOTE_DIRS = {
+  'SpectrumQT/XXMI-Libs-Package': 'XXMI-Libs-Package',
+  'leotorrez/ZZMI-Package': 'ZZMI-Package',
+  'bo3b/3Dmigoto': '3Dmigoto',
+};
+
+/**
+ * Env that makes git read the tracked GitHub repos from local clones in `../xxmi-refs`, so a server
+ * can index without a network. XXMITools has no clone there; a one-commit stand-in is made in `dir`.
+ */
+export function localRemotesEnv(dir) {
+  const repo = join(dir, 'XXMITools');
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: repo });
+  git('init', '-q', '-b', 'main');
+  writeFileSync(join(repo, 'README.md'), 'XXMITools stand-in\n');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'init');
+
+  const rewrites = Object.entries(REMOTE_DIRS)
+    .map(([full, local]) => [full, join(REFS, local)])
+    .concat([['leotorrez/XXMITools', repo]])
+    .map(([full, path]) => `[url "${path}"]\n\tinsteadOf = https://github.com/${full}.git\n`);
+  const file = join(dir, 'gitconfig');
+  writeFileSync(file, `[safe]\n\tdirectory = *\n${rewrites.join('')}`);
+  return { GIT_CONFIG_GLOBAL: file };
 }
 
 const COMMANDS = {

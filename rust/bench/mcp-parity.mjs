@@ -8,23 +8,17 @@
 // scripts/mcp-acceptance.ts plus the version listing. The GitHub releases API is the one live call.
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { makeVolume, post, root, rpc, startServer } from './mcp-support.mjs';
+import { join } from 'node:path';
+import { localRemotesEnv, makeVolume, post, root, rpc, startServer } from './mcp-support.mjs';
 
-const REFS = process.env.XXMI_REFS ?? resolve(root, '../xxmi-refs');
 const TS_PORT = 3911;
 const RUST_PORT = 3912;
 // Rate limiting is timing-dependent; the http tests of both servers cover it.
 const OPEN = { RATE_LIMIT_PER_MIN: '1000000', RATE_LIMIT_BURST: '1000000' };
 const skipIndex = process.argv.includes('--skip-index');
 
-const REMOTE_DIRS = {
-  'SpectrumQT/XXMI-Libs-Package': 'XXMI-Libs-Package',
-  'leotorrez/ZZMI-Package': 'ZZMI-Package',
-  'bo3b/3Dmigoto': '3Dmigoto',
-};
 
 /** Keys that differ by run: wall-clock stamps and timings. */
 const VOLATILE = new Set(['indexedAt', 'builtAt', 'ms']);
@@ -207,25 +201,6 @@ async function runCases() {
   for (const [label, ask] of RAW_CASES) await compare(label, ask);
 }
 
-function gitConfigFor(dir) {
-  const rewrites = Object.entries(REMOTE_DIRS)
-    .map(([full, local]) => `[url "${join(REFS, local)}"]\n\tinsteadOf = https://github.com/${full}.git\n`)
-    .concat(`[url "${join(dir, 'XXMITools')}"]\n\tinsteadOf = https://github.com/leotorrez/XXMITools.git\n`);
-  const file = join(dir, 'gitconfig');
-  writeFileSync(file, `[safe]\n\tdirectory = *\n${rewrites.join('')}`);
-  return file;
-}
-
-function makeToolsRemote(dir) {
-  const repo = join(dir, 'XXMITools');
-  mkdirSync(repo, { recursive: true });
-  const git = (...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: repo });
-  git('init', '-q', '-b', 'main');
-  writeFileSync(join(repo, 'README.md'), 'XXMITools stand-in\n');
-  git('add', '-A');
-  git('commit', '-q', '-m', 'init');
-}
-
 async function waitIndexed(port, label) {
   const deadline = Date.now() + 600_000;
   for (;;) {
@@ -279,8 +254,7 @@ function acceptance(port) {
 }
 
 async function phaseTwo(scratch) {
-  makeToolsRemote(scratch);
-  const env = { ...OPEN, INDEXER: 'on', POLL_INTERVAL_MIN: '600', GIT_CONFIG_GLOBAL: gitConfigFor(scratch) };
+  const env = { ...OPEN, INDEXER: 'on', POLL_INTERVAL_MIN: '600', ...localRemotesEnv(scratch) };
   const servers = [
     await startServer('ts', TS_PORT, join(scratch, 'ts-data'), env),
     await startServer('rust', RUST_PORT, join(scratch, 'rust-data'), env),
