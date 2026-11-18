@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::repos::{RepoRole, TrackedRepo, TRACKED_REPOS, find_repo};
+use crate::repos::{RepoRole, TRACKED_REPOS, TrackedRepo, find_repo};
 use crate::store::{Store, read_json};
 
 pub const KIND_HEAD: &str = "head";
@@ -69,9 +69,16 @@ pub struct CatalogError(pub String);
 /// The newest release; repos without GitHub releases fall back to their newest tag.
 pub fn latest_release(entry: &RepoState) -> Option<&VersionRef> {
     let release = entry.tags.iter().find(|t| t.kind == "release");
-    let has_releases = entry.tags.iter().any(|t| t.kind == "release" || t.kind == "prerelease");
+    let has_releases = entry
+        .tags
+        .iter()
+        .any(|t| t.kind == "release" || t.kind == "prerelease");
     release.or_else(|| {
-        if has_releases { None } else { entry.tags.iter().find(|t| t.kind == "tag") }
+        if has_releases {
+            None
+        } else {
+            entry.tags.iter().find(|t| t.kind == "tag")
+        }
     })
 }
 
@@ -92,7 +99,11 @@ fn find_version<'a>(entry: &'a RepoState, wanted: &str) -> Option<&'a VersionRef
     let mut all = std::iter::once(&entry.branch).chain(&entry.tags);
     let by_name = all.clone().find(|r| r.name.to_lowercase() == lower);
     by_name.or_else(|| {
-        if lower.len() >= 7 { all.find(|r| r.sha.starts_with(&lower)) } else { None }
+        if lower.len() >= 7 {
+            all.find(|r| r.sha.starts_with(&lower))
+        } else {
+            None
+        }
     })
 }
 
@@ -104,7 +115,10 @@ pub struct Catalog {
 impl Catalog {
     /// Loads `state.json`, dropping refs whose checkout vanished from the volume.
     pub async fn load(store: Store) -> Self {
-        let mut catalog = Self { store, repos: HashMap::new() };
+        let mut catalog = Self {
+            store,
+            repos: HashMap::new(),
+        };
         let Some(saved) = read_json::<StateFile>(catalog.store.state_file()).await else {
             return catalog;
         };
@@ -120,7 +134,9 @@ impl Catalog {
                 continue;
             }
             entry.branch.kind = KIND_HEAD.to_string();
-            entry.tags.retain(|t| catalog.store.has_checkout(repo, &t.sha));
+            entry
+                .tags
+                .retain(|t| catalog.store.has_checkout(repo, &t.sha));
             catalog.repos.insert(repo.alias, entry);
         }
         catalog
@@ -149,14 +165,21 @@ impl Catalog {
                 .iter()
                 .map(|r| format!("{} ({})", r.alias, r.full_name()))
                 .collect();
-            CatalogError(format!("Unknown repo \"{query}\". Tracked repos: {}.", allowed.join(", ")))
+            CatalogError(format!(
+                "Unknown repo \"{query}\". Tracked repos: {}.",
+                allowed.join(", ")
+            ))
         })
     }
 
     /// The checkout for `wanted`: omitted, `latest` or `head` is the default branch;
     /// `latest-release` and `latest-prerelease` follow the releases; otherwise a tag or branch
     /// name, or a commit sha prefix (7+ characters) of an indexed ref.
-    pub fn resolve(&self, repo: &'static TrackedRepo, wanted: Option<&str>) -> Result<ResolvedRef, CatalogError> {
+    pub fn resolve(
+        &self,
+        repo: &'static TrackedRepo,
+        wanted: Option<&str>,
+    ) -> Result<ResolvedRef, CatalogError> {
         let Some(entry) = self.repo_state(repo) else {
             return Err(CatalogError(format!(
                 "{} is not indexed yet (the server is warming up). Try again in a minute.",
@@ -219,7 +242,10 @@ mod tests {
     fn symbolic_refs_follow_the_release_kinds() {
         let entry = entry();
         assert_eq!(find_version(&entry, "latest-release").unwrap().name, "v1");
-        assert_eq!(find_version(&entry, "latest-prerelease").unwrap().name, "v2-beta");
+        assert_eq!(
+            find_version(&entry, "latest-prerelease").unwrap().name,
+            "v2-beta"
+        );
         assert_eq!(find_version(&entry, "").unwrap().name, "main");
     }
 

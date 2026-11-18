@@ -21,15 +21,24 @@ pub struct Store {
 
 impl Store {
     pub fn new(data_dir: impl Into<PathBuf>) -> Self {
-        Self { data_dir: data_dir.into() }
+        Self {
+            data_dir: data_dir.into(),
+        }
     }
 
     pub fn checkout_dir(&self, repo: &TrackedRepo, sha: &str) -> PathBuf {
-        self.data_dir.join("repos").join(repo.owner).join(repo.name).join(sha)
+        self.data_dir
+            .join("repos")
+            .join(repo.owner)
+            .join(repo.name)
+            .join(sha)
     }
 
     pub fn index_file(&self, repo: &TrackedRepo, sha: &str) -> PathBuf {
-        self.data_dir.join("index").join(repo.dir_name()).join(format!("{sha}.json"))
+        self.data_dir
+            .join("index")
+            .join(repo.dir_name())
+            .join(format!("{sha}.json"))
     }
 
     pub fn spec_file(&self, dll_sha: &str) -> PathBuf {

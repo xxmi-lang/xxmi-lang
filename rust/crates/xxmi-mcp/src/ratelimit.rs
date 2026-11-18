@@ -48,7 +48,10 @@ impl RateLimiter {
 
     pub fn take_at(&mut self, key: &str, now_ms: f64) -> RateDecision {
         if self.per_second <= 0.0 {
-            return RateDecision { allowed: true, retry_after_sec: 0 };
+            return RateDecision {
+                allowed: true,
+                retry_after_sec: 0,
+            };
         }
 
         let mut bucket = match self.buckets.remove(key) {
@@ -56,7 +59,11 @@ impl RateLimiter {
                 self.recency.remove(&bucket.seq);
                 bucket
             }
-            None => Bucket { tokens: self.burst, updated_ms: now_ms, seq: 0 },
+            None => Bucket {
+                tokens: self.burst,
+                updated_ms: now_ms,
+                seq: 0,
+            },
         };
         bucket.tokens = self
             .burst
@@ -65,10 +72,16 @@ impl RateLimiter {
 
         let decision = if bucket.tokens >= 1.0 {
             bucket.tokens -= 1.0;
-            RateDecision { allowed: true, retry_after_sec: 0 }
+            RateDecision {
+                allowed: true,
+                retry_after_sec: 0,
+            }
         } else {
             let wait = ((1.0 - bucket.tokens) / self.per_second).ceil();
-            RateDecision { allowed: false, retry_after_sec: wait as u64 }
+            RateDecision {
+                allowed: false,
+                retry_after_sec: wait as u64,
+            }
         };
 
         bucket.seq = self.next_seq;
@@ -101,7 +114,13 @@ mod tests {
         assert!(limiter.take_at("a", 0.0).allowed);
 
         let denied = limiter.take_at("a", 0.0);
-        assert_eq!(denied, RateDecision { allowed: false, retry_after_sec: 1 });
+        assert_eq!(
+            denied,
+            RateDecision {
+                allowed: false,
+                retry_after_sec: 1
+            }
+        );
         assert!(limiter.take_at("a", 1000.0).allowed);
     }
 

@@ -26,7 +26,12 @@ pub struct Config {
     pub worker_threads: usize,
 }
 
-fn int(env: &dyn Fn(&str) -> Option<String>, name: &str, fallback: u64, min: u64) -> Result<u64, String> {
+fn int(
+    env: &dyn Fn(&str) -> Option<String>,
+    name: &str,
+    fallback: u64,
+    min: u64,
+) -> Result<u64, String> {
     let Some(raw) = env(name).filter(|raw| !raw.trim().is_empty()) else {
         return Ok(fallback);
     };
@@ -45,10 +50,13 @@ impl Config {
     pub fn from_lookup(env: &dyn Fn(&str) -> Option<String>) -> Result<Self, String> {
         let releases_fallback = int(env, "INDEXED_TAGS", 3, 0)?;
         let port = int(env, "PORT", 3000, 1)?;
-        let default_workers = thread::available_parallelism().map_or(1, |n| n.get()).min(4);
+        let default_workers = thread::available_parallelism()
+            .map_or(1, |n| n.get())
+            .min(4);
 
         Ok(Self {
-            port: u16::try_from(port).map_err(|_| format!("PORT must be an integer >= 1, got \"{port}\""))?,
+            port: u16::try_from(port)
+                .map_err(|_| format!("PORT must be an integer >= 1, got \"{port}\""))?,
             host: env("HOST").unwrap_or_else(|| "0.0.0.0".to_string()),
             data_dir: env("DATA_DIR").unwrap_or_else(|| "./data".to_string()),
             admin_token: env("ADMIN_TOKEN").filter(|v| !v.is_empty()),

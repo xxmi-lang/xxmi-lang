@@ -109,7 +109,10 @@ mod tests {
     #[test]
     fn finds_by_alias_and_full_name() {
         assert_eq!(find_repo(" ZZMI ").unwrap().alias, "zzmi");
-        assert_eq!(find_repo("spectrumqt/xxmi-libs-package").unwrap().alias, "dll");
+        assert_eq!(
+            find_repo("spectrumqt/xxmi-libs-package").unwrap().alias,
+            "dll"
+        );
         assert!(find_repo("nope/nope").is_none());
     }
 
