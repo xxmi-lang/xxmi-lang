@@ -193,7 +193,7 @@ jobs:
         run: cargo clippy --manifest-path rust/Cargo.toml --release -- -D warnings
 
       - name: Tests
-        run: cargo test --manifest-path rust/Cargo.toml --release
+        run: cargo test --manifest-path rust/Cargo.toml --release --no-fail-fast
 
       - name: Parity with the TypeScript CLI and language server
         if: matrix.os == 'ubuntu-latest'
