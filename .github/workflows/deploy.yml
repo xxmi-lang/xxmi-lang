@@ -1,7 +1,7 @@
 name: deploy
 
-# Deploys the hosted MCP server (docs/06-mcp-server.md) to Railway after CI passes on main, including
-# re-runs of CI. Railway's own autodeploy is off for the service, so this is the only deploy path.
+# Deploys the hosted MCP server (docs/06-mcp-server.md) to Railway after CI passes on main,
+# including re-runs of CI. Railway's own autodeploy is off for the service, so this is the only deploy path.
 on:
   workflow_run:
     workflows: [ci]
@@ -56,11 +56,21 @@ jobs:
           INPUT_SHA: ${{ inputs.sha }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
+          sha_pattern='^[0-9a-f]{40}$'
+          if [ -n "$INPUT_SHA" ] && ! [[ "$INPUT_SHA" =~ $sha_pattern ]]; then
+            echo "::error::The sha input must be a full 40-char lowercase commit SHA"
+            exit 1
+          fi
+
           main=$(git ls-remote "https://github.com/$REPO" refs/heads/main | cut -f1)
           [ -n "$main" ] || { echo "::error::Could not read main from GitHub"; exit 1; }
 
           sha=${INPUT_SHA:-$RUN_SHA}
           sha=${sha:-$main}
+          if ! [[ "$sha" =~ $sha_pattern ]]; then
+            echo "::error::Resolved commit is not a full 40-char lowercase SHA"
+            exit 1
+          fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
           if [ "$sha" != "$main" ]; then

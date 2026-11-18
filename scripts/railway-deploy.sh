@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Deploys one commit of the hosted MCP server to Railway, waits for the deployment to succeed and
-# for /healthz to report ready. Called from .github/workflows/deploy.yml; the token comes from the
-# environment only and is never printed.
+# Deploys one commit of the hosted MCP server to Railway.
+# Waits for the deployment to succeed and for /healthz to report ready.
+# Called from .github/workflows/deploy.yml;
+# the token comes from the environment only and is never printed.
 #   usage: scripts/railway-deploy.sh <40-hex commit sha>
 set -euo pipefail
 
@@ -31,7 +32,7 @@ check_sha() {
 graphql() {
   local body
   body=$(jq -n --arg query "$1" '{query: $query}')
-  curl -fsS "$RAILWAY_API" \
+  curl -fsS --max-time 30 "$RAILWAY_API" \
     -H 'content-type: application/json' \
     -H "Project-Access-Token: $RAILWAY_PROJECT_TOKEN" \
     -d "$body"
@@ -79,7 +80,7 @@ wait_for_deployment() {
 wait_for_health() {
   local attempt
   for ((attempt = 1; attempt <= HEALTH_ATTEMPTS; attempt++)); do
-    if curl -fsS "$MCP_URL/healthz" | jq -e '.ready == true' >/dev/null; then
+    if curl -fsS --max-time 30 "$MCP_URL/healthz" | jq -e '.ready == true' >/dev/null; then
       echo "healthy: $MCP_URL/healthz reports ready"
       return 0
     fi
