@@ -7,7 +7,7 @@
 //   XXMI_RS=path node rust/bench/lsp-latency.mjs
 //   XXMI_TRACE_TIMING=1 node rust/bench/lsp-latency.mjs    adds the per-span breakdown of an edit
 //
-// Edits are spaced past the 150 ms debounce so each one is linted on the leading edge; the server
+// Edits are spaced past the 50 ms debounce so each one is linted on the leading edge; the server
 // publishes without a document version, so a reply is the next publishDiagnostics for the document.
 import { execFileSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';

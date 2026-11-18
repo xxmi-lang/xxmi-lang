@@ -15,7 +15,7 @@ use super::documents::Documents;
 use super::guard::guarded;
 use super::uri::{path_to_uri, uri_to_path};
 
-const DEBOUNCE: Duration = Duration::from_millis(150);
+const DEBOUNCE: Duration = Duration::from_millis(50);
 /// Bigger files only get syntax and structure rules while typing (docs/03-lsp.md "Robustness").
 const LARGE_FILE: usize = 5 * 1024 * 1024;
 /// Background indexing stops here (opening a whole install with thousands of mods).

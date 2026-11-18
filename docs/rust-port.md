@@ -6,7 +6,7 @@ The TypeScript implementation stays the reference. The release pipeline and the 
 ## Ported
 
 - `xxmi lint`, `query` and `index` keep the flags, text/JSON output and exit codes of `packages/cli`; `lint` adds a runtime `--spec <path>` override.
-- `xxmi lsp [--stdio]` (also `xxmi-lsp`, or a bare `--stdio`) has the capabilities and result shapes of `packages/lsp`: diagnostics with a 150 ms leading-edge debounce, quick fixes, definition, references, rename, hover, completion, document symbols and watched files.
+- `xxmi lsp [--stdio]` (also `xxmi-lsp`, or a bare `--stdio`) has the capabilities and result shapes of `packages/lsp`: diagnostics with a 50 ms leading-edge debounce, quick fixes, definition, references, rename, hover, completion, document symbols and watched files.
   Edits reparse only the changed sections of the open document.
 - `build.rs` embeds `packages/core/dist/spec.json` and `snapshots/zzmi.json`, so run `pnpm build` first.
 

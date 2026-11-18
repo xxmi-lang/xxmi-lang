@@ -8,7 +8,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 
 | Capability | Behavior |
 |---|---|
-| `textDocument/publishDiagnostics` | All enabled rules. Debounce 150 ms after the last change. Cross-file diagnostics (XM2xx) refresh when dependencies change |
+| `textDocument/publishDiagnostics` | All enabled rules. Debounce 50 ms after the last change (the TypeScript server: 150 ms). Cross-file diagnostics (XM2xx) refresh when dependencies change |
 | `textDocument/definition` | Sections, variables, resources, pools, custom shaders, include targets, `filename =` paths (opens the file), and library symbols in the package or bundled snapshot |
 | `textDocument/references` | All references across the indexed workspace, including the package |
 | `textDocument/rename` + `prepareRename` | Rename sections (updates every `CommandList\N\X`, `ref ResourceX`, `run = …` form), variables (`$x`, `$\N\x`), resources. Refuse renames of symbols in the package or bundled snapshot, with a clear message |
@@ -31,7 +31,7 @@ A stdio language server built on `vscode-languageserver/node`, using `@xxmi-lang
 
 `packages/lsp` (`xxmi-lsp`) implements phase 1 except formatting, which is not planned here any more (M4 moved to the maintainer's C# app, `09-roadmap.md`). Navigation, hover and completion logic is in `@xxmi-lang/core` (`src/navigation/`); the server only keeps editor state and converts types.
 
-- **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after 150 ms of quiet is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted 150 ms after the last one.
+- **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after one debounce period of quiet (50 ms; 150 ms in the TypeScript server) is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted one period after the last one.
 - **Definition, references, rename:** sections, variables (`$x`, `$\N\x`, locals), resources, pools, include targets and `filename =` paths. Rename edits only the name part of each reference and keeps prefixes and namespaces as written. It refuses symbols from the bundled snapshot, from the DLL's built-in sections, and from the package (`Core/`, d3dx.ini).
 - **Index:** open files first, then every `.ini` under the workspace folders in the background (stops after 5,000 files with a warning, skips `exclude_recursive` matches such as `DISABLED*` folders), then the package root's d3dx.ini and its includes.
 - **Hover:** spec docs (generated + overlays) with an XXMI-only badge, the doc comment above a section (or the comment block right below its header, ZZMI's `; Input:` style), and a variable's declaration line.
