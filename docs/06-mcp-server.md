@@ -232,6 +232,11 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 5. Check `https://<domain>/healthz` (`ready` turns true after about 10 seconds), then `node scripts/mcp-acceptance.ts https://<domain>/mcp`.
 6. (Done.) Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
 
+### Rust server
+
+`rust/crates/xxmi-mcp` is a drop-in port (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f packages/mcp-server/Dockerfile.rust -t xxmi-mcp-rs .`. It needs `git` and `rg` on the path, like the TS server.
+Railway still uses the TypeScript image (`Dockerfile`) until the switch; CI builds both. `node rust/bench/mcp-parity.mjs` compares the two servers answer by answer.
+
 ### Deviations from the design above
 
 - **Git without clones or worktrees.** `git ls-remote` plus shallow fetches by sha into one bare repo per tracked repo, and `git archive` for the files, instead of full bare clones with worktrees. The volume holds one commit's objects plus its text files, a few MB per commit.
