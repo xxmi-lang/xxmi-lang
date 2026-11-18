@@ -116,7 +116,7 @@ fn main_loop(connection: &Connection, mut server: Server) -> Result<(), BoxError
                 }
             }
             Message::Notification(notification) if notification.method == "exit" => return Ok(()),
-            Message::Notification(notification) => handle_notification(&mut server, notification)?,
+            Message::Notification(notification) => ignore_malformed(&mut server, notification),
             Message::Response(response) => {
                 server.settings_response(&response.id, response.response_result.ok())
             }
@@ -141,6 +141,14 @@ fn handle_request(
 
 fn parse<P: DeserializeOwned>(notification: Notification) -> Result<P, BoxError> {
     Ok(serde_json::from_value(notification.params)?)
+}
+
+/// A notification with params we can't read is dropped: it must not end the session.
+fn ignore_malformed(server: &mut Server, notification: Notification) {
+    let method = notification.method.clone();
+    if let Err(error) = handle_notification(server, notification) {
+        eprintln!("xxmi-lsp: ignored {method}: {error}");
+    }
 }
 
 fn handle_notification(server: &mut Server, notification: Notification) -> Result<(), BoxError> {
