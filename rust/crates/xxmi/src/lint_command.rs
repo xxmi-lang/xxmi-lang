@@ -1,150 +1,166 @@
-//! `xxmi-rs lint`: the JSON document of `xxmi lint --format json` for the two ported rules.
+//! `xxmi lint`: flags, validation order, output and exit codes match the TypeScript CLI.
 
-use std::collections::HashSet;
-use std::fs;
+use std::env;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
 
-use serde::Serialize;
-use xxmi_core::diagnostic::{Diagnostic, Severity};
-use xxmi_core::document::Document;
-use xxmi_core::encoding::{Encoding, decode_text};
-use xxmi_core::lint::lint;
+use xxmi_core::encoding::decode_text;
+use xxmi_core::lint::format::{format_json, format_text};
+use xxmi_core::lint::{LintOptions, LintResult, lint_paths, lint_text};
+use xxmi_core::lookup::Lookup;
+use xxmi_core::paths::display_path;
 use xxmi_core::rules::RULES;
+use xxmi_core::spec::Spec;
 
-use crate::paths::{collect_ini_files, display_path};
+use crate::args::{self, OptionSpec};
+use crate::error::CliError;
+use crate::help::lint_help;
+use crate::js_number::js_number;
 
-struct Args {
-    paths: Vec<PathBuf>,
-    rules: Option<Vec<String>>,
+const OPTIONS: [OptionSpec; 7] = [
+    args::string("format"),
+    args::string("rules"),
+    args::string("max-warnings"),
+    args::flag("stdin"),
+    args::string("stdin-path"),
+    args::string("spec"),
+    args::flag("help"),
+];
+
+#[derive(PartialEq)]
+enum Format {
+    Text,
+    Json,
 }
 
-#[derive(Serialize)]
-struct FileResult {
-    path: String,
-    encoding: Encoding,
-    diagnostics: Vec<Diagnostic>,
-}
-
-#[derive(Default, Serialize)]
-struct Summary {
-    files: usize,
-    error: usize,
-    warning: usize,
-    info: usize,
-    hint: usize,
-}
-
-/// The `version: 1` document.
-#[derive(Serialize)]
-struct LintOutput {
-    version: u32,
-    files: Vec<FileResult>,
-    summary: Summary,
-}
-
-pub fn run(args: &[String]) -> Result<ExitCode, String> {
-    let args = parse_args(args)?;
-
-    let mut files = Vec::new();
-    let mut seen = HashSet::new();
-    for path in &args.paths {
-        let found = collect_ini_files(path)
-            .map_err(|error| format!("no such file or directory: {} ({error})", path.display()))?;
-        for file in found.into_iter().filter(|f| seen.insert(f.clone())) {
-            files.push(lint_file(&file, args.rules.as_deref())?);
-        }
+/// Returns the process exit code.
+pub fn run(raw_args: &[String]) -> Result<i32, CliError> {
+    let parsed = args::parse(raw_args, &OPTIONS)?;
+    if parsed.flag("help") {
+        println!("{}", lint_help());
+        return Ok(0);
     }
 
-    let summary = summarize(&files);
-    let has_errors = summary.error > 0;
-    let output = LintOutput {
-        version: 1,
-        files,
-        summary,
-    };
-    println!(
-        "{}",
-        serde_json::to_string_pretty(&output).map_err(|e| e.to_string())?
-    );
+    let format = parse_format(parsed.string("format").unwrap_or("text"))?;
+    let rules = parse_rules(parsed.string("rules"))?;
+    let max_warnings = parse_max_warnings(parsed.string("max-warnings"))?;
 
-    Ok(if has_errors {
-        ExitCode::from(1)
+    let mut options = LintOptions::bundled();
+    options.rules = rules;
+    if let Some(path) = parsed.string("spec") {
+        options.lookup = load_spec(Path::new(path))?;
+    }
+
+    let result = if parsed.flag("stdin") {
+        let Some(path) = parsed.string("stdin-path").filter(|p| !p.is_empty()) else {
+            return Err(usage("--stdin needs --stdin-path <path>"));
+        };
+        if !parsed.positionals.is_empty() {
+            return Err(usage("--stdin lints stdin only; drop the paths"));
+        }
+        lint_stdin(Path::new(path), &options)?
     } else {
-        ExitCode::SUCCESS
-    })
-}
-
-fn parse_args(args: &[String]) -> Result<Args, String> {
-    let mut paths = Vec::new();
-    let mut rules = None;
-    let mut iter = args.iter();
-
-    while let Some(arg) = iter.next() {
-        match arg.as_str() {
-            "--format" => match iter.next().map(String::as_str) {
-                Some("json") => {}
-                other => {
-                    return Err(format!(
-                        "unsupported --format {}; only json",
-                        other.unwrap_or("")
-                    ));
-                }
-            },
-            "--rules" => rules = Some(parse_rules(iter.next().ok_or("--rules needs a value")?)?),
-            flag if flag.starts_with("--") => return Err(format!("unknown option {flag}")),
-            path => paths.push(PathBuf::from(path)),
+        if parsed.string("stdin-path").is_some() {
+            return Err(usage("--stdin-path needs --stdin"));
         }
-    }
-
-    if paths.is_empty() {
-        paths.push(PathBuf::from("."));
-    }
-    Ok(Args { paths, rules })
-}
-
-fn parse_rules(list: &str) -> Result<Vec<String>, String> {
-    let ids: Vec<String> = list
-        .split(',')
-        .map(|id| id.trim().to_uppercase())
-        .filter(|id| !id.is_empty())
-        .collect();
-
-    match ids
-        .iter()
-        .find(|id| !RULES.iter().any(|rule| rule.id == id.as_str()))
-    {
-        Some(unknown) => Err(format!(
-            "unknown rule {unknown} (this spike has XM001 and XM102)"
-        )),
-        None => Ok(ids),
-    }
-}
-
-fn lint_file(path: &Path, rules: Option<&[String]>) -> Result<FileResult, String> {
-    let bytes = fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
-    let (text, encoding) = decode_text(&bytes);
-    let diagnostics = lint(&Document::new(text), rules);
-
-    Ok(FileResult {
-        path: display_path(path),
-        encoding,
-        diagnostics,
-    })
-}
-
-fn summarize(files: &[FileResult]) -> Summary {
-    let mut summary = Summary {
-        files: files.len(),
-        ..Summary::default()
+        lint_disk(&parsed.positionals, &options)?
     };
-    for diagnostic in files.iter().flat_map(|f| &f.diagnostics) {
-        match diagnostic.severity {
-            Severity::Error => summary.error += 1,
-            Severity::Warning => summary.warning += 1,
-            Severity::Info => summary.info += 1,
-            Severity::Hint => summary.hint += 1,
+
+    print_result(&result, &format);
+    Ok(exit_code(&result, max_warnings))
+}
+
+fn usage(message: &str) -> CliError {
+    CliError::Usage(message.to_string())
+}
+
+fn parse_format(value: &str) -> Result<Format, CliError> {
+    match value {
+        "text" => Ok(Format::Text),
+        "json" => Ok(Format::Json),
+        other => Err(CliError::Usage(format!("unknown --format {other}"))),
+    }
+}
+
+fn parse_rules(value: Option<&str>) -> Result<Option<Vec<String>>, CliError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+
+    let rules: Vec<String> = value
+        .split(',')
+        .map(|r| r.trim().to_uppercase())
+        .filter(|r| !r.is_empty())
+        .collect();
+    for rule in &rules {
+        if !RULES.iter().any(|known| known.id == rule) {
+            return Err(CliError::Usage(format!("unknown rule {rule}")));
         }
     }
-    summary
+    Ok(Some(rules))
+}
+
+fn parse_max_warnings(value: Option<&str>) -> Result<Option<f64>, CliError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+
+    let number = js_number(value);
+    if number.is_finite() && number.fract() == 0.0 && number >= 0.0 {
+        Ok(Some(number))
+    } else {
+        Err(usage("--max-warnings must be a non-negative integer"))
+    }
+}
+
+/// A runtime spec replaces the built-in one; leaked because the lookup lives for the whole run.
+fn load_spec(path: &Path) -> Result<&'static Lookup, CliError> {
+    let json = std::fs::read_to_string(path)
+        .map_err(|e| CliError::Usage(format!("cannot read --spec {}: {e}", path.display())))?;
+    let spec = Spec::from_json(&json)
+        .map_err(|e| CliError::Usage(format!("invalid --spec {}: {e}", path.display())))?;
+    Ok(Box::leak(Box::new(Lookup::new(spec.leak()))))
+}
+
+fn lint_stdin(path: &Path, options: &LintOptions) -> Result<LintResult, CliError> {
+    let mut bytes = Vec::new();
+    std::io::stdin().read_to_end(&mut bytes)?;
+
+    let (text, encoding) = decode_text(&bytes);
+    Ok(lint_text(path, text, encoding, options)?)
+}
+
+fn lint_disk(positionals: &[String], options: &LintOptions) -> Result<LintResult, CliError> {
+    let paths: Vec<PathBuf> = if positionals.is_empty() {
+        vec![PathBuf::from(".")]
+    } else {
+        positionals.iter().map(PathBuf::from).collect()
+    };
+
+    for path in &paths {
+        if std::fs::metadata(path).is_err() {
+            return Err(CliError::Usage(format!(
+                "no such file or directory: {}",
+                path.display()
+            )));
+        }
+    }
+    Ok(lint_paths(&paths, options)?)
+}
+
+fn print_result(result: &LintResult, format: &Format) {
+    let cwd = env::current_dir().unwrap_or_default();
+    let path_of = |path: &Path| display_path(path, &cwd);
+
+    let output = if *format == Format::Json {
+        format_json(result, &path_of)
+    } else {
+        format_text(result, &path_of)
+    };
+    println!("{output}");
+}
+
+fn exit_code(result: &LintResult, max_warnings: Option<f64>) -> i32 {
+    let too_many_warnings = max_warnings.is_some_and(|max| result.summary.warning as f64 > max);
+    i32::from(result.summary.error > 0 || too_many_warnings)
 }

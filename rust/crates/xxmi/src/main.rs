@@ -1,36 +1,69 @@
-//! `xxmi-rs`: the Rust spike of the `xxmi` CLI (`lint`) and `xxmi-lsp` (`lsp --stdio`).
+//! `xxmi`: see docs/04-cli.md. Exit codes: 0 ok, 1 lint errors (or --max-warnings exceeded),
+//! 2 usage error, 3 internal error. Only `lint` is ported to Rust so far.
 
+mod args;
+mod error;
+mod help;
+mod js_number;
 mod lint_command;
-mod lsp;
-mod paths;
 
-use std::process::ExitCode;
+use std::process::exit;
 
-const USAGE: &str = "Usage:
-  xxmi-rs lint <path>... [--format json] [--rules XM001,XM102]
-  xxmi-rs lsp --stdio
-  xxmi-rs --version";
+use error::CliError;
+use help::USAGE;
 
-fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+fn main() {
+    install_panic_hook();
 
-    match args.first().map(String::as_str) {
-        Some("--version" | "-v") => {
+    let args: Vec<String> = std::env::args_os()
+        .skip(1)
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
+    exit(report(dispatch(&args)));
+}
+
+/// The release profile aborts on panic, which would exit with a signal; exit 3 like the
+/// TypeScript CLI does for an internal error.
+fn install_panic_hook() {
+    std::panic::set_hook(Box::new(|info| {
+        eprintln!("xxmi: internal error (please report it): {info}");
+        exit(3);
+    }));
+}
+
+fn dispatch(args: &[String]) -> Result<i32, CliError> {
+    let Some((command, rest)) = args.split_first() else {
+        println!("{USAGE}");
+        return Ok(2);
+    };
+
+    match command.as_str() {
+        "lint" => lint_command::run(rest),
+        "query" | "index" | "lsp" => Err(CliError::Usage(format!(
+            "`xxmi {command}` is not implemented in the Rust build yet"
+        ))),
+        "--version" | "-v" => {
             println!("{}", env!("CARGO_PKG_VERSION"));
-            ExitCode::SUCCESS
+            Ok(0)
         }
-        Some("lint") => report(lint_command::run(&args[1..])),
-        Some("lsp") => report(lsp::run().map(|()| ExitCode::SUCCESS)),
-        _ => {
-            eprintln!("{USAGE}");
-            ExitCode::from(2)
+        "--help" | "-h" => {
+            println!("{USAGE}");
+            Ok(0)
         }
+        other => Err(CliError::Usage(format!("unknown command {other}"))),
     }
 }
 
-fn report<E: std::fmt::Display>(result: Result<ExitCode, E>) -> ExitCode {
-    result.unwrap_or_else(|error| {
-        eprintln!("xxmi-rs: {error}");
-        ExitCode::from(2)
-    })
+fn report(outcome: Result<i32, CliError>) -> i32 {
+    match outcome {
+        Ok(code) => code,
+        Err(CliError::Usage(message)) => {
+            eprintln!("xxmi: {message}\n\n{USAGE}");
+            2
+        }
+        Err(CliError::Internal(message)) => {
+            eprintln!("xxmi: internal error (please report it): {message}");
+            3
+        }
+    }
 }
