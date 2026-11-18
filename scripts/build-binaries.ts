@@ -64,7 +64,8 @@ function tripleOf(target: string): string | undefined {
 
 /** The release name of this machine, e.g. macos-arm64. */
 function hostName(): string {
-  const os = { darwin: 'macos', linux: 'linux', win32: 'windows' }[process.platform];
+  const names: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
+  const os = names[process.platform];
   if (!os || (process.arch !== 'x64' && process.arch !== 'arm64')) {
     throw new Error(`no release name for ${process.platform}-${process.arch}`);
   }
