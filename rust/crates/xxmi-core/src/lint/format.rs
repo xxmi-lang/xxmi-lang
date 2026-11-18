@@ -65,7 +65,10 @@ struct FileDocument<'a> {
 }
 
 /// The `version: 1` JSON document of `xxmi lint --format json`.
-pub fn format_json(result: &LintResult, path_of: PathFormatter) -> String {
+pub fn format_json(
+    result: &LintResult,
+    path_of: PathFormatter,
+) -> Result<String, serde_json::Error> {
     let document = Document {
         version: 1,
         files: result
@@ -79,5 +82,5 @@ pub fn format_json(result: &LintResult, path_of: PathFormatter) -> String {
             .collect(),
         summary: &result.summary,
     };
-    serde_json::to_string_pretty(&document).unwrap_or_default()
+    serde_json::to_string_pretty(&document)
 }

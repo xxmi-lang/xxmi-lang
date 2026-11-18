@@ -66,7 +66,7 @@ pub fn run(raw_args: &[String]) -> Result<i32, CliError> {
         lint_disk(&parsed.positionals, &options)?
     };
 
-    print_result(&result, &format);
+    print_result(&result, &format)?;
     Ok(exit_code(&result, max_warnings))
 }
 
@@ -148,16 +148,17 @@ fn lint_disk(positionals: &[String], options: &LintOptions) -> Result<LintResult
     Ok(lint_paths(&paths, options)?)
 }
 
-fn print_result(result: &LintResult, format: &Format) {
+fn print_result(result: &LintResult, format: &Format) -> Result<(), CliError> {
     let cwd = env::current_dir().unwrap_or_default();
     let path_of = |path: &Path| display_path(path, &cwd);
 
     let output = if *format == Format::Json {
-        format_json(result, &path_of)
+        format_json(result, &path_of).map_err(|error| CliError::Internal(error.to_string()))?
     } else {
         format_text(result, &path_of)
     };
     println!("{output}");
+    Ok(())
 }
 
 fn exit_code(result: &LintResult, max_warnings: Option<f64>) -> i32 {
