@@ -9,7 +9,9 @@ use crate::spec::{CommandKind, MatchKind, SectionKind, SpecCommand};
 use crate::workspace::{FileId, Workspace};
 
 use super::markdown::docs;
-use super::text::{enum_table, is_word, line_of, suffix_where, utf16_len, utf16_prefix};
+use super::text::{
+    enum_table, is_word, js_trim_start, line_of, suffix_where, utf16_len, utf16_prefix,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompletionKind {
@@ -124,11 +126,11 @@ pub fn completions(workspace: &Workspace, id: FileId, pos: Position) -> Vec<Comp
     let before = utf16_prefix(line, pos.character);
     let cursor = Cursor { pos, line, before };
 
-    if before.trim_start().starts_with('[') && !before.contains(']') {
+    if js_trim_start(before).starts_with('[') && !before.contains(']') {
         return section_kinds(workspace, &cursor);
     }
     // The DLL only treats `;` at the start of a line as a comment.
-    if before.trim_start().starts_with(';') {
+    if js_trim_start(before).starts_with(';') {
         return Vec::new();
     }
 

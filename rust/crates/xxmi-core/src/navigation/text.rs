@@ -29,6 +29,11 @@ pub fn line_of(text: &str, line: u32) -> (&str, usize) {
     ("", text.len())
 }
 
+/// `trim_start` with JavaScript's `\s`, which also counts a byte order mark as whitespace.
+pub fn js_trim_start(text: &str) -> &str {
+    text.trim_start_matches(|ch: char| ch.is_whitespace() || ch == '\u{feff}')
+}
+
 pub fn is_word(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_'
 }
