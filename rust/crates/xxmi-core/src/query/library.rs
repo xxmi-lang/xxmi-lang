@@ -395,19 +395,16 @@ pub fn list_libraries(
         };
 
         let position = libraries.iter().position(|l| l.namespace == *original);
-        let library = match position {
-            Some(i) => &mut libraries[i],
-            None => {
-                libraries.push(LibraryInfo {
-                    namespace: original.clone(),
-                    counts: KindCounts::default(),
-                    files: None,
-                    module_doc: None,
-                });
-                libraries.last_mut().expect("just pushed")
-            }
-        };
-        library.counts.add(kind);
+        let index = position.unwrap_or_else(|| {
+            libraries.push(LibraryInfo {
+                namespace: original.clone(),
+                counts: KindCounts::default(),
+                files: None,
+                module_doc: None,
+            });
+            libraries.len() - 1
+        });
+        libraries[index].counts.add(kind);
     }
 
     libraries.sort_by(|a, b| locale_cmp(&a.namespace, &b.namespace));

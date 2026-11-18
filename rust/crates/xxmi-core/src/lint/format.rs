@@ -79,5 +79,5 @@ pub fn format_json(result: &LintResult, path_of: PathFormatter) -> String {
             .collect(),
         summary: &result.summary,
     };
-    serde_json::to_string_pretty(&document).expect("lint results serialise")
+    serde_json::to_string_pretty(&document).unwrap_or_default()
 }

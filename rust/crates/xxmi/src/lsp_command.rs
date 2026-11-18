@@ -18,14 +18,12 @@ pub fn run(args: &[String], standalone: bool) -> Result<i32, CliError> {
     if has("--version", "-v") {
         println!("{}", env!("CARGO_PKG_VERSION"));
     } else if has("--help", "-h") {
-        println!(
-            "{}",
-            if standalone {
-                STANDALONE_HELP
-            } else {
-                LSP_HELP
-            }
-        );
+        let help = if standalone {
+            STANDALONE_HELP
+        } else {
+            LSP_HELP
+        };
+        println!("{help}");
     } else {
         lsp::run().map_err(|error| CliError::Internal(error.to_string()))?;
     }

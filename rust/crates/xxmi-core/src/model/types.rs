@@ -174,10 +174,14 @@ impl IniFile {
 
     fn position_of(&self, offset: usize) -> Position {
         let line_col = self.line_index.line_col(TextSize::new(offset as u32));
+        // Offsets sit on char boundaries; the byte column is the fallback if one ever doesn't.
         let wide = self
             .line_index
             .to_wide(WideEncoding::Utf16, line_col)
-            .expect("offsets sit on char boundaries");
+            .unwrap_or(WideLineCol {
+                line: line_col.line,
+                col: line_col.col,
+            });
         Position {
             line: wide.line,
             character: wide.col,
