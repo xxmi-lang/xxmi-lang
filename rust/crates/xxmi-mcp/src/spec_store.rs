@@ -12,7 +12,7 @@ use xxmi_core::lookup::Lookup;
 use xxmi_core::spec::Spec;
 
 use crate::catalog::Catalog;
-use crate::repos::baseline_repo;
+use crate::repos::{baseline_repo, is_sha};
 use crate::specs::{ExtractedSpec, SpecSlot, VersionSpecs};
 use crate::store::{Store, read_json_blocking};
 
@@ -231,10 +231,6 @@ impl VolumeSpecs {
         }
         removed
     }
-}
-
-fn is_sha(text: &str) -> bool {
-    text.len() == 40 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
 
 impl VersionSpecs for Arc<VolumeSpecs> {

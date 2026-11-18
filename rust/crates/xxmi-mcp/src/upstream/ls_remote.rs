@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 
+use crate::repos::is_sha;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RemoteTag {
     pub name: String,
@@ -17,60 +19,85 @@ pub struct RemoteRefs {
     pub tags: Vec<RemoteTag>,
 }
 
-fn is_sha(text: &str) -> bool {
-    text.len() == 40 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+/// The refs of the output, before they are matched up.
+#[derive(Default)]
+struct Scan<'a> {
+    symref: Option<&'a str>,
+    head_sha: Option<&'a str>,
+    heads: HashMap<&'a str, &'a str>,
+    tags: Vec<(&'a str, &'a str)>,
+    peeled: HashMap<&'a str, &'a str>,
 }
 
-pub fn parse_ls_remote(output: &str) -> Result<RemoteRefs, String> {
-    let mut symref: Option<&str> = None;
-    let mut head_sha: Option<&str> = None;
-    let mut heads: HashMap<&str, &str> = HashMap::new();
-    let mut tags: Vec<(&str, &str)> = Vec::new();
-    let mut peeled: HashMap<&str, &str> = HashMap::new();
+fn symref_target(line: &str) -> Option<&str> {
+    line.strip_prefix("ref: ")
+        .and_then(|rest| rest.strip_suffix("\tHEAD"))
+        .filter(|target| !target.contains(char::is_whitespace))
+}
 
-    for line in output.split('\n') {
-        if let Some(target) = line
-            .strip_prefix("ref: ")
-            .and_then(|rest| rest.strip_suffix("\tHEAD"))
-            && !target.contains(char::is_whitespace)
-        {
-            symref = Some(target);
-            continue;
+impl<'a> Scan<'a> {
+    fn read(output: &'a str) -> Self {
+        let mut scan = Self::default();
+        for line in output.split('\n') {
+            scan.read_line(line);
         }
+        scan
+    }
+
+    fn read_line(&mut self, line: &'a str) {
+        if let Some(target) = symref_target(line) {
+            self.symref = Some(target);
+            return;
+        }
+
         let mut parts = line.split('\t');
         let (sha, name) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
         if !is_sha(sha) {
-            continue;
+            return;
         }
         if name == "HEAD" {
-            head_sha = Some(sha);
+            self.head_sha = Some(sha);
         } else if let Some(branch) = name.strip_prefix("refs/heads/") {
-            heads.insert(branch, sha);
+            self.heads.insert(branch, sha);
         } else if let Some(tag) = name
             .strip_prefix("refs/tags/")
             .and_then(|rest| rest.strip_suffix("^{}"))
         {
-            peeled.insert(tag, sha);
+            self.peeled.insert(tag, sha);
         } else if let Some(tag) = name.strip_prefix("refs/tags/") {
-            tags.push((tag, sha));
+            self.tags.push((tag, sha));
         }
     }
 
-    let default_branch = symref.map(|s| s.strip_prefix("refs/heads/").unwrap_or(s));
-    let head = default_branch.and_then(|b| heads.get(b).copied().or(head_sha));
-    let (Some(default_branch), Some(head)) = (default_branch, head) else {
+    fn default_branch(&self) -> Option<(&'a str, &'a str)> {
+        let branch = self
+            .symref
+            .map(|s| s.strip_prefix("refs/heads/").unwrap_or(s))?;
+        let head = self.heads.get(branch).copied().or(self.head_sha)?;
+        Some((branch, head))
+    }
+
+    fn remote_tags(&self) -> Vec<RemoteTag> {
+        self.tags
+            .iter()
+            .map(|(name, sha)| RemoteTag {
+                name: name.to_string(),
+                sha: self.peeled.get(name).unwrap_or(sha).to_string(),
+            })
+            .collect()
+    }
+}
+
+pub fn parse_ls_remote(output: &str) -> Result<RemoteRefs, String> {
+    let scan = Scan::read(output);
+    let Some((default_branch, head)) = scan.default_branch() else {
         return Err("remote has no default branch (empty repository?)".to_string());
     };
+
     Ok(RemoteRefs {
         default_branch: default_branch.to_string(),
         head: head.to_string(),
-        tags: tags
-            .into_iter()
-            .map(|(name, sha)| RemoteTag {
-                name: name.to_string(),
-                sha: peeled.get(name).unwrap_or(&sha).to_string(),
-            })
-            .collect(),
+        tags: scan.remote_tags(),
     })
 }
 

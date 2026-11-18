@@ -103,6 +103,11 @@ pub fn dll_repo() -> &'static TrackedRepo {
     &TRACKED_REPOS[0]
 }
 
+/// A full lowercase git commit id.
+pub fn is_sha(text: &str) -> bool {
+    text.len() == 40 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
 pub fn baseline_repo() -> &'static TrackedRepo {
     &TRACKED_REPOS[3]
 }
