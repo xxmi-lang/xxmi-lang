@@ -60,7 +60,7 @@ pub async fn ensure_specs(deps: &EnsureDeps<'_>) -> Vec<String> {
 
     let mut built = Vec::new();
     for version in distinct_versions(&dll_state) {
-        if deps.specs.has_current(&version.sha) {
+        if deps.specs.has_current(&version.sha).await {
             continue;
         }
         let Some(dll_input) = source_of(deps.catalog, dll, &version) else {

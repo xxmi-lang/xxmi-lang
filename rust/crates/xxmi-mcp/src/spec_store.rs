@@ -4,7 +4,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -47,12 +47,34 @@ impl SpecHeader {
     }
 }
 
-/// The lookup of a stored spec; leaked, as every spec model is (see `Spec::leak`).
-fn extracted(doc: Value) -> Option<ExtractedSpec> {
+/// Leaking a spec is the price of the `&'static` model references core hands out, so a spec that
+/// is loaded again (after an eviction, or by a second reader) must reuse its first lookup: the
+/// leak is then one per build, not one per load.
+type BuildKey = (String, String, String, String);
+
+static LOOKUPS: LazyLock<Mutex<HashMap<BuildKey, &'static Lookup>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn build_key(header: &SpecHeader) -> BuildKey {
+    (
+        header.dll_sha.clone(),
+        header.baseline_sha.clone(),
+        header.builder.clone(),
+        header.built_at.clone(),
+    )
+}
+
+fn leaked_lookup(header: &SpecHeader, spec: Spec) -> &'static Lookup {
+    let mut known = LOOKUPS.lock().unwrap_or_else(|e| e.into_inner());
+    known
+        .entry(build_key(header))
+        .or_insert_with(|| Box::leak(Box::new(Lookup::new(spec.leak()))))
+}
+
+fn extracted(header: &SpecHeader, doc: Value) -> Option<ExtractedSpec> {
     let spec: Spec = serde_json::from_value(doc.clone()).ok()?;
-    let lookup: &'static Lookup = Box::leak(Box::new(Lookup::new(spec.leak())));
     Some(ExtractedSpec {
-        lookup,
+        lookup: leaked_lookup(header, spec),
         doc: Arc::new(doc),
     })
 }
@@ -65,7 +87,19 @@ fn slot_of(stored: StoredSpec) -> Option<SpecSlot> {
             .unwrap_or_else(|| "unknown error".into());
         return Some(SpecSlot::Failed(why));
     }
-    extracted(stored.spec?).map(SpecSlot::Ready)
+    extracted(&stored.header, stored.spec?).map(SpecSlot::Ready)
+}
+
+/// Reads the spec file of `dll_sha` when it was built from these inputs. Takes no lock: it does
+/// file I/O and parsing.
+fn load_current(store: &Store, dll_sha: &str, baseline_sha: &str, builder: &str) -> Option<Cached> {
+    let stored = read_json_blocking::<StoredSpec>(&store.spec_file(dll_sha))?;
+    if !stored.header.is_current(dll_sha, baseline_sha, builder) {
+        return None;
+    }
+    let header = stored.header.clone();
+    let slot = slot_of(stored)?;
+    Some(Cached { header, slot })
 }
 
 struct Cached {
@@ -109,47 +143,58 @@ impl VolumeSpecs {
         self.slots.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Whether a current build result (spec or failure) exists for `dll_sha`.
-    pub fn has_current(&self, dll_sha: &str) -> bool {
-        !matches!(self.slot_of_sha(dll_sha), SpecSlot::Pending)
+    /// Whether a current build result (spec or failure) exists for `dll_sha`. Called from the
+    /// indexer's async pass, so a cache miss reads the file on a blocking thread.
+    pub async fn has_current(&self, dll_sha: &str) -> bool {
+        let Some(baseline_sha) = self.baseline_sha() else {
+            return false;
+        };
+        if self.cached(dll_sha, &baseline_sha).is_some() {
+            return true;
+        }
+
+        let (store, builder) = (self.store.clone(), self.builder.clone());
+        let (sha, baseline) = (dll_sha.to_string(), baseline_sha);
+        let loaded =
+            tokio::task::spawn_blocking(move || load_current(&store, &sha, &baseline, &builder))
+                .await;
+        match loaded {
+            Ok(Some(cached)) => {
+                self.lock().insert(dll_sha.to_string(), cached);
+                true
+            }
+            _ => false,
+        }
     }
 
+    /// The cached slot, dropping an entry built from inputs that have since changed.
+    fn cached(&self, dll_sha: &str, baseline_sha: &str) -> Option<SpecSlot> {
+        let mut slots = self.lock();
+        let cached = slots.get(dll_sha)?;
+        if cached
+            .header
+            .is_current(dll_sha, baseline_sha, &self.builder)
+        {
+            return Some(cached.slot.clone());
+        }
+        slots.remove(dll_sha);
+        None
+    }
+
+    /// Runs on a blocking tool thread, so a cache miss may read the file there.
     fn slot_of_sha(&self, dll_sha: &str) -> SpecSlot {
         let Some(baseline_sha) = self.baseline_sha() else {
             return SpecSlot::Pending;
         };
-        let mut slots = self.lock();
-        if let Some(cached) = slots.get(dll_sha) {
-            if cached
-                .header
-                .is_current(dll_sha, &baseline_sha, &self.builder)
-            {
-                return cached.slot.clone();
-            }
-            slots.remove(dll_sha);
+        if let Some(slot) = self.cached(dll_sha, &baseline_sha) {
+            return slot;
         }
 
-        let path = self.store.spec_file(dll_sha);
-        let Some(stored) = read_json_blocking::<StoredSpec>(&path) else {
+        let Some(cached) = load_current(&self.store, dll_sha, &baseline_sha, &self.builder) else {
             return SpecSlot::Pending;
         };
-        if !stored
-            .header
-            .is_current(dll_sha, &baseline_sha, &self.builder)
-        {
-            return SpecSlot::Pending;
-        }
-        let header = stored.header.clone();
-        let Some(slot) = slot_of(stored) else {
-            return SpecSlot::Pending;
-        };
-        slots.insert(
-            dll_sha.to_string(),
-            Cached {
-                header,
-                slot: slot.clone(),
-            },
-        );
+        let slot = cached.slot.clone();
+        self.lock().insert(dll_sha.to_string(), cached);
         slot
     }
 
@@ -195,5 +240,38 @@ fn is_sha(text: &str) -> bool {
 impl VersionSpecs for Arc<VolumeSpecs> {
     fn slot(&self, dll_sha: &str) -> SpecSlot {
         self.slot_of_sha(dll_sha)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use xxmi_core::defaults::bundled_spec_json;
+
+    use super::*;
+
+    fn header(built_at: &str) -> SpecHeader {
+        SpecHeader {
+            dll_sha: "a".repeat(40),
+            baseline_sha: "b".repeat(40),
+            builder: "test".into(),
+            built_at: built_at.into(),
+            status: "ok".into(),
+            error: None,
+            warnings: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn loading_the_same_build_twice_leaks_one_lookup() {
+        let load = |header: &SpecHeader| {
+            leaked_lookup(header, Spec::from_json(bundled_spec_json()).unwrap())
+        };
+
+        let first = load(&header("2026-01-01"));
+        let again = load(&header("2026-01-01"));
+        let rebuilt = load(&header("2026-01-02"));
+
+        assert!(std::ptr::eq(first, again));
+        assert!(!std::ptr::eq(first, rebuilt));
     }
 }

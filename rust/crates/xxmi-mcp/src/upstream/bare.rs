@@ -150,14 +150,19 @@ impl BareCaches {
     }
 
     async fn ensure(&self, repo: &TrackedRepo) -> Result<(), ExecError> {
-        let empty = std::fs::read_dir(self.dir(repo)).is_ok_and(|mut d| d.next().is_none())
-            || !self.dir(repo).exists();
-        if empty {
+        if self.is_missing_or_empty(repo).await {
             self.create(repo).await
         } else if !self.healthy(repo).await? {
             self.recreate(repo, "failed the health check").await
         } else {
             Ok(())
+        }
+    }
+
+    async fn is_missing_or_empty(&self, repo: &TrackedRepo) -> bool {
+        match tokio::fs::read_dir(self.dir(repo)).await {
+            Ok(mut entries) => matches!(entries.next_entry().await, Ok(None)),
+            Err(error) => error.kind() == std::io::ErrorKind::NotFound,
         }
     }
 

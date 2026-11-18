@@ -159,7 +159,7 @@ async fn a_pass_indexes_heads_and_tags_then_idles() {
     assert_eq!(dll.tags[0].kind, "release");
     assert_eq!(dll.tags[0].tag.as_deref(), Some("v1.0"));
     assert!(
-        f.specs.has_current(&dll.branch.sha),
+        f.specs.has_current(&dll.branch.sha).await,
         "the stubbed build is recorded as failed"
     );
 
