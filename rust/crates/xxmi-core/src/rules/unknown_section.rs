@@ -1,6 +1,8 @@
 //! XM101: a section prefix the DLL doesn't know.
 
+use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 
 use super::{Finding, RuleContext};
 use crate::suggest::edit_distance;
@@ -21,7 +23,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
         .filter(|section| section.spec.is_none())
         .map(|section| {
             let name = context.file.slice(section.name);
-            let hint = match suggest(name, &names) {
+            let hint = match suggest_cached(name, &names) {
                 Some(found) => format!(" Did you mean a [{found}…] section?"),
                 None => String::new(),
             };
@@ -31,6 +33,22 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
             )
         })
         .collect()
+}
+
+/// A misspelt header stays in the file edit after edit, and `suggest` is the costliest thing a
+/// lint does with it. The names come from the one bundled spec, so the name alone is the key.
+fn suggest_cached(name: &str, names: &[&str]) -> Option<String> {
+    thread_local! {
+        static SUGGESTIONS: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
+    }
+    SUGGESTIONS.with_borrow_mut(|cache| {
+        if let Some(found) = cache.get(name) {
+            return found.clone();
+        }
+        let found = suggest(name, names).map(str::to_string);
+        cache.insert(name.to_string(), found.clone());
+        found
+    })
 }
 
 /// Compares each known prefix with the name's leading characters, allowing a couple of missing or

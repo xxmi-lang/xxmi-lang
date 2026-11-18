@@ -8,10 +8,34 @@ use crate::spec::{
     CommandKind, MatchKind, SectionKind, Spec, SpecCommand, SpecEnum, SpecKey, SpecSection,
 };
 
+/// Lower-cased equality without allocating for the ASCII names nearly every key and value has.
+pub fn eq_caseless(a: &str, b: &str) -> bool {
+    if a.is_ascii() && b.is_ascii() {
+        return a.eq_ignore_ascii_case(b);
+    }
+    a.to_lowercase() == b.to_lowercase()
+}
+
+fn address(section: &SpecSection) -> usize {
+    std::ptr::from_ref(section) as usize
+}
+
+/// The first key of a name wins, as in a linear search.
+fn key_table(section: &'static SpecSection) -> HashMap<String, &'static SpecKey> {
+    let mut table = HashMap::new();
+    for key in &section.keys {
+        table.entry(key.name.to_lowercase()).or_insert(key);
+    }
+    table
+}
+
 pub struct Lookup {
     spec: &'static Spec,
     /// Command-list sections first, as `IsCommandListSection` is checked before `IsRegularSection`.
     sections: Vec<(String, &'static SpecSection)>,
+    /// Keys by lower-cased name, per section (by address): sections have dozens of keys and every
+    /// line of a file looks one up.
+    keys: HashMap<usize, HashMap<String, &'static SpecKey>>,
     exact_commands: HashMap<String, &'static SpecCommand>,
     prefix_commands: Vec<(String, &'static SpecCommand)>,
     enums: HashMap<&'static str, &'static SpecEnum>,
@@ -40,9 +64,16 @@ impl Lookup {
             }
         }
 
+        let keys = spec
+            .sections
+            .iter()
+            .map(|section| (address(section), key_table(section)))
+            .collect();
+
         Self {
             spec,
             sections,
+            keys,
             exact_commands,
             prefix_commands,
             enums: spec.enums.iter().map(|e| (e.name.as_str(), e)).collect(),
@@ -90,8 +121,8 @@ impl Lookup {
     }
 
     pub fn key(&self, section: &'static SpecSection, key: &str) -> Option<&'static SpecKey> {
-        let lower = key.to_lowercase();
-        section.keys.iter().find(|k| k.name.to_lowercase() == lower)
+        let table = self.keys.get(&address(section))?;
+        table.get(&key.to_lowercase()).copied()
     }
 
     pub fn enum_table(&self, name: &str) -> Option<&'static SpecEnum> {

@@ -1,6 +1,7 @@
 //! XM105: a value outside the enum table the DLL parses the key against.
 
 use super::{Finding, RuleContext, replace_fix};
+use crate::lookup::eq_caseless;
 use crate::spec::SectionKind;
 use crate::suggest::did_you_mean;
 
@@ -49,8 +50,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                 written
             };
 
-            let lower = value.to_lowercase();
-            if values.iter().any(|v| v.to_lowercase() == lower) {
+            if values.iter().any(|v| eq_caseless(v, value)) {
                 continue;
             }
 

@@ -7,18 +7,23 @@ fn utf16_lower(text: &str) -> Vec<u16> {
 }
 
 pub fn edit_distance(a: &str, b: &str) -> usize {
-    let (x, y) = (utf16_lower(a), utf16_lower(b));
-    let mut prev: Vec<usize> = (0..=y.len()).collect();
+    distance_between(&utf16_lower(a), &utf16_lower(b))
+}
+
+fn distance_between(x: &[u16], y: &[u16]) -> usize {
+    let mut row: Vec<usize> = (0..=y.len()).collect();
 
     for (i, cx) in x.iter().enumerate() {
-        let mut row = vec![i + 1];
+        let mut diagonal = row[0];
+        row[0] = i + 1;
         for (j, cy) in y.iter().enumerate() {
+            let above = row[j + 1];
             let cost = usize::from(cx != cy);
-            row.push((prev[j + 1] + 1).min(row[j] + 1).min(prev[j] + cost));
+            row[j + 1] = (above + 1).min(row[j] + 1).min(diagonal + cost);
+            diagonal = above;
         }
-        prev = row;
     }
-    prev[y.len()]
+    row[y.len()]
 }
 
 /// The closest candidate within a distance that scales with length, or `None`.
@@ -26,9 +31,15 @@ pub fn nearest<'a>(word: &str, candidates: impl IntoIterator<Item = &'a str>) ->
     let limit = (word.encode_utf16().count() / 3).clamp(1, 3);
     let mut best: Option<&str> = None;
     let mut best_distance = limit + 1;
+    let word_units = utf16_lower(word);
 
     for candidate in candidates {
-        let distance = edit_distance(word, candidate);
+        let candidate_units = utf16_lower(candidate);
+        // The distance is at least the length difference, and anything over the limit never wins.
+        if candidate_units.len().abs_diff(word_units.len()) > limit {
+            continue;
+        }
+        let distance = distance_between(&word_units, &candidate_units);
         let closer = distance < best_distance;
         let ties_alphabetically = distance == best_distance && best.is_some_and(|b| candidate < b);
         if closer || ties_alphabetically {

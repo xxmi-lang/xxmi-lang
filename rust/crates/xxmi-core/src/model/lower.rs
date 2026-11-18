@@ -7,16 +7,15 @@ use std::path::PathBuf;
 use crate::document::{Chunk, Document};
 use crate::encoding::Encoding;
 use crate::lookup::Lookup;
-use crate::parse::collect_syntax_issues;
 use crate::scan::{ScannedIni, ScannedLine, Span};
 use crate::spec::SectionKind;
 
-use super::collect::collect;
-use super::types::{IniFile, Issue, LineModel, SectionModel};
+use super::collect::analyse_chunk;
+use super::types::{IniFile, Issue, LineModel, Reference, SectionModel, VariableDeclaration};
 
 pub struct LowerOptions<'a> {
     pub path: PathBuf,
-    pub text: String,
+    pub document: &'a Document,
     pub encoding: Encoding,
     /// Namespace the DLL gives the file when it has no `namespace =`: its path relative to the
     /// 3DMigoto folder with `\` separators, or '' for the main d3dx.ini.
@@ -27,12 +26,11 @@ pub struct LowerOptions<'a> {
 pub fn lower_ini(options: LowerOptions) -> IniFile {
     let LowerOptions {
         path,
-        text,
+        document: doc,
         encoding,
         default_namespace,
         lookup,
     } = options;
-    let doc = Document::new(text);
     let scan = doc.scan();
     let text = doc.text();
 
@@ -178,24 +176,49 @@ fn command_of(key: &str, is_command_list: bool) -> String {
     lower
 }
 
-/// Reads one chunk's tree: its syntax issues (shifted to file offsets), then its statements,
-/// references and declarations.
+/// Places one chunk's analysis (read from its tree the first time) in the file: syntax issues,
+/// statements, references and declarations, shifted to file offsets and rows.
 fn analyse(
     text: &str,
     chunk: &Chunk,
     target: &mut ChunkTarget,
-    references: &mut Vec<super::types::Reference>,
-    variables: &mut Vec<super::types::VariableDeclaration>,
+    references: &mut Vec<Reference>,
+    variables: &mut Vec<VariableDeclaration>,
 ) {
-    let source = chunk.span.slice(text);
-    for issue in collect_syntax_issues(&chunk.tree, source) {
+    let analysis = chunk
+        .analysis
+        .get_or_init(|| analyse_chunk(chunk, chunk.span.slice(text)));
+
+    for issue in &analysis.issues {
         target.issues.push(Issue {
             span: shift(issue.span, chunk.span),
             line: target.line + issue.row as u32,
-            message: issue.message,
+            message: issue.message.clone(),
         });
     }
-    collect(chunk, source, target, references, variables);
+    for (row, kind) in &analysis.statements {
+        let line = target.line + row;
+        if let Ok(i) = target.lines.binary_search_by_key(&line, |l| l.scanned.line)
+            && target.lines[i].statement.is_none()
+        {
+            target.lines[i].statement = Some(kind.clone());
+        }
+    }
+    references.extend(analysis.references.iter().map(|r| Reference {
+        kind: r.kind,
+        text: r.text.clone(),
+        span: shift(r.span, chunk.span),
+        section: target.section,
+        access: r.access,
+    }));
+    variables.extend(analysis.variables.iter().map(|v| VariableDeclaration {
+        name: v.name.clone(),
+        span: shift(v.span, chunk.span),
+        section: target.section,
+        scope: v.scope,
+        persist: v.persist,
+        locked: v.locked,
+    }));
 }
 
 fn shift(span: Span, chunk: Span) -> Span {

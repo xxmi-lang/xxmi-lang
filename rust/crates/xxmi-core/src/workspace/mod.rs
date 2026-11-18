@@ -8,16 +8,19 @@ pub mod symbols;
 pub mod usage;
 
 use std::cell::{OnceCell, RefCell};
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::document::Document;
 use crate::encoding::{Encoding, decode_text};
 use crate::glob::Glob;
 use crate::lookup::Lookup;
-use crate::model::{IniFile, lower_ini};
+use crate::model::{IniFile, LowerOptions, lower_ini};
 use crate::paths::{PathResolver, relative_path, resolve_path};
+use crate::trace;
 
 use package::{default_excludes, find_package_root, path_namespace};
 use snapshot::SymbolSnapshot;
@@ -50,6 +53,8 @@ pub struct Workspace {
     fixed_namespaces: HashMap<PathBuf, String>,
     /// Text of files open in an editor; wins over the file on disk.
     overlays: HashMap<PathBuf, String>,
+    /// Parse state of the files that have an overlay.
+    documents: HashMap<PathBuf, Document>,
     /// `canonicalize` results: symlinked libraries share an editor buffer with their target.
     real_paths: RefCell<HashMap<PathBuf, PathBuf>>,
     symbols: OnceCell<SymbolTable>,
@@ -73,6 +78,7 @@ impl Workspace {
             included: HashSet::new(),
             fixed_namespaces: HashMap::new(),
             overlays: HashMap::new(),
+            documents: HashMap::new(),
             real_paths: RefCell::new(HashMap::new()),
             symbols: OnceCell::new(),
             usage: OnceCell::new(),
@@ -147,6 +153,7 @@ impl Workspace {
 
         for path in paths {
             self.overlays.remove(&path);
+            self.documents.remove(&path);
             self.reload(&path);
         }
     }
@@ -214,21 +221,24 @@ impl Workspace {
     /// The symbols of every loaded file, plus the snapshots of libraries no loaded file provides.
     pub fn symbols(&self) -> &SymbolTable {
         self.symbols.get_or_init(|| {
-            let mut table = SymbolTable::new(self.lookup);
-            for (id, file) in self.files.iter().enumerate() {
-                table.add_file(id, file);
-            }
-            for snapshot in self.snapshots {
-                if !snapshot.namespaces.iter().any(|ns| table.has_namespace(ns)) {
-                    table.add_snapshot(snapshot);
+            trace::span("symbols", || {
+                let mut table = SymbolTable::new(self.lookup);
+                for (id, file) in self.files.iter().enumerate() {
+                    table.add_file(id, file);
                 }
-            }
-            table
+                for snapshot in self.snapshots {
+                    if !snapshot.namespaces.iter().any(|ns| table.has_namespace(ns)) {
+                        table.add_snapshot(snapshot);
+                    }
+                }
+                table
+            })
         })
     }
 
     pub fn usage(&self) -> &Usage {
-        self.usage.get_or_init(|| usage::compute(self))
+        self.usage
+            .get_or_init(|| trace::span("usage", || usage::compute(self)))
     }
 
     /// Adds a file to lint. Its namespace comes from its path relative to the package root (or to
@@ -331,15 +341,24 @@ impl Workspace {
         }
 
         let (text, encoding) = self.read_text(path)?;
-        let file = lower_ini(crate::model::LowerOptions {
+        let open = self.overlay_for(path).is_some();
+        let lookup = self.lookup;
+        let options = |document| LowerOptions {
             path: path.to_path_buf(),
-            text,
+            document,
             encoding,
             default_namespace: fixed_namespace
                 .clone()
                 .unwrap_or_else(|| path_namespace(path, namespace_root)),
-            lookup: self.lookup,
-        });
+            lookup,
+        };
+        let file = if open {
+            let document = trace::span("parse", || self.document_for(path, text));
+            trace::span("lower", || lower_ini(options(document)))
+        } else {
+            let document = trace::span("parse", || Document::new(text));
+            trace::span("lower", || lower_ini(options(&document)))
+        };
 
         // Anything cached was computed from the files loaded so far.
         self.symbols = OnceCell::new();
@@ -358,6 +377,19 @@ impl Workspace {
             self.fixed_namespaces.insert(path.to_path_buf(), namespace);
         }
         Ok(id)
+    }
+
+    /// The parsed text of an open file. Its trees outlive the edit, so the next edit only parses
+    /// the sections that changed.
+    fn document_for(&mut self, path: &Path, text: String) -> &Document {
+        match self.documents.entry(path.to_path_buf()) {
+            Entry::Occupied(entry) => {
+                let document = entry.into_mut();
+                document.set_text(text);
+                document
+            }
+            Entry::Vacant(entry) => entry.insert(Document::new(text)),
+        }
     }
 
     /// The overlay for `path` (or for another path to the same file on disk), else the file.

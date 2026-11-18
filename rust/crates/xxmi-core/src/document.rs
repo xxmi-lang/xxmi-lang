@@ -4,12 +4,14 @@
 //! into the next section. An edit re-scans the text, then re-parses only the sections whose text
 //! changed, handing tree-sitter the previous tree of the same section as the incremental base.
 
+use std::cell::OnceCell;
 use std::mem;
 
 use line_index::{LineIndex, WideEncoding, WideLineCol};
 use tree_sitter::{InputEdit, Parser, Point, Tree};
 
 use crate::diagnostic::{Position, Range};
+use crate::model::ChunkAnalysis;
 use crate::parse::new_parser;
 use crate::scan::{ScannedIni, Span, scan_ini};
 
@@ -24,6 +26,18 @@ pub struct TextChange {
 pub struct Chunk {
     pub span: Span,
     pub tree: Tree,
+    /// Filled by lowering; dropped with the chunk when its text changes.
+    pub analysis: OnceCell<ChunkAnalysis>,
+}
+
+impl Chunk {
+    fn new(span: Span, tree: Tree) -> Self {
+        Self {
+            span,
+            tree,
+            analysis: OnceCell::new(),
+        }
+    }
 }
 
 pub struct Document {
@@ -81,6 +95,12 @@ impl Document {
         &self.chunks[index + usize::from(self.has_preamble)]
     }
 
+    /// Replaces the text; only the sections that differ from the old text are parsed again.
+    pub fn set_text(&mut self, text: String) {
+        let index = LineIndex::new(&text);
+        self.reparse(text, index);
+    }
+
     /// Applies the changes in order, then re-parses what they touched.
     pub fn apply_changes(&mut self, changes: &[TextChange]) {
         let mut text = self.text.clone();
@@ -132,7 +152,7 @@ fn fresh_chunk(parser: &mut Parser, text: &str, span: Span) -> Chunk {
     let tree = parser
         .parse(span.slice(text), None)
         .expect("the parser has a language and no timeout");
-    Chunk { span, tree }
+    Chunk::new(span, tree)
 }
 
 /// LSP position to a byte offset, clamped to the line like the spec asks for characters past its end.
@@ -197,6 +217,7 @@ fn reparse_chunk(parser: &mut Parser, old_text: &str, old: Chunk, text: &str, sp
         return Chunk {
             span,
             tree: old.tree,
+            analysis: old.analysis,
         };
     }
 
@@ -205,7 +226,7 @@ fn reparse_chunk(parser: &mut Parser, old_text: &str, old: Chunk, text: &str, sp
     let tree = parser
         .parse(source, Some(&base))
         .expect("the parser has a language and no timeout");
-    Chunk { span, tree }
+    Chunk::new(span, tree)
 }
 
 /// Pairs new chunks with old ones: the identical leading and trailing chunks, then the changed

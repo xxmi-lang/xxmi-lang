@@ -4,9 +4,9 @@
 use tree_sitter::Node;
 
 use crate::document::Chunk;
+use crate::parse::{SyntaxIssue, collect_syntax_issues};
 use crate::scan::Span;
 
-use super::lower::ChunkTarget;
 use super::types::{Access, Reference, Scope, SymbolKind, VariableDeclaration};
 
 /// Statements whose `name` field is written, not read.
@@ -39,33 +39,36 @@ fn reference_kind(node_kind: &str) -> Option<SymbolKind> {
     })
 }
 
-pub(super) fn collect(
-    chunk: &Chunk,
-    source: &str,
-    target: &mut ChunkTarget,
-    references: &mut Vec<Reference>,
-    variables: &mut Vec<VariableDeclaration>,
-) {
+/// What one chunk's tree says, with spans and rows local to the chunk and no section set. A chunk
+/// whose text is unchanged keeps its analysis when an edit moves it elsewhere in the file.
+#[derive(Default)]
+pub struct ChunkAnalysis {
+    pub issues: Vec<SyntaxIssue>,
+    /// Chunk-local row and node kind of each statement, in document order.
+    pub statements: Vec<(u32, String)>,
+    pub references: Vec<Reference>,
+    pub variables: Vec<VariableDeclaration>,
+}
+
+pub(super) fn analyse_chunk(chunk: &Chunk, source: &str) -> ChunkAnalysis {
+    let mut analysis = ChunkAnalysis {
+        issues: collect_syntax_issues(&chunk.tree, source),
+        ..ChunkAnalysis::default()
+    };
     let mut walker = Walker {
         source,
-        offset: chunk.span.start,
-        target,
-        references,
-        variables,
+        analysis: &mut analysis,
     };
     walker.visit(chunk.tree.root_node());
+    analysis
 }
 
-struct Walker<'a, 'b> {
+struct Walker<'a> {
     source: &'a str,
-    /// Trees are built from the chunk's text alone; this shifts them to file offsets.
-    offset: usize,
-    target: &'a mut ChunkTarget<'b>,
-    references: &'a mut Vec<Reference>,
-    variables: &'a mut Vec<VariableDeclaration>,
+    analysis: &'a mut ChunkAnalysis,
 }
 
-impl Walker<'_, '_> {
+impl Walker<'_> {
     fn visit(&mut self, node: Node) {
         // Text inside an ERROR is reported as XM001, not interpreted.
         if node.is_error() {
@@ -97,24 +100,18 @@ impl Walker<'_, '_> {
             return;
         }
 
-        let row = self.target.line + node.start_position().row as u32;
-        if let Ok(i) = self
-            .target
-            .lines
-            .binary_search_by_key(&row, |l| l.scanned.line)
-            && self.target.lines[i].statement.is_none()
-        {
-            self.target.lines[i].statement = Some(kind.to_string());
-        }
+        self.analysis
+            .statements
+            .push((node.start_position().row as u32, kind.to_string()));
     }
 
     fn visit_declaration(&mut self, node: Node) {
         if let Some(variable) = node.child_by_field_name("variable") {
             let has_flag = |flag: &str| node.children(&mut node.walk()).any(|c| c.kind() == flag);
-            self.variables.push(VariableDeclaration {
+            self.analysis.variables.push(VariableDeclaration {
                 name: self.text_of(variable).trim().to_string(),
                 span: self.span_of(variable),
-                section: self.target.section,
+                section: None,
                 scope: if node.kind().starts_with("local") {
                     Scope::Local
                 } else {
@@ -136,11 +133,11 @@ impl Walker<'_, '_> {
     fn visit_reference(&mut self, node: Node, kind: SymbolKind) {
         let text = self.reference_text(node);
         if !text.is_empty() {
-            self.references.push(Reference {
+            self.analysis.references.push(Reference {
                 kind,
                 text,
                 span: self.span_of(node),
-                section: self.target.section,
+                section: None,
                 access: access(node),
             });
         }
@@ -163,8 +160,8 @@ impl Walker<'_, '_> {
 
     fn span_of(&self, node: Node) -> Span {
         Span {
-            start: node.start_byte() + self.offset,
-            end: node.end_byte() + self.offset,
+            start: node.start_byte(),
+            end: node.end_byte(),
         }
     }
 }
