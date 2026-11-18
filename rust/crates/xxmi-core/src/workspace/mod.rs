@@ -63,9 +63,17 @@ pub struct Workspace {
 
 impl Workspace {
     pub fn new(lookup: &'static Lookup, snapshots: &'static [SymbolSnapshot]) -> Self {
+        Self::with_resolver(lookup, snapshots, PathResolver::default())
+    }
+
+    pub fn with_resolver(
+        lookup: &'static Lookup,
+        snapshots: &'static [SymbolSnapshot],
+        resolver: PathResolver,
+    ) -> Self {
         Self {
             lookup,
-            resolver: PathResolver::default(),
+            resolver,
             snapshots,
             files: Vec::new(),
             file_ids: HashMap::new(),

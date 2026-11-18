@@ -60,7 +60,12 @@ pub fn normalize(name: &str) -> &str {
     unwrapped.strip_prefix("->").unwrap_or(unwrapped)
 }
 
-fn entry(kind: &'static str, name: String, meta: &Meta, facts: Vec<String>) -> SpecEntry {
+pub(super) fn entry(
+    kind: &'static str,
+    name: String,
+    meta: &Meta,
+    facts: Vec<String>,
+) -> SpecEntry {
     let present = |text: &Option<String>| text.clone().filter(|t| !t.is_empty());
     SpecEntry {
         kind,
@@ -107,7 +112,7 @@ fn command_entry(command: &SpecCommand) -> SpecEntry {
     found
 }
 
-fn lookup_commands(spec: &Spec, lookup: &Lookup, name: &str) -> Vec<SpecEntry> {
+pub(super) fn lookup_commands(spec: &Spec, lookup: &Lookup, name: &str) -> Vec<SpecEntry> {
     let lower = name.to_lowercase();
     let mut matches: Vec<&SpecCommand> = spec
         .commands
@@ -122,7 +127,7 @@ fn lookup_commands(spec: &Spec, lookup: &Lookup, name: &str) -> Vec<SpecEntry> {
     matches.into_iter().map(command_entry).collect()
 }
 
-fn lookup_functions(spec: &Spec, name: &str) -> Vec<SpecEntry> {
+pub(super) fn lookup_functions(spec: &Spec, name: &str) -> Vec<SpecEntry> {
     let lower = name.to_lowercase();
     spec.functions
         .iter()
@@ -197,12 +202,12 @@ pub fn lookup_operators(spec: &Spec, name: &str) -> Vec<SpecEntry> {
         .collect()
 }
 
-fn summarize(doc: Option<&str>) -> String {
+pub(super) fn summarize(doc: Option<&str>) -> String {
     doc.and_then(|d| d.lines().next())
         .map_or_else(String::new, |line| line.trim().to_string())
 }
 
-fn item(name: String, meta: &Meta) -> SpecListItem {
+pub(super) fn item(name: String, meta: &Meta) -> SpecListItem {
     SpecListItem {
         name,
         summary: summarize(meta.doc.as_deref()),

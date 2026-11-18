@@ -11,7 +11,18 @@ fn indent(text: &str, spaces: usize) -> String {
         .join("\n")
 }
 
+/// Where the DLL implements a spec entry, for `render_spec_entry_at`.
+pub struct DllLocation<'a> {
+    pub path: &'a str,
+    pub line: usize,
+    pub link: Option<&'a str>,
+}
+
 pub fn render_spec_entry(entry: &SpecEntry) -> String {
+    render_spec_entry_at(entry, None)
+}
+
+pub fn render_spec_entry_at(entry: &SpecEntry, dll: Option<&DllLocation>) -> String {
     let section = entry
         .section
         .as_ref()
@@ -21,6 +32,11 @@ pub fn render_spec_entry(entry: &SpecEntry) -> String {
         format!("{} {}{section}{xxmi}", entry.kind, entry.name),
         format!("  spec source: {}", entry.source),
     ];
+
+    if let Some(dll) = dll {
+        let link = dll.link.map_or_else(String::new, |l| format!("  {l}"));
+        lines.push(format!("  DLL: {}:{}{link}", dll.path, dll.line));
+    }
 
     if !entry.facts.is_empty() {
         lines.push(format!("  {}", entry.facts.join("; ")));
@@ -45,10 +61,22 @@ pub fn render_spec_entry(entry: &SpecEntry) -> String {
 }
 
 pub fn render_symbol(info: &SymbolInfo) -> String {
+    render_symbol_with(info, None, None)
+}
+
+/// `link` follows the declaration; `note` is its own line after it.
+pub fn render_symbol_with(info: &SymbolInfo, link: Option<&str>, note: Option<&str>) -> String {
+    let link = link.map_or_else(String::new, |l| format!("  {l}"));
     let mut lines = vec![
         format!("{} {}", info.kind.as_str(), info.qualified_name),
-        format!("declared: {}:{}", info.location.path, info.location.line),
+        format!(
+            "declared: {}:{}{link}",
+            info.location.path, info.location.line
+        ),
     ];
+    if let Some(note) = note {
+        lines.push(note.to_string());
+    }
 
     if let Some(doc) = &info.doc {
         lines.push("doc:".to_string());

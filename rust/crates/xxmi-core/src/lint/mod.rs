@@ -24,7 +24,7 @@ use crate::workspace::snapshot::SymbolSnapshot;
 pub use collect::collect_ini_files;
 pub use config::{ConfigError, ConfigLoader, RuleSetting};
 pub use file::lint_file;
-pub use run::{lint_paths, lint_text};
+pub use run::{lint_paths, lint_text, lint_texts};
 
 pub struct LintOptions {
     /// Only run these rule ids (upper-case).

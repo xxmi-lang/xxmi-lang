@@ -7,6 +7,7 @@ pub mod docs;
 pub mod library;
 pub mod render;
 pub mod spec;
+pub mod spec_all;
 
 use std::cmp::Ordering;
 
