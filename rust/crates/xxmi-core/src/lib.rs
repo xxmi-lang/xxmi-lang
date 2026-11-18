@@ -8,6 +8,7 @@ pub mod glob;
 pub mod lint;
 pub mod lookup;
 pub mod model;
+pub mod navigation;
 pub mod parse;
 pub mod paths;
 pub mod query;
