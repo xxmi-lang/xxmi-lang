@@ -1,6 +1,7 @@
 /**
  * Launches a real VS Code (downloaded and cached by @vscode/test-electron) with the bundled
- * extension and runs test/suite.cjs inside it. Run `pnpm --filter ./packages/vscode build` first.
+ * extension and runs test/suite.cjs inside it. Run `pnpm --filter ./packages/vscode build` first;
+ * the bundled Rust binary comes from dist/bin (`pnpm build:binaries --target host`).
  * On Linux CI it needs a display (xvfb-run).
  */
 import { mkdtempSync } from 'node:fs';
