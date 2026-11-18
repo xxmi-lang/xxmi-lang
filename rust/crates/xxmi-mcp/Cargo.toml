@@ -1,0 +1,31 @@
+[package]
+name = "xxmi-mcp"
+description = "xxmi-mcp: hosted read-only MCP server for XXMI (Rust port of packages/mcp-server)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "xxmi-mcp"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+grep-matcher = "0.1"
+grep-regex = "0.1"
+grep-searcher = "0.1"
+ignore = "0.4"
+mimalloc = "0.1"
+regex = "1"
+serde.workspace = true
+serde_json = { workspace = true, features = ["preserve_order"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "process", "signal", "sync", "time", "io-util", "fs"] }
+toml.workspace = true
+tower-http = { version = "0.6", features = ["limit", "timeout"] }
+xxmi-core = { path = "../xxmi-core" }
+xxmi-spec-extractor = { path = "../xxmi-spec-extractor" }
+
+[dev-dependencies]
+tempfile = "3"
