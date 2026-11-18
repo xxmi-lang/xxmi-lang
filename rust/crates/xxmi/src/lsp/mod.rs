@@ -29,7 +29,8 @@ use uri::uri_to_path;
 
 type BoxError = Box<dyn Error + Send + Sync>;
 
-pub fn run() -> Result<(), BoxError> {
+/// The process exit code: 0 for an `exit` (or end of input) after `shutdown`, 1 otherwise.
+pub fn run() -> Result<i32, BoxError> {
     let (connection, io_threads) = Connection::stdio();
 
     let (id, params) = connection.initialize_start()?;
@@ -41,12 +42,13 @@ pub fn run() -> Result<(), BoxError> {
     let mut server = Server::new(&connection, roots, supports_configuration);
     server.request_settings();
     server.index_roots();
-    main_loop(&connection, server)?;
+    let code = main_loop(&connection, server)?;
 
-    // Joining ends the writer thread once the connection's sender is dropped.
+    // Joining ends the writer thread once the connection's sender is dropped. The reader may
+    // fail to deliver a late message to the closed channel, and that is a normal way to end.
     drop(connection);
-    io_threads.join()?;
-    Ok(())
+    let _ = io_threads.join();
+    Ok(code)
 }
 
 /// Workspace folders, falling back to the deprecated `rootUri` some clients still send.
@@ -90,7 +92,10 @@ fn initialize_result() -> Value {
     })
 }
 
-fn main_loop(connection: &Connection, mut server: Server) -> Result<(), BoxError> {
+fn main_loop(connection: &Connection, mut server: Server) -> Result<i32, BoxError> {
+    let mut shut_down = false;
+    let end_code = |shut_down: bool| if shut_down { 0 } else { 1 };
+
     loop {
         let received = match server.deadline() {
             Some(deadline) => connection
@@ -108,16 +113,26 @@ fn main_loop(connection: &Connection, mut server: Server) -> Result<(), BoxError
                 server.run_due();
                 continue;
             }
-            Err(RecvTimeoutError::Disconnected) => return Ok(()),
+            Err(RecvTimeoutError::Disconnected) => return Ok(end_code(shut_down)),
         };
 
         match message {
-            Message::Request(request) => {
-                if handle_request(connection, &mut server, request)? {
-                    return Ok(());
-                }
+            Message::Request(request) if request.method == "shutdown" => {
+                shut_down = true;
+                connection
+                    .sender
+                    .send(Message::Response(Response::new_ok(request.id, Value::Null)))?;
             }
-            Message::Notification(notification) if notification.method == "exit" => return Ok(()),
+            Message::Request(request) if shut_down => {
+                let message = "the server is shutting down".to_string();
+                let response =
+                    Response::new_err(request.id, ErrorCode::InvalidRequest as i32, message);
+                connection.sender.send(Message::Response(response))?;
+            }
+            Message::Request(request) => handle_request(connection, &mut server, request)?,
+            Message::Notification(notification) if notification.method == "exit" => {
+                return Ok(end_code(shut_down));
+            }
             Message::Notification(notification) => contain(&mut server, notification),
             Message::Response(response) => {
                 server.settings_response(&response.id, response.response_result.ok())
@@ -126,16 +141,11 @@ fn main_loop(connection: &Connection, mut server: Server) -> Result<(), BoxError
     }
 }
 
-/// Returns true once the client asked to shut down.
 fn handle_request(
     connection: &Connection,
     server: &mut Server,
     request: Request,
-) -> Result<bool, BoxError> {
-    if connection.handle_shutdown(&request)? {
-        return Ok(true);
-    }
-
+) -> Result<(), BoxError> {
     let id = request.id.clone();
     let method = request.method.clone();
     let response = guarded(|| requests::handle(server, request)).unwrap_or_else(|| {
@@ -145,7 +155,7 @@ fn handle_request(
     });
 
     connection.sender.send(Message::Response(response))?;
-    Ok(false)
+    Ok(())
 }
 
 fn parse<P: DeserializeOwned>(notification: Notification) -> Result<P, BoxError> {
