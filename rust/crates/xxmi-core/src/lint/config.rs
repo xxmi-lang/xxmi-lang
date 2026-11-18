@@ -31,6 +31,16 @@ const SETTINGS: [(&str, RuleSetting); 5] = [
     ("hint", RuleSetting::Level(Severity::Hint)),
 ];
 
+impl RuleSetting {
+    /// `off`, `error`, `warning`, `info` or `hint`.
+    pub fn parse(name: &str) -> Option<Self> {
+        SETTINGS
+            .iter()
+            .find(|(setting, _)| *setting == name)
+            .map(|(_, setting)| *setting)
+    }
+}
+
 #[derive(Debug)]
 pub struct ConfigError(String);
 

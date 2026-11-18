@@ -136,7 +136,7 @@ fn fresh_chunk(parser: &mut Parser, text: &str, span: Span) -> Chunk {
 }
 
 /// LSP position to a byte offset, clamped to the line like the spec asks for characters past its end.
-fn offset_at(text: &str, index: &LineIndex, position: Position) -> usize {
+pub fn offset_at(text: &str, index: &LineIndex, position: Position) -> usize {
     let Some(line) = index.line(position.line) else {
         return text.len();
     };

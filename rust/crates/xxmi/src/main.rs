@@ -1,5 +1,5 @@
 //! `xxmi`: see docs/04-cli.md. Exit codes: 0 ok, 1 lint errors (or --max-warnings exceeded),
-//! 2 usage error, 3 internal error. Only `lint` is ported to Rust so far.
+//! 2 usage error, 3 internal error. Run as `xxmi-lsp` (or with `--stdio`) it is the language server.
 
 mod args;
 mod error;
@@ -7,6 +7,8 @@ mod help;
 mod index_command;
 mod js_number;
 mod lint_command;
+mod lsp;
+mod lsp_command;
 mod query_command;
 
 use std::process::exit;
@@ -24,6 +26,13 @@ fn main() {
     exit(report(dispatch(&args)));
 }
 
+/// The language server is the whole program when it is launched under its own name.
+fn is_standalone_lsp() -> bool {
+    let program = std::env::args_os().next().map(std::path::PathBuf::from);
+    let stem = program.as_deref().and_then(|p| p.file_stem());
+    stem.is_some_and(|stem| stem.eq_ignore_ascii_case("xxmi-lsp"))
+}
+
 /// The release profile aborts on panic, which would exit with a signal; exit 3 like the
 /// TypeScript CLI does for an internal error.
 fn install_panic_hook() {
@@ -34,6 +43,9 @@ fn install_panic_hook() {
 }
 
 fn dispatch(args: &[String]) -> Result<i32, CliError> {
+    if is_standalone_lsp() {
+        return lsp_command::run(args, true);
+    }
     let Some((command, rest)) = args.split_first() else {
         println!("{USAGE}");
         return Ok(2);
@@ -43,9 +55,8 @@ fn dispatch(args: &[String]) -> Result<i32, CliError> {
         "lint" => lint_command::run(rest),
         "query" => query_command::run(rest),
         "index" => index_command::run(rest),
-        "lsp" => Err(CliError::Usage(
-            "`xxmi lsp` is not implemented in the Rust build yet".to_string(),
-        )),
+        "lsp" => lsp_command::run(rest, false),
+        "--stdio" => lsp_command::run(args, false),
         "--version" | "-v" => {
             println!("{}", env!("CARGO_PKG_VERSION"));
             Ok(0)
