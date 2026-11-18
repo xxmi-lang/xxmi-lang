@@ -11,6 +11,8 @@ export default tseslint.config(
       'coverage/**',
       '.zzmi-package/**',
       '.dll/**',
+      // The Rust workspace (docs/rust-port.md) has its own tooling; only bench scripts are JS.
+      'rust/**',
       // VS Code downloaded by @vscode/test-electron (packages/vscode/.vscode-test).
       '**/.vscode-test/**',
       // Temporary git worktrees (ESLint does not read .gitignore).
