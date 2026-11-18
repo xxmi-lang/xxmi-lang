@@ -134,6 +134,65 @@ jobs:
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
+  rust:
+    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS; the parity
+    # checks against the TypeScript CLI and server run on Linux, where the ZZMI package is checked out.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # build.rs embeds packages/core/dist/spec.json.
+      - run: pnpm build
+
+      - name: Check out ZZMI-Package
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/checkout@v7
+        with:
+          repository: leotorrez/ZZMI-Package
+          ref: ${{ env.ZZMI_PACKAGE_REF }}
+          path: .zzmi-package
+          persist-credentials: false
+
+      - name: Format
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+
+      - name: Clippy (warnings are errors)
+        run: cargo clippy --manifest-path rust/Cargo.toml --release -- -D warnings
+
+      - name: Tests
+        run: cargo test --manifest-path rust/Cargo.toml --release
+
+      - name: Parity with the TypeScript CLI and language server
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          XXMI_PACKAGE_SRC: .zzmi-package/ZZMI
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml -p xxmi
+          node rust/bench/parity.mjs
+          node rust/bench/lsp-parity.mjs
+
   dotnet:
     # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
     # A hung test once ran this job for 6 hours: the limits below end it in minutes and name the test.
