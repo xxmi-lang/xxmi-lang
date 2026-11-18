@@ -28,10 +28,4 @@ describe('DLL 1.3.2 syntax', () => {
     expect(actual.map((d) => d.id)).toEqual(['XM102', 'XM102']);
     matchesGolden('filter-keys.ini', actual);
   });
-
-  // The grammar fork still has the 1.3.1 value-form names and no [Filter] sections, slot
-  // filters or filter targets: drop `fails` once it parses them.
-  it.fails('parses [Filter] sections, slot filters and filter targets', async () => {
-    expect(await diagnose('pending-grammar.ini', ['XM001'])).toEqual([]);
-  });
 });
