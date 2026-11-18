@@ -66,6 +66,19 @@ jobs:
             /util.h
           sparse-checkout-cone-mode: false
 
+      # The checkout is one commit without tags; spec-build-tags.test.ts needs these.
+      - name: Fetch DLL release tags
+        shell: bash
+        run: |
+          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
+              refs/tags/v1.2.0:refs/tags/v1.2.0 \
+              refs/tags/v1.2.1:refs/tags/v1.2.1 \
+              refs/tags/v1.2.2:refs/tags/v1.2.2 \
+              refs/tags/v1.2.3:refs/tags/v1.2.3 \
+              refs/tags/v1.3.0:refs/tags/v1.3.0 \
+              refs/tags/v1.3.1:refs/tags/v1.3.1 \
+              refs/tags/v1.3.2:refs/tags/v1.3.2
+
       - name: Check out 3Dmigoto (vanilla baseline)
         uses: actions/checkout@v7
         with:
