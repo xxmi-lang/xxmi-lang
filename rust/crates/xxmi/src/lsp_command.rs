@@ -25,7 +25,7 @@ pub fn run(args: &[String], standalone: bool) -> Result<i32, CliError> {
         };
         println!("{help}");
     } else {
-        lsp::run().map_err(|error| CliError::Internal(error.to_string()))?;
+        return lsp::run().map_err(|error| CliError::Internal(error.to_string()));
     }
     Ok(0)
 }

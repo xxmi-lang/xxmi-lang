@@ -22,8 +22,7 @@ setTimeout(() => {
 }, TIMEOUT_MS).unref();
 
 const client = new LspClient(resolve(program), args);
-// Without the configuration capability the server asks nothing, so shutdown cannot race a reply to it.
-const reply = await client.initialize([], false);
+const reply = await client.initialize([]);
 if (!reply?.capabilities) {
   console.error(`initialize reply without capabilities: ${JSON.stringify(reply)}`);
   client.child.kill();
