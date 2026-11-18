@@ -21,7 +21,8 @@ function materialize(repo: string, tag: string): { dir: string; commit: string }
   return { dir, commit: git(repo, ['rev-parse', tag]).toString().trim() };
 }
 
-describe.skipIf(!DLL || !MIGOTO)('buildVersionSpec on real DLL tags', () => {
+// each case extracts a full spec from a git archive
+describe.skipIf(!DLL || !MIGOTO)('buildVersionSpec on real DLL tags', { timeout: 60_000 }, () => {
   const baseline = { dir: MIGOTO ?? '', commit: 'b'.repeat(40) };
 
   for (const tag of TAGS) {
