@@ -12,7 +12,7 @@ What you get:
   references, rename a command list or variable across files, hover docs, completion, outline,
   quick fixes.
 - **For AI agents:** a Claude Code plugin that shows the agent these diagnostics after every
-  edit, `xxmi query` lookups, and a hosted MCP server (not deployed yet) so an agent can ask
+  edit, `xxmi query` lookups, and a hosted MCP server so an agent can ask
   about the DLL, the ZZMI libraries and lint text without cloning anything.
 
 The language rules aren't hand-written: they're extracted from the XXMI DLL source
@@ -69,15 +69,16 @@ reach the agent after its edits.
 or a local clone: spec lookups with DLL source locations, ZZMI library symbols with their docs,
 source search, and `lint_ini`. It indexes `SpectrumQT/XXMI-Libs-Package`,
 `leotorrez/ZZMI-Package` and `leotorrez/XXMITools` and follows new commits every 15 minutes.
-**No public instance exists yet**; deploying it to Railway is described in
-[docs/06-mcp-server.md](docs/06-mcp-server.md). Once you have a URL:
+A public instance runs at `https://xxmi-mcp-production.up.railway.app/mcp` (Railway default domain; a custom domain may
+replace it later). To add it to Claude Code:
 
 ```bash
-claude mcp add --transport http xxmi https://<your-domain>/mcp
+claude mcp add --transport http xxmi https://xxmi-mcp-production.up.railway.app/mcp
 ```
 
-Other clients take the same URL in their HTTP MCP config. The Claude Code plugin reads the URL
-from `XXMI_MCP_URL`. [AGENTS.md](AGENTS.md) lists the tools for agents.
+Other clients (Cursor, Codex, etc.) take the same URL in their HTTP MCP config. The Claude Code
+plugin uses it by default; set `XXMI_MCP_URL` to point at another instance. Self-hosting is
+described in [docs/06-mcp-server.md](docs/06-mcp-server.md). [AGENTS.md](AGENTS.md) lists the tools for agents.
 
 ### .NET
 

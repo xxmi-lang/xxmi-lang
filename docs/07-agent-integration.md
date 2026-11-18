@@ -45,10 +45,10 @@ Claude Code plugins support LSP servers natively. With `diagnostics` on (the def
 ### `.mcp.json`
 
 ```json
-{ "mcpServers": { "xxmi": { "type": "http", "url": "${XXMI_MCP_URL}" } } }
+{ "mcpServers": { "xxmi": { "type": "http", "url": "${XXMI_MCP_URL:-https://xxmi-mcp-production.up.railway.app/mcp}" } } }
 ```
 
-**TODO (needs the Railway deployment, `06-mcp-server.md`):** no server is deployed yet, so the plugin has no default URL. Claude Code expands `${VAR}` in plugin `.mcp.json`; while `XXMI_MCP_URL` is unset the server shows as `failed` in `/mcp` and nothing else is affected (`claude plugin validate` passes). Use it now by exporting `XXMI_MCP_URL=https://<your-domain>/mcp` before starting Claude Code. After deploying, change the entry to `${XXMI_MCP_URL:-https://<the real domain>/mcp}` so it works out of the box.
+The entry defaults to the public instance (`06-mcp-server.md`); set `XXMI_MCP_URL` before starting Claude Code to use another one. Claude Code expands `${VAR:-default}` in plugin `.mcp.json`.
 
 ### Fallback hook
 
