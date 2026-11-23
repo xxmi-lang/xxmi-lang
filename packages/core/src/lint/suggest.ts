@@ -35,6 +35,15 @@ export function didYouMean(word: string, candidates: Iterable<string>): string {
   return match ? ` Did you mean \`${match}\`?` : '';
 }
 
+/** A "comment out the line" quick fix, for lines the DLL warns about and drops. */
+export function commentOutFix(range: import('../parser/index.ts').Range): import('./types.ts').Fix {
+  const { start } = range;
+  return {
+    title: 'Comment out the line',
+    edits: [{ range: { start, end: start }, newText: '; ' }],
+  };
+}
+
 /** A "replace with the suggestion" quick fix, if there is a suggestion. */
 export function replaceFix(
   range: import('../parser/index.ts').Range,

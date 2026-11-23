@@ -7,12 +7,16 @@ mod duplicate_section;
 mod empty_value;
 mod enum_value;
 mod flow_balance;
+mod flow_case;
+mod flow_outside;
 mod hash_format;
+mod header;
 mod inline_comment;
 mod keywords;
 mod missing_file;
 mod missing_include;
 mod no_hash;
+mod outside_section;
 mod syntax;
 mod unknown_key;
 mod unknown_namespace;
@@ -98,6 +102,18 @@ fn replace_fix(span: Span, word: &str, candidates: &[&str], prefix: &str) -> Opt
     })
 }
 
+/// A "comment out the line" quick fix, for lines the DLL warns about and drops.
+fn comment_out_fix(content: Span) -> FixSpec {
+    FixSpec {
+        title: "Comment out the line".to_string(),
+        span: Span {
+            start: content.start,
+            end: content.start,
+        },
+        new_text: "; ".to_string(),
+    }
+}
+
 pub struct Rule {
     pub id: &'static str,
     pub severity: Severity,
@@ -130,7 +146,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 23] = [
+pub const RULES: [Rule; 28] = [
     rule(
         "XM001",
         Severity::Error,
@@ -143,6 +159,27 @@ pub const RULES: [Rule; 23] = [
         "File isn't valid UTF-8 (likely GBK/Shift-JIS)",
         syntax::check_encoding,
     ),
+    rule(
+        "XM003",
+        Severity::Warning,
+        "Preamble line other than `namespace` / `condition` (the DLL ignores it)",
+        outside_section::check,
+    )
+    .with_fix(),
+    rule(
+        "XM005",
+        Severity::Warning,
+        "Text after the `]` of a section header (the DLL ignores it)",
+        header::check_suffix,
+    )
+    .with_fix(),
+    rule(
+        "XM006",
+        Severity::Warning,
+        "Section header with no closing `]`",
+        header::check_unclosed,
+    )
+    .with_fix(),
     rule(
         "XM101",
         Severity::Error,
@@ -161,7 +198,8 @@ pub const RULES: [Rule; 23] = [
         Severity::Error,
         "Bare line (no `=`) in a section that doesn't allow it",
         bare_line::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM104",
         Severity::Warning,
@@ -180,7 +218,8 @@ pub const RULES: [Rule; 23] = [
         Severity::Error,
         "Unbalanced `if`/`elif`/`else`/`endif`",
         flow_balance::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM107",
         Severity::Warning,
@@ -206,6 +245,12 @@ pub const RULES: [Rule; 23] = [
         empty_value::check,
     )
     .with_fix(),
+    rule(
+        "XM111",
+        Severity::Error,
+        "`if`/`elif`/`else`/`endif` outside a command list",
+        flow_outside::check,
+    ),
     rule(
         "XM112",
         Severity::Warning,
@@ -275,4 +320,11 @@ pub const RULES: [Rule; 23] = [
         "`filename =` points to a missing file",
         missing_file::check,
     ),
+    rule(
+        "XM403",
+        Severity::Hint,
+        "Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase",
+        flow_case::check,
+    )
+    .with_fix(),
 ];

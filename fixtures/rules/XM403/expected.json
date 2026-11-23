@@ -1,0 +1,172 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Flow keyword `If` should be lowercase; the DLL accepts any case.",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 0
+      },
+      "end": {
+        "line": 1,
+        "character": 2
+      }
+    },
+    "fix": {
+      "title": "Change to `if`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 2
+            }
+          },
+          "newText": "if"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Flow keyword `Else If` should be lowercase; the DLL accepts any case.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 2
+      },
+      "end": {
+        "line": 2,
+        "character": 9
+      }
+    },
+    "fix": {
+      "title": "Change to `else if`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 2
+            },
+            "end": {
+              "line": 2,
+              "character": 9
+            }
+          },
+          "newText": "else if"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Flow keyword `ELIF` should be lowercase; the DLL accepts any case.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 2
+      },
+      "end": {
+        "line": 3,
+        "character": 6
+      }
+    },
+    "fix": {
+      "title": "Change to `elif`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 2
+            },
+            "end": {
+              "line": 3,
+              "character": 6
+            }
+          },
+          "newText": "elif"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Flow keyword `Else` should be lowercase; the DLL accepts any case.",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 0
+      },
+      "end": {
+        "line": 4,
+        "character": 4
+      }
+    },
+    "fix": {
+      "title": "Change to `else`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 4
+            }
+          },
+          "newText": "else"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Flow keyword `EndIf` should be lowercase; the DLL accepts any case.",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 2
+      },
+      "end": {
+        "line": 5,
+        "character": 7
+      }
+    },
+    "fix": {
+      "title": "Change to `endif`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 2
+            },
+            "end": {
+              "line": 5,
+              "character": 7
+            }
+          },
+          "newText": "endif"
+        }
+      ]
+    }
+  }
+]

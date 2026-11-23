@@ -5,8 +5,8 @@
 import type { LineModel, SectionModel } from '../../model/types.ts';
 import { keyCommands } from '../../spec/lookup.ts';
 import type { SpecKey } from '../../spec/types.ts';
-import { didYouMean, editDistance, replaceFix } from '../suggest.ts';
-import type { Rule, RuleContext } from '../types.ts';
+import { commentOutFix, didYouMean, editDistance, replaceFix } from '../suggest.ts';
+import type { Fix, Rule, RuleContext } from '../types.ts';
 
 /** `x`, `y1`, `w123`: ini params (the grammar's `ini_parameter`). */
 const INI_PARAM = /^[xyzw]\d{0,3}$/i;
@@ -29,6 +29,22 @@ export function flowKeyword(line: LineModel): 'if' | 'elif' | 'else' | 'endif' |
   if (text === 'else') return 'else';
   if (text === 'endif') return 'endif';
   return undefined;
+}
+
+/**
+ * A flow keyword where the DLL doesn't read flow control: the preamble (no section) or a section
+ * that isn't a command list (`ParseCommandList` only runs on those).
+ * Unknown sections are left to XM101.
+ */
+export function isMisplacedFlow(section: SectionModel | undefined, line: LineModel): boolean {
+  const outside = section === undefined || (section.spec && section.spec.kind !== 'commandlist');
+  return Boolean(outside) && flowKeyword(line) !== undefined;
+}
+
+/** `ParseIniKeyValLine` warns "Malformed line" and drops it. XM111 owns a stray `else` or `endif`. */
+export function isMalformedLine(section: SectionModel, line: LineModel): boolean {
+  const strict = section.spec !== undefined && !section.spec.allowsBareLines;
+  return strict && !line.key && !isMisplacedFlow(section, line);
 }
 
 export const XM101: Rule = {
@@ -65,7 +81,8 @@ export const XM102: Rule = {
       if (!spec || isFreeForm(section)) continue;
       const known = spec.keys.map((k) => k.name);
       for (const line of section.lines) {
-        if (!line.key) continue;
+        // XM111 owns `if $x == 1` and the like.
+        if (!line.key || isMisplacedFlow(section, line)) continue;
         const key = line.key.text;
         if (spec.kind === 'commandlist') {
           // The grammar parses anything it doesn't recognise as a command, resource copy or
@@ -109,9 +126,10 @@ export const XM103: Rule = {
   description: "Bare line (no `=`) in a section that doesn't allow it",
   check({ file, report }) {
     for (const section of file.sections) {
-      if (!section.spec || section.spec.allowsBareLines) continue;
       for (const line of section.lines) {
-        if (!line.key) report(line.content.span.range, `Malformed line: "${line.content.text}"`);
+        if (!isMalformedLine(section, line)) continue;
+        const range = line.content.span.range;
+        report(range, `Malformed line: "${line.content.text}"`, commentOutFix(range));
       }
     }
   },
@@ -197,6 +215,21 @@ export const XM105: Rule = {
   },
 };
 
+/**
+ * Adds `endif` after the section's last command, indented like the `if` it closes.
+ * A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
+ */
+function insertEndif(text: string, section: SectionModel, opening: LineModel): Fix {
+  const last = section.lines.at(-1) ?? opening;
+  const at = last.content.span.range.end;
+  const { start } = opening.content.span;
+  const indent = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
+  return {
+    title: 'Add the missing `endif`',
+    edits: [{ range: { start: at, end: at }, newText: `\n${indent}endif` }],
+  };
+}
+
 export const XM106: Rule = {
   id: 'XM106',
   severity: 'error',
@@ -228,6 +261,7 @@ export const XM106: Rule = {
         report(
           line.content.span.range,
           `Scope unbalanced: \`if\` without \`endif\` in [${section.name.text}]`,
+          insertEndif(file.text, section, line),
         );
       }
     }

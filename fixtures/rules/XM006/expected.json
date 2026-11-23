@@ -1,0 +1,70 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM006",
+    "severity": "warning",
+    "message": "Section header has no closing `]`: the DLL takes the rest of the line as the name.",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 0
+      },
+      "end": {
+        "line": 0,
+        "character": 20
+      }
+    },
+    "fix": {
+      "title": "Add the closing `]`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 20
+            },
+            "end": {
+              "line": 0,
+              "character": 20
+            }
+          },
+          "newText": "]"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM006",
+    "severity": "warning",
+    "message": "Section header has no closing `]`: the DLL takes the rest of the line as the name.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 20
+      }
+    },
+    "fix": {
+      "title": "Add the closing `]`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 20
+            },
+            "end": {
+              "line": 2,
+              "character": 20
+            }
+          },
+          "newText": "]"
+        }
+      ]
+    }
+  }
+]

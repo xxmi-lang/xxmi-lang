@@ -1,0 +1,70 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM005",
+    "severity": "warning",
+    "message": "Text after `]` is ignored: `extra` (the DLL reads the section name up to the first `]`).",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 22
+      },
+      "end": {
+        "line": 0,
+        "character": 27
+      }
+    },
+    "fix": {
+      "title": "Remove the text after `]`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 21
+            },
+            "end": {
+              "line": 0,
+              "character": 27
+            }
+          },
+          "newText": ""
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM005",
+    "severity": "warning",
+    "message": "Text after `]` is ignored: `[TextureOverrideFace]` (the DLL reads the section name up to the first `]`).",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 21
+      },
+      "end": {
+        "line": 2,
+        "character": 42
+      }
+    },
+    "fix": {
+      "title": "Remove the text after `]`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 21
+            },
+            "end": {
+              "line": 2,
+              "character": 42
+            }
+          },
+          "newText": ""
+        }
+      ]
+    }
+  }
+]

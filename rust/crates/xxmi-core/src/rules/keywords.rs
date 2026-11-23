@@ -1,6 +1,7 @@
 //! Line-start keyword tests shared by the syntax and flow rules.
 
-use crate::model::LineModel;
+use crate::model::{LineModel, SectionModel};
+use crate::spec::SectionKind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FlowKeyword {
@@ -23,6 +24,10 @@ impl FlowKeyword {
 
 /// Flow-control keyword a command-list line starts with (`ParseCommandListFlowControl`).
 pub fn flow_keyword(line: &LineModel, text: &str) -> Option<FlowKeyword> {
+    let first = text.as_bytes()[line.scanned.content.start].to_ascii_lowercase();
+    if first != b'i' && first != b'e' {
+        return None;
+    }
     let content = line.scanned.content.slice(text).to_lowercase();
 
     if starts_with_keyword(&content, &["if"]) {
@@ -36,6 +41,19 @@ pub fn flow_keyword(line: &LineModel, text: &str) -> Option<FlowKeyword> {
     } else {
         None
     }
+}
+
+/// A flow keyword where the DLL doesn't read flow control: the preamble (`None`) or a section
+/// that isn't a command list (`ParseCommandList` only runs on those).
+/// Unknown sections are left to XM101.
+pub fn is_misplaced_flow(section: Option<&SectionModel>, line: &LineModel, text: &str) -> bool {
+    let outside = match section {
+        None => true,
+        Some(section) => section
+            .spec
+            .is_some_and(|spec| spec.kind != SectionKind::CommandList),
+    };
+    outside && flow_keyword(line, text).is_some()
 }
 
 /// Lines whose value the DLL parses as an expression (`CommandListExpression::parse`).

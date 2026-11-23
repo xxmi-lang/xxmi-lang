@@ -1,7 +1,6 @@
 //! XM110: `key =` with nothing after the `=`.
 
-use super::{Finding, FixSpec, RuleContext};
-use crate::scan::Span;
+use super::{Finding, RuleContext, comment_out_fix};
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
     let mut findings = Vec::new();
@@ -22,14 +21,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                     "No value for `{}`; the DLL warns and ignores the line.",
                     key.slice(context.text)
                 ),
-                fix: Some(FixSpec {
-                    title: "Comment out the line".to_string(),
-                    span: Span {
-                        start: content.start,
-                        end: content.start,
-                    },
-                    new_text: "; ".to_string(),
-                }),
+                fix: Some(comment_out_fix(content)),
                 severity: None,
             });
         }

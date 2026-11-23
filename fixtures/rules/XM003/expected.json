@@ -1,0 +1,70 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM003",
+    "severity": "warning",
+    "message": "Entry outside of section: foo = 1. Only `namespace` and `condition` are read before the first section; the DLL warns and ignores the line.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 7
+      }
+    },
+    "fix": {
+      "title": "Comment out the line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 0
+            }
+          },
+          "newText": "; "
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM003",
+    "severity": "warning",
+    "message": "Entry outside of section: loose text. Only `namespace` and `condition` are read before the first section; the DLL warns and ignores the line.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 0
+      },
+      "end": {
+        "line": 3,
+        "character": 10
+      }
+    },
+    "fix": {
+      "title": "Comment out the line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 0
+            },
+            "end": {
+              "line": 3,
+              "character": 0
+            }
+          },
+          "newText": "; "
+        }
+      ]
+    }
+  }
+]

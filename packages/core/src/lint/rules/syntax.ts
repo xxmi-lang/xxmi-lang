@@ -1,6 +1,9 @@
-import type { LineModel } from '../../model/types.ts';
+import type { LineModel, SectionModel } from '../../model/types.ts';
 import type { SyntaxIssue } from '../../parser/index.ts';
 import type { Rule, RuleContext } from '../types.ts';
+import { isMalformedHeader } from './header.ts';
+import { isHonoured } from './outside-section.ts';
+import { isMalformedLine, isMisplacedFlow } from './structure.ts';
 
 /** Lines whose value the DLL parses as an expression (`CommandListExpression::parse`). */
 function isExpressionLine(line: LineModel | undefined): boolean {
@@ -17,16 +20,33 @@ function issues(context: RuleContext): { issue: SyntaxIssue; line: LineModel | u
   const { file } = context;
   const out: { issue: SyntaxIssue; line: LineModel | undefined }[] = [];
   const lineAt = (lines: LineModel[], n: number) => lines.find((l) => l.line === n);
-  for (const issue of file.preambleIssues)
-    out.push({ issue, line: lineAt(file.preamble, issue.range.start.line) });
+  for (const issue of file.preambleIssues) {
+    const line = lineAt(file.preamble, issue.range.start.line);
+    // XM003 owns every preamble line but `namespace` and `condition`, XM111 the flow keywords.
+    if (!line || isHonoured(line)) out.push({ issue, line });
+  }
   for (const section of file.sections) {
     for (const issue of section.syntaxIssues) {
       const line = lineAt(section.lines, issue.range.start.line);
-      // XM110 owns `key =`: it names the cause the syntax error only hints at.
-      if (line?.value?.text !== '') out.push({ issue, line });
+      if (!isClaimed(section, issue, line)) out.push({ issue, line });
     }
   }
   return out;
+}
+
+/** Whether XM005, XM006, XM103, XM110 or XM111 reports the line the issue starts on. */
+function isClaimed(
+  section: SectionModel,
+  issue: SyntaxIssue,
+  line: LineModel | undefined,
+): boolean {
+  if (!line) {
+    return issue.range.start.line === section.header.line && isMalformedHeader(section.header);
+  }
+  // XM110 owns `key =`: it names the cause the syntax error only hints at.
+  return (
+    line.value?.text === '' || isMalformedLine(section, line) || isMisplacedFlow(section, line)
+  );
 }
 
 export const XM001: Rule = {

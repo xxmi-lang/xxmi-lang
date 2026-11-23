@@ -1,3 +1,4 @@
+import { commentOutFix } from '../suggest.ts';
 import type { Rule } from '../types.ts';
 
 export const XM110: Rule = {
@@ -10,14 +11,11 @@ export const XM110: Rule = {
         if (!line.key || line.value?.text !== '') continue;
 
         // ParseIniKeyValLine warns "No value found" and drops the line, so the key is never set.
-        const { start } = line.content.span.range;
+        const range = line.content.span.range;
         report(
-          line.content.span.range,
+          range,
           `No value for \`${line.key.text}\`; the DLL warns and ignores the line.`,
-          {
-            title: 'Comment out the line',
-            edits: [{ range: { start, end: start }, newText: '; ' }],
-          },
+          commentOutFix(range),
         );
       }
     }

@@ -135,12 +135,13 @@ macro_rules! rule_tests {
 }
 
 rule_tests! {
-    xm001 => "XM001", xm002 => "XM002",
+    xm001 => "XM001", xm002 => "XM002", xm003 => "XM003", xm005 => "XM005", xm006 => "XM006",
     xm101 => "XM101", xm102 => "XM102", xm103 => "XM103", xm104 => "XM104", xm105 => "XM105",
     xm106 => "XM106", xm107 => "XM107", xm108 => "XM108", xm109 => "XM109",
-    xm110 => "XM110", xm112 => "XM112", xm113 => "XM113", xm115 => "XM115",
+    xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
     xm206 => "XM206", xm207 => "XM207", xm208 => "XM208",
+    xm403 => "XM403",
 }
 
 /// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change.
@@ -225,6 +226,33 @@ fn xxmi_1_3_1_fixtures_match_the_golden_output() {
         checked, 3,
         "clean, matchtextures-missing and run-misspelled"
     );
+}
+
+/// fixtures/ownership: every line a dedicated rule names is reported by that rule alone, not also
+/// as XM001, XM102, XM103, XM109 or XM110.
+#[test]
+fn stray_lines_are_reported_once_under_their_own_rule() {
+    let dir = fixtures().join("ownership");
+    let found: Vec<String> = diagnose(&dir.join("mixed.ini"), &dir, None)
+        .iter()
+        .filter(|d| {
+            let id = d["id"].as_str().unwrap();
+            id.starts_with("XM0")
+                || id == "XM403"
+                || matches!(id, "XM102" | "XM103" | "XM109" | "XM110" | "XM111")
+        })
+        .map(|d| {
+            format!(
+                "{}:{}",
+                d["range"]["start"]["line"].as_u64().unwrap() + 1,
+                d["id"].as_str().unwrap()
+            )
+        })
+        .collect();
+
+    let expected: Vec<String> =
+        serde_json::from_str(&fs::read_to_string(dir.join("expected.json")).unwrap()).unwrap();
+    assert_eq!(found, expected);
 }
 
 #[test]

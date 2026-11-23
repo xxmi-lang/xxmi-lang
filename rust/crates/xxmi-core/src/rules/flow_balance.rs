@@ -1,7 +1,8 @@
 //! XM106: `if`/`elif`/`else`/`endif` that don't pair up in a command list.
 
 use super::keywords::{FlowKeyword, flow_keyword};
-use super::{Finding, RuleContext};
+use super::{Finding, FixSpec, RuleContext};
+use crate::model::SectionModel;
 use crate::scan::Span;
 use crate::spec::SectionKind;
 
@@ -55,11 +56,30 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
 
         let name = context.file.slice(section.name);
         for unclosed in open {
-            findings.push(Finding::new(
-                unclosed.content,
-                format!("Scope unbalanced: `if` without `endif` in [{name}]"),
-            ));
+            findings.push(Finding {
+                span: unclosed.content,
+                message: format!("Scope unbalanced: `if` without `endif` in [{name}]"),
+                fix: Some(insert_endif(context.text, section, unclosed.content)),
+                severity: None,
+            });
         }
     }
     findings
+}
+
+/// Adds `endif` after the section's last command, indented like the `if` it closes.
+/// A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
+fn insert_endif(text: &str, section: &SectionModel, opening: Span) -> FixSpec {
+    let end = section
+        .lines
+        .last()
+        .map_or(opening.end, |line| line.scanned.content.end);
+    let line_start = text[..opening.start].rfind('\n').map_or(0, |i| i + 1);
+    let indent = &text[line_start..opening.start];
+
+    FixSpec {
+        title: "Add the missing `endif`".to_string(),
+        span: Span { start: end, end },
+        new_text: format!("\n{indent}endif"),
+    }
 }
