@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad/a.ini",
+    "id": "XM211",
+    "severity": "error",
+    "message": "Global $twice is declared `locked` at line 5; the DLL keeps that declaration and ignores this one, so its value never applies.",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 14
+      },
+      "end": {
+        "line": 5,
+        "character": 20
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM211",
+    "severity": "error",
+    "message": "Global $mode is declared `locked` at a.ini:4; the DLL keeps that declaration and ignores this one, so its value never applies.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 15
+      },
+      "end": {
+        "line": 3,
+        "character": 20
+      }
+    }
+  }
+]

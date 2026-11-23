@@ -103,6 +103,16 @@ fn lint_exit_codes() {
     assert_eq!(code(&["lint", "--max-warnings", "5", &warning]), 0);
 }
 
+/// A symlink on Unix: copying leaves a write fd open that parallel tests' forks inherit,
+/// so exec of the copy fails with ETXTBSY. Windows has no such race.
+fn link_binary(link: &std::path::Path) {
+    let binary = env!("CARGO_BIN_EXE_xxmi");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(binary, link).unwrap();
+    #[cfg(windows)]
+    fs::copy(binary, link).map(drop).unwrap();
+}
+
 #[test]
 fn standalone_lsp_name_answers_version() {
     let dir = Fixture::new("lsp-name", &[]);
@@ -111,7 +121,7 @@ fn standalone_lsp_name_answers_version() {
     } else {
         "xxmi-lsp"
     });
-    fs::copy(env!("CARGO_BIN_EXE_xxmi"), &link).unwrap();
+    link_binary(&link);
 
     let output = Command::new(&link).arg("--version").output().unwrap();
     assert_eq!(output.status.code(), Some(0));

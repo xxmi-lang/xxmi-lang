@@ -4,6 +4,7 @@
 use std::collections::HashSet;
 
 use crate::model::SymbolKind;
+use crate::model::mesh::binds_core_mesh_slot;
 
 use super::Workspace;
 use super::symbols::ResolvedVariable;
@@ -11,6 +12,8 @@ use super::symbols::ResolvedVariable;
 pub struct Usage {
     /// Lower-cased qualified names of sections some reference resolved to.
     pub sections: HashSet<String>,
+    /// The lower-cased qualified names among them that a `vb0`-`vb2` or `ib` line binds.
+    pub mesh_bound: HashSet<String>,
     /// Keys of global variables some reference resolved to.
     pub globals: HashSet<String>,
     /// Local declarations, by file path and declaration offset, some reference resolved to.
@@ -22,6 +25,7 @@ pub(super) fn compute(workspace: &Workspace) -> Usage {
     let symbols = workspace.symbols();
     let mut usage = Usage {
         sections: HashSet::new(),
+        mesh_bound: HashSet::new(),
         globals: HashSet::new(),
         locals: HashSet::new(),
     };
@@ -41,7 +45,11 @@ pub(super) fn compute(workspace: &Workspace) -> Usage {
             } else if let Some(name) =
                 symbols.resolve_section(reference.kind, &reference.text, &file.namespace)
             {
-                usage.sections.insert(name.to_lowercase());
+                let name = name.to_lowercase();
+                if reference.kind == SymbolKind::Resource && binds_core_mesh_slot(file, reference) {
+                    usage.mesh_bound.insert(name.clone());
+                }
+                usage.sections.insert(name);
             }
         }
     }

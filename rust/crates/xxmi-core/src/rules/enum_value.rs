@@ -63,6 +63,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                     did_you_mean(value, values.iter().copied())
                 ),
                 fix: replace_fix(value_span, value, &values, prefix),
+                severity: None,
             });
         }
     }

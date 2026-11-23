@@ -1,0 +1,50 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM111",
+    "severity": "error",
+    "message": "Flow control outside a command list: `if $x == 1` in the preamble is never parsed as `if`/`endif`.",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 0
+      },
+      "end": {
+        "line": 0,
+        "character": 10
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM111",
+    "severity": "error",
+    "message": "Flow control outside a command list: `if $x == 1` in [ResourceBodyDiffuse] is never parsed as `if`/`endif`.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 10
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM111",
+    "severity": "error",
+    "message": "Flow control outside a command list: `endif` in [ResourceBodyDiffuse] is never parsed as `if`/`endif`.",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 0
+      },
+      "end": {
+        "line": 4,
+        "character": 5
+      }
+    }
+  }
+]

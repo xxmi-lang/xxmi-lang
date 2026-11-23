@@ -3,15 +3,20 @@
  * workspace/symbols.ts.
  */
 import { dirname } from 'node:path';
+import { bindsCoreMeshSlot } from '../../model/mesh.ts';
 import type { IniFile, Reference, SymbolKind } from '../../model/types.ts';
 import { didYouMean, replaceFix } from '../suggest.ts';
 import { explicitNamespace, globalVariableKey, type SymbolTable } from '../../workspace/symbols.ts';
 import type { Workspace } from '../../workspace/workspace.ts';
 import type { Rule, RuleContext } from '../types.ts';
+import { redeclaredGlobals } from './global-redeclared.ts';
+import { redeclaredLocals } from './local-redeclared.ts';
 
 interface Usage {
   /** Lower-cased qualified names of sections some reference resolved to. */
   sections: Set<string>;
+  /** The lower-cased qualified names among them that a `vb0`-`vb2` or `ib` line binds. */
+  meshBound: Set<string>;
   /** Keys of global variables some reference resolved to. */
   globals: Set<string>;
   /** Local declarations (by `path#offset`) some reference resolved to. */
@@ -21,11 +26,11 @@ interface Usage {
 const usageCache = new WeakMap<SymbolTable, Usage>();
 
 /** Resolves every reference in the workspace once, recording what is used. */
-function usage(workspace: Workspace): Usage {
+export function usage(workspace: Workspace): Usage {
   const symbols = workspace.symbols;
   let result = usageCache.get(symbols);
   if (result) return result;
-  result = { sections: new Set(), globals: new Set(), locals: new Set() };
+  result = { sections: new Set(), meshBound: new Set(), globals: new Set(), locals: new Set() };
   for (const file of workspace.files.values()) {
     for (const ref of file.references) {
       if (ref.kind === 'variable') {
@@ -36,7 +41,10 @@ function usage(workspace: Workspace): Usage {
         else result.globals.add(found.key);
       } else {
         const found = symbols.resolveSection(ref.kind, ref.text, file.namespace);
-        if (found) result.sections.add(found.qualifiedName.toLowerCase());
+        if (!found) continue;
+        const name = found.qualifiedName.toLowerCase();
+        if (ref.kind === 'resource' && bindsCoreMeshSlot(file, ref)) result.meshBound.add(name);
+        result.sections.add(name);
       }
     }
   }
@@ -129,7 +137,12 @@ export const XM204: Rule = {
     // Globals in files pulled in by includes are usually a library's API for other mods.
     const checkGlobals = workspace.targets.has(file.path) && !isLibrary(file, workspace);
     const used = usage(workspace);
-    for (const v of file.variables) {
+    // XM209 and XM210 own the declarations the DLL drops.
+    const dropped = new Set(
+      [...redeclaredGlobals(file), ...redeclaredLocals(file)].map((r) => r.index),
+    );
+    for (const [index, v] of file.variables.entries()) {
+      if (dropped.has(index)) continue;
       const isUsed =
         v.scope === 'local'
           ? used.locals.has(`${file.path}#${v.span.start}`)

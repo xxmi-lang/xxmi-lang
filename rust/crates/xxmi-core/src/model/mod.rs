@@ -2,6 +2,7 @@
 
 mod collect;
 mod lower;
+pub mod mesh;
 mod types;
 
 pub use collect::ChunkAnalysis;

@@ -2,13 +2,29 @@
 
 mod argument_count;
 mod bare_line;
+mod duplicate_grade;
 mod duplicate_key;
 mod duplicate_section;
+mod empty_value;
 mod enum_value;
 mod flow_balance;
+mod flow_case;
+mod flow_outside;
+mod global_redeclared;
+mod hash_format;
+mod header;
+mod inline_comment;
+mod kept_globals;
 mod keywords;
+mod loaded_files;
+mod local_redeclared;
+mod locked_assigned;
+mod locked_redeclared;
 mod missing_file;
 mod missing_include;
+mod no_hash;
+mod outside_section;
+mod setting_inside_if;
 mod syntax;
 mod unknown_key;
 mod unknown_namespace;
@@ -62,6 +78,8 @@ pub struct Finding {
     pub span: Span,
     pub message: String,
     pub fix: Option<FixSpec>,
+    /// Overrides the rule's default severity, unless the user configured one.
+    pub severity: Option<Severity>,
 }
 
 impl Finding {
@@ -70,6 +88,7 @@ impl Finding {
             span,
             message,
             fix: None,
+            severity: None,
         }
     }
 }
@@ -79,6 +98,8 @@ pub struct FixSpec {
     pub title: String,
     pub span: Span,
     pub new_text: String,
+    /// More edits applied together with the main one, as (span, new text).
+    pub also: Vec<(Span, String)>,
 }
 
 /// A "replace with the suggestion" quick fix, if there is a suggestion.
@@ -88,7 +109,54 @@ fn replace_fix(span: Span, word: &str, candidates: &[&str], prefix: &str) -> Opt
         title: format!("Change to `{prefix}{found}`"),
         span,
         new_text: format!("{prefix}{found}"),
+        also: Vec::new(),
     })
+}
+
+/// A "comment out the line" quick fix, for lines the DLL warns about and drops.
+fn comment_out_fix(content: Span) -> FixSpec {
+    FixSpec {
+        title: "Comment out the line".to_string(),
+        span: Span {
+            start: content.start,
+            end: content.start,
+        },
+        new_text: "; ".to_string(),
+        also: Vec::new(),
+    }
+}
+
+/// Start offset of the line holding `offset`, and the whitespace before `offset` on it.
+fn line_start_indent(text: &str, offset: usize) -> (usize, &str) {
+    let start = text[..offset].rfind('\n').map_or(0, |i| i + 1);
+    (start, &text[start..offset])
+}
+
+/// The line break an edit on the line holding `offset` should insert, so CRLF files stay CRLF.
+/// A last line without a terminator takes the file's first break.
+fn line_ending(text: &str, offset: usize) -> &'static str {
+    let newline = text[offset..]
+        .find('\n')
+        .map(|i| offset + i)
+        .or_else(|| text.find('\n'));
+    match newline {
+        Some(i) if text[..i].ends_with('\r') => "\r\n",
+        _ => "\n",
+    }
+}
+
+/// An insertion of `body` as a new line above the line holding `offset`, with that line's indent.
+fn insert_line_above(text: &str, offset: usize, body: &str) -> (Span, String) {
+    let (start, indent) = line_start_indent(text, offset);
+    let eol = line_ending(text, offset);
+    (Span { start, end: start }, format!("{indent}{body}{eol}"))
+}
+
+/// An insertion of `body` as a new line after `at`, indented like the line holding `indent_of`.
+fn insert_line_after(text: &str, at: usize, indent_of: usize, body: &str) -> (Span, String) {
+    let (_, indent) = line_start_indent(text, indent_of);
+    let eol = line_ending(text, at);
+    (Span { start: at, end: at }, format!("{eol}{indent}{body}"))
 }
 
 pub struct Rule {
@@ -123,7 +191,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 19] = [
+pub const RULES: [Rule; 33] = [
     rule(
         "XM001",
         Severity::Error,
@@ -136,6 +204,27 @@ pub const RULES: [Rule; 19] = [
         "File isn't valid UTF-8 (likely GBK/Shift-JIS)",
         syntax::check_encoding,
     ),
+    rule(
+        "XM003",
+        Severity::Warning,
+        "Preamble line other than `namespace` / `condition` (the DLL ignores it)",
+        outside_section::check,
+    )
+    .with_fix(),
+    rule(
+        "XM005",
+        Severity::Warning,
+        "Text after the `]` of a section header (the DLL ignores it)",
+        header::check_suffix,
+    )
+    .with_fix(),
+    rule(
+        "XM006",
+        Severity::Warning,
+        "Section header with no closing `]`",
+        header::check_unclosed,
+    )
+    .with_fix(),
     rule(
         "XM101",
         Severity::Error,
@@ -154,7 +243,8 @@ pub const RULES: [Rule; 19] = [
         Severity::Error,
         "Bare line (no `=`) in a section that doesn't allow it",
         bare_line::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM104",
         Severity::Warning,
@@ -173,11 +263,12 @@ pub const RULES: [Rule; 19] = [
         Severity::Error,
         "Unbalanced `if`/`elif`/`else`/`endif`",
         flow_balance::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM107",
         Severity::Warning,
-        "Duplicate section name within the same namespace",
+        "Duplicate section name within the same namespace (error, warning or info per finding)",
         duplicate_section::check,
     ),
     rule(
@@ -192,6 +283,45 @@ pub const RULES: [Rule; 19] = [
         "Unknown operator or malformed expression",
         syntax::check_expressions,
     ),
+    rule(
+        "XM110",
+        Severity::Warning,
+        "Key with no value (the DLL ignores the line)",
+        empty_value::check,
+    )
+    .with_fix(),
+    rule(
+        "XM111",
+        Severity::Error,
+        "`if`/`elif`/`else`/`endif` outside a command list",
+        flow_outside::check,
+    ),
+    rule(
+        "XM112",
+        Severity::Warning,
+        "TextureOverride with no `hash` and no `match_*` key, with both, or ShaderOverride with no `hash`",
+        no_hash::check,
+    ),
+    rule(
+        "XM113",
+        Severity::Error,
+        "Hash value the DLL can't read as hex, or that isn't canonical (error or warning per finding)",
+        hash_format::check,
+    ),
+    rule(
+        "XM114",
+        Severity::Info,
+        "TextureOverride / ShaderOverride setting written inside an `if` (the DLL reads it unconditionally)",
+        setting_inside_if::check,
+    )
+    .with_fix(),
+    rule(
+        "XM115",
+        Severity::Warning,
+        "`;` comment after a value (the DLL keeps it in the value)",
+        inline_comment::check,
+    )
+    .with_fix(),
     rule(
         "XM201",
         Severity::Error,
@@ -242,4 +372,35 @@ pub const RULES: [Rule; 19] = [
         "`filename =` points to a missing file",
         missing_file::check,
     ),
+    rule(
+        "XM209",
+        Severity::Warning,
+        "Global declared twice in [Constants] (the DLL keeps the first)",
+        global_redeclared::check,
+    ),
+    rule(
+        "XM210",
+        Severity::Error,
+        "Local redeclared where an earlier local of the same name is visible (the DLL drops the line)",
+        local_redeclared::check,
+    ),
+    rule(
+        "XM211",
+        Severity::Error,
+        "Locked global declared again (the DLL keeps the first and ignores the new value)",
+        locked_redeclared::check,
+    ),
+    rule(
+        "XM212",
+        Severity::Error,
+        "Assignment to a locked global (the DLL rejects the line)",
+        locked_assigned::check,
+    ),
+    rule(
+        "XM403",
+        Severity::Hint,
+        "Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase",
+        flow_case::check,
+    )
+    .with_fix(),
 ];

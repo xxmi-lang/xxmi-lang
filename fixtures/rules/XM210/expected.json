@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM210",
+    "severity": "error",
+    "message": "Local $t is already declared on line 2 in this or an enclosing branch; the DLL rejects this redeclaration.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 6
+      },
+      "end": {
+        "line": 2,
+        "character": 8
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM210",
+    "severity": "error",
+    "message": "Local $U is already declared on line 5 in this or an enclosing branch; the DLL rejects this redeclaration.",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 10
+      },
+      "end": {
+        "line": 6,
+        "character": 12
+      }
+    }
+  }
+]

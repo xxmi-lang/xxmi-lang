@@ -1,0 +1,70 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM115",
+    "severity": "warning",
+    "message": "`;` after a value doesn't start a comment: the DLL keeps it in the value.",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 16
+      },
+      "end": {
+        "line": 1,
+        "character": 22
+      }
+    },
+    "fix": {
+      "title": "Move the comment above the line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 22
+            }
+          },
+          "newText": "; body\nhash = 0123abcd"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM115",
+    "severity": "warning",
+    "message": "`;` after a value doesn't start a comment: the DLL keeps it in the value.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 31
+      },
+      "end": {
+        "line": 2,
+        "character": 40
+      }
+    },
+    "fix": {
+      "title": "Move the comment above the line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 4
+            },
+            "end": {
+              "line": 2,
+              "character": 40
+            }
+          },
+          "newText": ";position\n    vb0 = ResourceBodyPosition"
+        }
+      ]
+    }
+  }
+]

@@ -135,14 +135,18 @@ macro_rules! rule_tests {
 }
 
 rule_tests! {
-    xm001 => "XM001", xm002 => "XM002",
+    xm001 => "XM001", xm002 => "XM002", xm003 => "XM003", xm005 => "XM005", xm006 => "XM006",
     xm101 => "XM101", xm102 => "XM102", xm103 => "XM103", xm104 => "XM104", xm105 => "XM105",
     xm106 => "XM106", xm107 => "XM107", xm108 => "XM108", xm109 => "XM109",
+    xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm114 => "XM114", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
-    xm206 => "XM206", xm207 => "XM207", xm208 => "XM208",
+    xm206 => "XM206", xm207 => "XM207", xm208 => "XM208", xm209 => "XM209", xm210 => "XM210",
+    xm211 => "XM211", xm212 => "XM212",
+    xm403 => "XM403",
 }
 
-/// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change.
+/// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change,
+/// except that fixes insert the file's own line break.
 #[test]
 fn crlf_files_report_the_same_diagnostics_as_lf() {
     let scratch = std::env::temp_dir().join(format!("xxmi-crlf-{}", std::process::id()));
@@ -161,15 +165,41 @@ fn crlf_files_report_the_same_diagnostics_as_lf() {
         fs::write(&crlf, to_crlf(&fs::read(&bad).unwrap())).unwrap();
         let rules = Some(vec![id.clone()]);
 
+        let actual = diagnose(&crlf, &scratch, rules.clone());
         assert_eq!(
-            diagnose(&crlf, &scratch, rules.clone()),
+            normalise_fix_text(actual.clone()),
             diagnose(&bad, &dir, rules),
             "{id} with CRLF"
         );
+        if let Ok(text) = fs::read_to_string(&crlf) {
+            assert_no_bare_lf(&id, &text, &actual);
+        }
         checked += 1;
     }
     fs::remove_dir_all(&scratch).unwrap();
     assert!(checked > 15, "only {checked} single-file fixtures found");
+}
+
+/// Fix texts with CRLF breaks turned back into LF, to compare against the LF run.
+fn normalise_fix_text(mut diagnostics: Vec<Value>) -> Vec<Value> {
+    for d in &mut diagnostics {
+        let Some(edits) = d.get_mut("fix").and_then(|f| f["edits"].as_array_mut()) else {
+            continue;
+        };
+        for edit in edits {
+            let text = edit["newText"].as_str().unwrap().replace("\r\n", "\n");
+            edit["newText"] = json!(text);
+        }
+    }
+    diagnostics
+}
+
+fn assert_no_bare_lf(id: &str, before: &str, diagnostics: &[Value]) {
+    let fixed = apply_fixes(before, diagnostics);
+    let bare = fixed
+        .match_indices('\n')
+        .any(|(i, _)| !fixed[..i].ends_with('\r'));
+    assert!(!bare, "{id}: a fix left a bare LF in a CRLF file");
 }
 
 fn to_crlf(bytes: &[u8]) -> Vec<u8> {
@@ -224,6 +254,44 @@ fn xxmi_1_3_1_fixtures_match_the_golden_output() {
         checked, 3,
         "clean, matchtextures-missing and run-misspelled"
     );
+}
+
+/// fixtures/ownership: every line a dedicated rule names is reported by that rule alone,
+/// not also as XM001, XM102, XM103, XM109, XM110 or XM204.
+#[test]
+fn stray_lines_are_reported_once_under_their_own_rule() {
+    let dir = fixtures().join("ownership");
+    let found: Vec<String> = diagnose(&dir.join("mixed.ini"), &dir, None)
+        .iter()
+        .filter(|d| {
+            let id = d["id"].as_str().unwrap();
+            id.starts_with("XM0")
+                || id == "XM403"
+                || matches!(
+                    id,
+                    "XM102"
+                        | "XM103"
+                        | "XM109"
+                        | "XM110"
+                        | "XM111"
+                        | "XM204"
+                        | "XM209"
+                        | "XM210"
+                        | "XM211"
+                )
+        })
+        .map(|d| {
+            format!(
+                "{}:{}",
+                d["range"]["start"]["line"].as_u64().unwrap() + 1,
+                d["id"].as_str().unwrap()
+            )
+        })
+        .collect();
+
+    let expected: Vec<String> =
+        serde_json::from_str(&fs::read_to_string(dir.join("expected.json")).unwrap()).unwrap();
+    assert_eq!(found, expected);
 }
 
 #[test]

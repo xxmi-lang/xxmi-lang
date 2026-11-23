@@ -1,6 +1,134 @@
 [
   {
-    "path": "bad.ini",
+    "path": "bad/Zeta.ini",
+    "id": "XM107",
+    "severity": "warning",
+    "message": "Duplicate section found: [ResourceOrder] (first at alpha2.ini:3; the DLL uses the first)",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 1
+      },
+      "end": {
+        "line": 2,
+        "character": 14
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "error",
+    "message": "Duplicate section found: [ResourceVb] (first at a.ini:3; the DLL uses the first; ignored mesh resource)",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 1
+      },
+      "end": {
+        "line": 2,
+        "character": 11
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "warning",
+    "message": "Duplicate section found: [ResourceTex] (first at a.ini:6; the DLL uses the first)",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 1
+      },
+      "end": {
+        "line": 6,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "info",
+    "message": "Duplicate section found: [ResourceSame] (first at a.ini:9; the DLL uses the first; identical to the first)",
+    "range": {
+      "start": {
+        "line": 9,
+        "character": 1
+      },
+      "end": {
+        "line": 9,
+        "character": 13
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "error",
+    "message": "Duplicate section found: [ResourceBuf] (first at a.ini:13; the DLL uses the first; ignored mesh resource)",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 1
+      },
+      "end": {
+        "line": 14,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "error",
+    "message": "Duplicate section found: [TextureOverrideSkip] (first at a.ini:16; the DLL uses the first; ignored mesh command list)",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 1
+      },
+      "end": {
+        "line": 17,
+        "character": 20
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "error",
+    "message": "Duplicate section found: [CommandListMesh] (first at a.ini:19; the DLL uses the first; ignored mesh command list)",
+    "range": {
+      "start": {
+        "line": 21,
+        "character": 1
+      },
+      "end": {
+        "line": 21,
+        "character": 16
+      }
+    }
+  },
+  {
+    "path": "bad/b.ini",
+    "id": "XM107",
+    "severity": "info",
+    "message": "Duplicate section found: [CommandListShared] (first at a.ini:22; the DLL uses the first; identical to the first)",
+    "range": {
+      "start": {
+        "line": 24,
+        "character": 1
+      },
+      "end": {
+        "line": 24,
+        "character": 18
+      }
+    }
+  },
+  {
+    "path": "bad/same_file.ini",
     "id": "XM107",
     "severity": "warning",
     "message": "Duplicate section found: [commandlista] (first at line 1; the DLL uses the first)",

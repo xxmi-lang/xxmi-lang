@@ -1,6 +1,7 @@
 //! XM102: a key the section's parser doesn't read (port of XM102 in
 //! packages/core/src/lint/rules/structure.ts).
 
+use super::keywords::is_misplaced_flow;
 use super::{Finding, RuleContext, replace_fix};
 use crate::model::{LineModel, SectionModel};
 use crate::scan::Span;
@@ -19,6 +20,10 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
 
         let known: Vec<&str> = spec.keys.iter().map(|k| k.name.as_str()).collect();
         for line in &section.lines {
+            // XM111 owns `if $x == 1` and the like.
+            if is_misplaced_flow(Some(section), line, context.text) {
+                continue;
+            }
             if let Some(finding) = check_line(context, section, spec, &known, line) {
                 findings.push(finding);
             }
@@ -80,6 +85,7 @@ fn check_command_list_line(
             did_you_mean(command, candidates.iter().copied())
         ),
         fix: None,
+        severity: None,
     })
 }
 
@@ -107,6 +113,7 @@ fn check_regular_line(
                 "`{key}` is read by vanilla 3DMigoto but not by XXMI; the DLL ignores it."
             ),
             fix: None,
+            severity: None,
         });
     }
 
@@ -120,6 +127,7 @@ fn check_regular_line(
         span: key_span,
         message: format!("Unknown key `{key}` in [{name}]; the DLL ignores it.{hint}"),
         fix: replace_fix(key_span, key, known, ""),
+        severity: None,
     })
 }
 

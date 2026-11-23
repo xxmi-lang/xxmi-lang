@@ -92,6 +92,35 @@ describe('rule fixtures', () => {
   }
 });
 
+describe('quick fixes on CRLF files', () => {
+  const crlf = (text: string) => text.replace(/\r?\n/g, '\r\n');
+
+  for (const rule of RULES) {
+    const dir = join(FIXTURES, rule.id);
+    const bad = join(dir, 'bad.ini');
+    const fixed = join(dir, 'fixed.ini');
+    if (!existsSync(bad) || !existsSync(fixed)) continue;
+
+    it(`${rule.id} inserts the file's own line break`, async () => {
+      const scratch = mkdtempSync(join(tmpdir(), 'crlf-fix-'));
+      const path = join(scratch, 'bad.ini');
+      const before = crlf(readFileSync(bad, 'utf8'));
+      writeFileSync(path, before);
+
+      try {
+        const { files } = await lintPaths([path], { rules: [rule.id], snapshots: [] });
+        const edits = files.flatMap((f) => f.diagnostics.flatMap((d) => d.fix?.edits ?? []));
+        const after = applyEdits(before, edits);
+
+        expect(after).not.toMatch(/(?<!\r)\n/);
+        expect(after).toBe(crlf(readFileSync(fixed, 'utf8')));
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
 describe('XM102 did-you-mean', () => {
   it('never suggests a value-form command for a misspelled key', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'xm102-'));

@@ -2,6 +2,7 @@
 //! loads files with the namespaces the DLL would give them, follows `[Include]` like
 //! `ParseIncludedIniFiles`, and builds the symbol table.
 
+pub mod load_order;
 pub mod package;
 pub mod snapshot;
 pub mod symbols;
