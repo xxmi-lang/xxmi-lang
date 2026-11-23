@@ -241,6 +241,7 @@ The Rust server also reads these (the TypeScript server does not have them):
 
 - `WORKER_THREADS`: async worker threads. Default: available parallelism, capped at 4.
 - `MAX_INFLIGHT`: requests beyond this many in flight get 503 with `Retry-After`. Default: 512.
+- `PACKAGE_CACHE_ENTRIES`: maximum number of cached package indexes (LRU). Default: 64.
 
 Tool calls run on blocking threads from a fixed pool of 8, which is not configurable.
 
