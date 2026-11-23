@@ -6,7 +6,6 @@ LICENSE
 docs/
 CLAUDE.md
 fixtures/
-*.wasm
 .zzmi-package/
 spec/generated/
 .dll/

@@ -1,4 +1,4 @@
-// A minimal LSP client over stdio, shared by lsp-parity.mjs and lsp-latency.mjs.
+// A minimal LSP client over stdio, shared by lsp-latency.mjs and lsp-smoke.mjs.
 import { spawn } from 'node:child_process';
 
 export class LspClient {

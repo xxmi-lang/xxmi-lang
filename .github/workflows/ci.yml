@@ -76,7 +76,7 @@ jobs:
           ref: ${{ steps.spec.outputs.dll }}
           path: .dll/xxmi
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
@@ -105,7 +105,7 @@ jobs:
           ref: ${{ steps.spec.outputs.baseline }}
           path: .dll/vanilla
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
@@ -160,8 +160,7 @@ jobs:
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
   rust:
-    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS; the parity
-    # checks against the TypeScript CLI and server run on Linux, where the ZZMI package is checked out.
+    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS.
     strategy:
       fail-fast: false
       matrix:
@@ -183,13 +182,6 @@ jobs:
         with:
           workspaces: rust
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
       # The MCP server shells out to rg; its tests need it on PATH.
       - name: Install ripgrep (Linux)
         if: runner.os == 'Linux'
@@ -203,22 +195,6 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ripgrep
 
-      # Only the parity step below needs the TypeScript build.
-      - run: pnpm install --frozen-lockfile
-        if: matrix.os == 'ubuntu-latest'
-
-      - run: pnpm build
-        if: matrix.os == 'ubuntu-latest'
-
-      - name: Check out ZZMI-Package
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/checkout@v7
-        with:
-          repository: leotorrez/ZZMI-Package
-          ref: ${{ env.ZZMI_PACKAGE_REF }}
-          path: .zzmi-package
-          persist-credentials: false
-
       - name: Format
         if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
@@ -228,15 +204,6 @@ jobs:
 
       - name: Tests
         run: cargo test --manifest-path rust/Cargo.toml --release --no-fail-fast
-
-      - name: Parity with the TypeScript CLI and language server
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          XXMI_PACKAGE_SRC: .zzmi-package/ZZMI
-        run: |
-          cargo build --release --manifest-path rust/Cargo.toml -p xxmi
-          node rust/bench/parity.mjs
-          node rust/bench/lsp-parity.mjs
 
   dotnet:
     # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
