@@ -60,6 +60,7 @@ fn command(m: &Match, kind: &str, source: &str, values: Vec<SpecCommandValue>) -
         values,
         source: source.to_string(),
         xxmi: false,
+        gimi: true,
         arg_count: None,
         indirect: None,
         form: None,
@@ -76,6 +77,7 @@ fn values(code: &str, source: &str) -> Vec<SpecCommandValue> {
                 match_kind: v.kind,
                 source: source.to_string(),
                 xxmi: false,
+                gimi: true,
             });
         }
     }
@@ -309,6 +311,7 @@ fn target_members(
                 .collect(),
             source: source.clone(),
             xxmi: false,
+            gimi: true,
             docs: Default::default(),
         });
     }
@@ -350,6 +353,7 @@ pub fn functions(
             name: name.to_string(),
             source: format!("{}:{group}", file.name),
             xxmi: false,
+            gimi: true,
             docs: Default::default(),
         })
         .collect())

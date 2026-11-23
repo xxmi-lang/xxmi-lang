@@ -20,7 +20,7 @@ pub use model::*;
 pub use output::serialize_spec;
 
 /// Bump when the output shape or extraction rules change, so regenerated specs are expected.
-pub const EXTRACTOR_VERSION: u32 = 3;
+pub const EXTRACTOR_VERSION: u32 = 4;
 
 /// Extracts one DLL. `strict` fails on any missing anchor (use for the XXMI DLL).
 pub fn extract_body(
@@ -88,12 +88,19 @@ pub struct ExtractOptions<'a> {
     /// Overrides for checkouts without git metadata (tests, materialized sources).
     pub dll_git: Option<GitInfo>,
     pub baseline_git: Option<GitInfo>,
+    /// XXMI-Libs-Package at v0.1.0; without it no entry is flagged `gimi: false`.
+    pub gimi_root: Option<&'a Path>,
+    pub gimi_git: Option<GitInfo>,
 }
 
 pub struct ExtractResult {
     pub spec: Spec,
     /// Anchors missing from the baseline (expected: XXMI-only tables).
     pub baseline_warnings: Vec<String>,
+    /// Anchors missing from the GIMI baseline (expected: tables added since v0.1.0).
+    pub gimi_warnings: Vec<String>,
+    /// Entries the GIMI baseline has that the XXMI DLL dropped since.
+    pub gimi_only: Vec<String>,
 }
 
 pub fn extract_spec(options: ExtractOptions) -> Result<ExtractResult, ExtractError> {
@@ -103,6 +110,7 @@ pub fn extract_spec(options: ExtractOptions) -> Result<ExtractResult, ExtractErr
 
     flags::flag_xxmi(&mut body, &mut baseline);
     record_removed_keys(&mut body, &baseline);
+    let gimi = extract_gimi(&mut body, &options)?;
     let meta = SpecMeta {
         extractor_version: EXTRACTOR_VERSION,
         dll: match options.dll_git {
@@ -113,9 +121,44 @@ pub fn extract_spec(options: ExtractOptions) -> Result<ExtractResult, ExtractErr
             Some(git) => git,
             None => git_info(options.baseline_root)?,
         },
+        gimi: gimi.git,
     };
     Ok(ExtractResult {
         spec: Spec { meta, body },
         baseline_warnings,
+        gimi_warnings: gimi.warnings,
+        gimi_only: gimi.only,
+    })
+}
+
+struct GimiExtraction {
+    git: Option<GitInfo>,
+    warnings: Vec<String>,
+    only: Vec<String>,
+}
+
+/// Flags `body` against the GIMI baseline, when there is one.
+fn extract_gimi(
+    body: &mut SpecBody,
+    options: &ExtractOptions,
+) -> Result<GimiExtraction, ExtractError> {
+    let Some(root) = options.gimi_root else {
+        return Ok(GimiExtraction {
+            git: None,
+            warnings: Vec::new(),
+            only: Vec::new(),
+        });
+    };
+
+    let (mut baseline, warnings) = extract_body(DllSource::load(root)?, false)?;
+    let only = flags::flag_gimi(body, &mut baseline);
+    let git = match &options.gimi_git {
+        Some(git) => git.clone(),
+        None => git_info(root)?,
+    };
+    Ok(GimiExtraction {
+        git: Some(git),
+        warnings,
+        only,
     })
 }

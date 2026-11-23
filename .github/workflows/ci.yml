@@ -66,8 +66,11 @@ jobs:
         id: spec
         shell: bash
         run: |
-          echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")" >> "$GITHUB_OUTPUT"
-          echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
+          {
+            echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")"
+            echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")"
+            echo "gimi=$(node -p "require('./spec/generated/meta.json').gimi.commit")"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check out XXMI-Libs-Package (DLL source)
         uses: actions/checkout@v7
@@ -75,6 +78,21 @@ jobs:
           repository: SpectrumQT/XXMI-Libs-Package
           ref: ${{ steps.spec.outputs.dll }}
           path: .dll/xxmi
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      - name: Check out XXMI-Libs-Package v0.1.0 (GIMI DLL baseline)
+        uses: actions/checkout@v7
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.spec.outputs.gimi }}
+          path: .dll/gimi
           persist-credentials: false
           # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
@@ -106,6 +124,7 @@ jobs:
         env:
           XXMI_DLL_SRC: .dll/xxmi
           MIGOTO_DLL_SRC: .dll/vanilla
+          GIMI_DLL_SRC: .dll/gimi
 
       - name: Check out ZZMI-Package
         uses: actions/checkout@v7
@@ -184,8 +203,11 @@ jobs:
         if: runner.os == 'Linux'
         id: spec
         run: |
-          echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")" >> "$GITHUB_OUTPUT"
-          echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
+          {
+            echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")"
+            echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")"
+            echo "gimi=$(node -p "require('./spec/generated/meta.json').gimi.commit")"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Check out XXMI-Libs-Package (DLL source)
         if: runner.os == 'Linux'
@@ -217,6 +239,22 @@ jobs:
               refs/tags/v1.3.2:refs/tags/v1.3.2 \
               refs/tags/v1.3.3:refs/tags/v1.3.3
 
+      - name: Check out XXMI-Libs-Package v0.1.0 (GIMI DLL baseline)
+        if: runner.os == 'Linux'
+        uses: actions/checkout@v7
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.spec.outputs.gimi }}
+          path: .dll/gimi
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
       - name: Check out 3Dmigoto (vanilla baseline)
         if: runner.os == 'Linux'
         uses: actions/checkout@v7
@@ -240,6 +278,7 @@ jobs:
           {
             echo "XXMI_DLL_SRC=$GITHUB_WORKSPACE/.dll/xxmi"
             echo "MIGOTO_DLL_SRC=$GITHUB_WORKSPACE/.dll/vanilla"
+            echo "GIMI_DLL_SRC=$GITHUB_WORKSPACE/.dll/gimi"
             echo "XXMI_REQUIRE_DLL_SRC=1"
           } >> "$GITHUB_ENV"
 

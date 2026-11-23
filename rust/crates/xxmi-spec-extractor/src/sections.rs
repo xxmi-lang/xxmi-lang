@@ -196,6 +196,7 @@ fn new_key(name: &str, value_type: String, source: String) -> SpecKey {
         value_type,
         source,
         xxmi: false,
+        gimi: true,
         repeatable: None,
         docs: Default::default(),
     }
@@ -402,6 +403,7 @@ fn add_dynamic(list: &mut Vec<SpecDynamicKeys>, kind: &str, source: &str) {
             kind: kind.to_string(),
             source: source.to_string(),
             xxmi: false,
+            gimi: true,
         });
     }
 }
@@ -625,6 +627,7 @@ pub fn extract_sections(x: &Extraction) -> Result<Vec<SpecSection>, AnchorNotFou
                 dynamic_keys,
                 source: format!("{INI}:{table_name}"),
                 xxmi: false,
+                gimi: true,
                 docs: Default::default(),
             });
         }
@@ -651,6 +654,7 @@ pub fn extract_builtin_sections(x: &Extraction) -> Result<Vec<SpecBuiltinSection
                 name,
                 source: source.clone(),
                 xxmi: false,
+                gimi: true,
             })
             .collect())
     })
