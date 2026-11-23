@@ -174,6 +174,8 @@ Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tes
 
 ## Releasing
 
+To release, bump the version in the files the last release commit touched (`packages/core/src/version.ts`, the VS Code `package.json`, `plugin.json`, `rust/Cargo.toml` and `Cargo.lock`) and merge to `main`. `tag-release.yml` sees the change to `version.ts`, creates the annotated tag `v<VERSION>` unless it exists, and calls `release.yml` for it (a tag pushed with `GITHUB_TOKEN` triggers no workflow, so it cannot rely on the tag push). Pushing a `v*` tag by hand still runs `release.yml` directly, and running `tag-release.yml` manually retries a bump whose tag is missing. Both darwin binaries are built in one job on an arm64 macOS runner (Apple's SDK cross-compiles `x86_64-apple-darwin`); the x64 one is smoke-tested under Rosetta when the runner has it.
+
 `release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang`, in that order). The `nuget` job is separate, so a failed push can be re-run on its own. The `github-packages` job (the reusable `github-packages.yml`) pushes the same artifact, in the same order, to GitHub Packages; it is independent of the `nuget` job, so neither blocks the other.
 
 ### Publishing (maintainers)
@@ -187,7 +189,7 @@ nuget.org uses Trusted Publishing (GitHub OIDC): there is no API key or secret. 
 2. Set the repository variable to your nuget.org username (not the email):
    `gh variable set NUGET_USER --body <name> --repo xxmi-lang/xxmi-lang`.
 3. Publish: for a release whose `nuget` job was skipped, re-run only that job (Actions → the
-   release run → the `nuget` job → Re-run), or push a new tag. The job requests an OIDC token
+   release run → the `nuget` job → Re-run), or release a new version. The job requests an OIDC token
    (`id-token: write`, on that job only), `NuGet/login@v1` exchanges it for a short-lived key,
    and `dotnet nuget push --skip-duplicate` pushes the packages.
 

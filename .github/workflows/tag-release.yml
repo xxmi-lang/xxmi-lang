@@ -1,0 +1,60 @@
+# Tags and releases a version bump: a push to main that changes packages/core/src/version.ts creates
+# v<VERSION> unless it exists, then calls release.yml (docs/10-dotnet.md "Releasing"). The caller's
+# permissions are the ceiling for the called workflow's jobs, so they list everything release.yml asks for.
+name: tag-release
+
+on:
+  push:
+    branches: [main]
+    paths: [packages/core/src/version.ts]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      created: ${{ steps.tag.outputs.created }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n "s/^export const VERSION = '\(.*\)';/\1/p" packages/core/src/version.ts)
+          test -n "$version" || { echo "No VERSION in packages/core/src/version.ts"; exit 1; }
+          tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then
+            echo "Tag $tag exists; nothing to release"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$tag"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      contents: write
+      packages: write # github-packages.yml
+      actions: read # github-packages.yml
+      id-token: write # the nuget job's Trusted Publishing
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets: inherit
