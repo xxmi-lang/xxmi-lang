@@ -149,5 +149,5 @@ before DLL 1.3.2."""
 
 [commands.restoreinitialtextures]
 doc = """
-XXMI: written as the value, the key is not checked. Post list only. Called `restoreoriginaltextures` \
-before DLL 1.3.2."""
+XXMI: written as the value, the key is not checked. Pre list only (DLL 1.3.3, CommandList.cpp:1343; \
+the post list before). Called `restoreoriginaltextures` before DLL 1.3.2."""

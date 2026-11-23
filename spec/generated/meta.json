@@ -2,8 +2,8 @@
   "extractorVersion": 3,
   "dll": {
     "repository": "https://github.com/SpectrumQT/XXMI-Libs-Package",
-    "commit": "e2bca90e3d9dcbe1f7b33209b74481b09479ce34",
-    "commitDate": "2026-11-18T18:54:01+07:00"
+    "commit": "8bd31f74727f033b3d9049509e19da3563c8b98c",
+    "commitDate": "2026-11-19T20:06:20+07:00"
   },
   "baseline": {
     "repository": "https://github.com/bo3b/3Dmigoto",
