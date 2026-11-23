@@ -13,7 +13,7 @@ describe('rule ownership', () => {
     const result = await lintText(resolve(DIR, 'mixed.ini'), text, { snapshots: [] });
     const found = result.files.flatMap((f) =>
       f.diagnostics
-        .filter((d) => /^XM0|^XM10[239]$|^XM11[01]$|^XM20[49]$|^XM210$|^XM403$/.test(d.id))
+        .filter((d) => /^XM0|^XM10[239]$|^XM11[01]$|^XM20[49]$|^XM21[01]$|^XM403$/.test(d.id))
         .map((d) => `${d.range.start.line + 1}:${d.id}`),
     );
     expect(found).toEqual(JSON.parse(readFileSync(resolve(DIR, 'expected.json'), 'utf8')));

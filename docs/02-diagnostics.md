@@ -35,7 +35,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM109 | E | Unknown operator or malformed expression | — |
 | XM110 | W | Key with no value (the DLL ignores the line) | Comment out the line |
 | XM111 | E | `if` / `elif` / `else` / `endif` outside a command list, or in the preamble | — |
-| XM112 | W | TextureOverride with no `hash` and no resource-description `match_*` key | — |
+| XM112 | W | TextureOverride with no `hash` and no `match_*` key, or with both; ShaderOverride with no `hash` | — |
 | XM113 | E / W | Hash value the DLL can't read as hex (error), or reads from a non-canonical form (warning) | — |
 | XM114 | I | TextureOverride / ShaderOverride setting written inside an `if` (the DLL reads it unconditionally) | Move it above the `if` when every branch sets it the same |
 | XM115 | W | `;` comment after a value (the DLL keeps it in the value) | Move the comment above the line |
@@ -49,6 +49,8 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM208 | W | `filename =` points to a missing file | — |
 | XM209 | W | Global declared twice in `[Constants]` (the DLL keeps the first) | — |
 | XM210 | E | Local redeclared where an earlier local of the same name is visible (the DLL drops the line) | — |
+| XM211 | E | `global locked` declared again (the DLL keeps the first, so the new value never applies) | — |
+| XM212 | E | Assignment to a `locked` global (the DLL rejects the line) | — |
 | XM301 | W | Writing to a `locked` library global (e.g. `$\TTL\default_alpha`) | — |
 | XM302 | W | Library API used without its required inputs (from `@in` doc tags) | Insert the input lines |
 | XM303 | I | Library call recognized but deprecated for this package version | Rewrite to the replacement |
@@ -77,7 +79,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/l
 - **XM110:** the DLL drops a `key =` line with a "No value found" warning, in every section kind. XM105 skips empty values, so this rule owns them.
 - **XM106:** the fix inserts `endif` after the section's last command, indented like its `if`, for each `if` left open. Stray `endif`, `elif` and `else` get no fix. The inserted line break matches the file's (CRLF stays CRLF).
 - **XM111:** `ParseCommandList` only runs on the spec's `commandlist` sections (`TextureOverride`, `CommandList`, `Constants`, `Present`, `ShaderOverride`, `CustomShader`, `ShaderRegex`, `BuiltInCommandList`, `BuiltInCustomShader` and the four `Clear…View` sections), so flow keywords anywhere else, or before the first section, are never parsed. Sections with an unknown prefix are XM101's.
-- **XM112:** only `hash` and the resource-description keys (`match_type` … `match_msaa_quality`) let a TextureOverride match; `filter_index`, `match_priority` and the draw-call `match_first_index`-style keys don't, so they don't exempt the section. A section that has a `hash` line, even an unreadable one, is left to XM110 and XM113.
+- **XM112:** only `hash` and the resource-description keys (`match_type` … `match_msaa_quality`) let a TextureOverride match; `filter_index`, `match_priority` and the draw-call `match_first_index`-style keys don't, so they don't exempt the section. A section that has a `hash` line, even an unreadable one, is left to XM110 and XM113. A ShaderOverride has no `match_*` path, so one without `hash` is skipped ("Section missing Hash="). Key names are matched exactly, case-insensitively, and only by presence: a key with an empty value (`match_width =`) is dropped at load ("No value found"), so it counts as absent (XM110 reports it). A TextureOverride with both `hash` and a resource key warns "Cannot use hash= and match options together!" and takes the hash path; the finding sits on each such key and says it is ignored. The keys that conflict with `hash` are the 15 resource keys: `match_type`, `match_usage`, `match_bind_flags`, `match_cpu_access_flags`, `match_misc_flags`, `match_byte_width`, `match_stride`, `match_mips`, `match_format`, `match_width`, `match_height`, `match_depth`, `match_array`, `match_msaa` and `match_msaa_quality`. The draw-call keys (`match_first_vertex`, `match_first_index`, `match_first_instance`, `match_vertex_count`, `match_index_count`, `match_instance_count`), `match_priority` and `filter_index` apply alongside `hash` and never warn.
 - **XM113:** applies to every key the spec types as `hash`. The DLL reads `%16llx` and the whole value, so `0x` prefixes, short forms and a leading `+` or `-` (`%llx` follows the C standard; `-` wraps to `ffffffff…`) parse (warning), while anything else is rejected and the key counts as missing (error). TextureOverride hashes are cast to 32 bits, so more than 8 digits is an error there; other sections accept 8 or 16 digits (shader hashes are 64-bit). A severity set in `xxmi.toml` replaces the per-finding one.
 - **XM114:** the keys are the section's own settings from the spec (`TextureOverride` and `ShaderOverride`): ParseCommandList skips them before it reads flow control and the `GetIni*` readers never look at `if`, so a copy inside a branch is not conditional. `handling` is a command, not a setting, so it isn't flagged. The fix applies when one chain has an `else` and every branch sets the key once to the same value: it adds one copy above the `if` (same indent) and deletes the copies. Only the first copy's diagnostic carries it, and its line break matches the file's.
 - **XM115:** a `;` at the start of a value or after a blank is part of the value for the DLL, so the line is read wrong. A `;` glued to text (`a;b.dds`) is left alone. The fix's line break matches the file's. XM113 skips such values.
@@ -88,6 +90,8 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/l
 - **XM208:** tries the ini's folder first, then the 3DMigoto folder, like `ParseResourceSection`, and skips absolute paths.
 - **XM209:** `ParseConstantsSection` registers globals from `[Constants]` only, and `RegisterGlobalVariable` refuses a name it already holds, so the first declaration wins (flags included, `persist` too) and the DLL warns "Redeclaration". Names compare case-insensitively and per namespace. The scope is one file; its declarations XM204 leaves to this rule.
 - **XM210:** `declare_local_variable` refuses a name that the section's scope stack already holds ("Illegal redeclaration of local variable") and the line is dropped. `if` opens a scope, `elif` and `else` clear it, `endif` closes it, so sibling branches may reuse a name. A local that masks a global is only a notice there, so it isn't reported. Its declarations XM204 leaves to this rule.
+- **XM211:** the first declaration wins, `locked` included, across every file of the namespace in the DLL's load order (files the DLL doesn't load don't count). When that declaration is `locked`, each later one (`global`, `persist` or `locked`) is reported, in the same file or another: its value never applies. XM209 leaves those declarations to this rule.
+- **XM212:** the target of an assignment goes through `GetVariable`, which fails on a `locked` variable whatever the namespace, so the line is dropped. It covers every command-list section including `[Constants]` itself (its non-`global` lines are parsed as a command list), `$ns\x` qualified names, and `store`. A `local` of the same name wins the lookup, so assigning it is fine. `[Key…]` and `[Preset…]` sections aren't command lists, but `Override::ParseIniSection` reads each `$var = …` key through the same `GetVariable`, so a `locked` target fails there too (the value is skipped) and is reported.
 - **XM403:** `ParseCommandList` lower-cases the whole line before `ParseCommandListFlowControl`, so `If`, `ELSE IF` and `EndIf` work and the rule is style only. There is no off-by-default switch for `XM4xx` yet: it runs in the CLI, the language server and the MCP server like any other rule, and `XM403 = "off"` in `xxmi.toml` turns it off, and `--rules` runs only the ids it lists.
 
 `pnpm test:corpus` lints every root and diffs per-rule counts against `corpus/.baseline.json` (`lint` key); with `--strict` any lint error fails.
@@ -186,7 +190,7 @@ Default severity: error. `if` / `elif` / `else` / `endif` outside a command list
 
 ### XM112
 
-Default severity: warning. TextureOverride with no `hash` and no resource-description `match_*` key. Quick fix: no.
+Default severity: warning. TextureOverride with no `hash` and no resource-description `match_*` key, or with both (one finding per `match_*` key, which the DLL ignores); ShaderOverride with no `hash`. Quick fix: no.
 
 ### XM113
 
@@ -239,6 +243,14 @@ Default severity: warning. Global declared twice in `[Constants]`; the DLL keeps
 ### XM210
 
 Default severity: error. Local redeclared where an earlier local of the same name is visible; the DLL drops the line. Quick fix: no.
+
+### XM211
+
+Default severity: error. `global locked` declared again; the DLL keeps the first declaration, so the new value never applies. Quick fix: no.
+
+### XM212
+
+Default severity: error. Assignment to a `locked` global; the DLL rejects the line. Quick fix: no.
 
 ### XM403
 

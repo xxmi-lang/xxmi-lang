@@ -14,8 +14,12 @@ mod global_redeclared;
 mod hash_format;
 mod header;
 mod inline_comment;
+mod kept_globals;
 mod keywords;
+mod loaded_files;
 mod local_redeclared;
+mod locked_assigned;
+mod locked_redeclared;
 mod missing_file;
 mod missing_include;
 mod no_hash;
@@ -187,7 +191,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 31] = [
+pub const RULES: [Rule; 33] = [
     rule(
         "XM001",
         Severity::Error,
@@ -295,7 +299,7 @@ pub const RULES: [Rule; 31] = [
     rule(
         "XM112",
         Severity::Warning,
-        "TextureOverride with no `hash` and no resource-description `match_*` key",
+        "TextureOverride with no `hash` and no `match_*` key, with both, or ShaderOverride with no `hash`",
         no_hash::check,
     ),
     rule(
@@ -379,6 +383,18 @@ pub const RULES: [Rule; 31] = [
         Severity::Error,
         "Local redeclared where an earlier local of the same name is visible (the DLL drops the line)",
         local_redeclared::check,
+    ),
+    rule(
+        "XM211",
+        Severity::Error,
+        "Locked global declared again (the DLL keeps the first and ignores the new value)",
+        locked_redeclared::check,
+    ),
+    rule(
+        "XM212",
+        Severity::Error,
+        "Assignment to a locked global (the DLL rejects the line)",
+        locked_assigned::check,
     ),
     rule(
         "XM403",

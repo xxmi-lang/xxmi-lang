@@ -14,8 +14,8 @@ import {
   replaceFix,
 } from '../suggest.ts';
 import type { Fix, Rule, RuleContext } from '../types.ts';
-import { compareLoadOrder, relativeToRoot } from '../../workspace/load-order.ts';
 import { gradeDuplicate } from './duplicate-grade.ts';
+import { loadedFiles, loadsBefore } from './loaded-files.ts';
 
 /** `x`, `y1`, `w123`: ini params (the grammar's `ini_parameter`). */
 const INI_PARAM = /^[xyzw]\d{0,3}$/i;
@@ -275,7 +275,7 @@ export const XM106: Rule = {
 };
 
 /** Relative to the duplicate's folder, so the message doesn't depend on where the package lives. */
-function relativeLocation(from: IniFile, to: IniFile): string {
+export function relativeLocation(from: IniFile, to: IniFile): string {
   return relative(dirname(from.path), to.path).split(sep).join('/');
 }
 
@@ -286,28 +286,17 @@ export const XM107: Rule = {
     'Duplicate section name within the same namespace (error, warning or info per finding)',
   check({ file, workspace, lookup, report }) {
     // The DLL keeps the first and warns for the rest, in its own load order (see load-order.ts).
-    // Files it never loads (`exclude_recursive`, e.g. DISABLED folders) can only clash with
-    // themselves: a disabled copy of a library isn't a duplicate of the enabled one.
     const winners = new Map<string, { file: IniFile; section: SectionModel }>();
-    const excluded = workspace.isExcluded(file.path);
-    const ownPackage = workspace.packageRoot(file);
-    const loadPath = (f: IniFile): string => relativeToRoot(f.path, ownPackage);
     const clashes = (other: IniFile, section: SectionModel): boolean =>
       // Global sections from included files merge into the main one instead of duplicating.
       other.namespace === '' || lookup.sectionPrefix(section.name.text) !== undefined;
 
-    for (const other of workspace.files.values()) {
-      if (other !== file && (excluded || workspace.isExcluded(other.path))) continue;
-      // One lint run can span several packages; the DLL only ever loads one.
-      if (workspace.packageRoot(other) !== ownPackage) continue;
+    for (const other of loadedFiles(workspace, file)) {
       for (const section of other.sections) {
         if (!clashes(other, section)) continue;
         const key = section.qualifiedName.toLowerCase();
         const first = winners.get(key);
-        if (
-          !first ||
-          (other !== first.file && compareLoadOrder(loadPath(other), loadPath(first.file)) < 0)
-        ) {
+        if (!first || (other !== first.file && loadsBefore(workspace, file, other, first.file))) {
           winners.set(key, { file: other, section });
         }
       }

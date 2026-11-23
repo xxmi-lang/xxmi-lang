@@ -30,5 +30,101 @@
         "character": 24
       }
     }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "[ShaderOverrideNoHash] has no `hash`, so the DLL skips it (a ShaderOverride can't match any other way).",
+    "range": {
+      "start": {
+        "line": 8,
+        "character": 1
+      },
+      "end": {
+        "line": 8,
+        "character": 21
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "`match_format` is ignored: with `hash`, the DLL matches by hash only.",
+    "range": {
+      "start": {
+        "line": 13,
+        "character": 0
+      },
+      "end": {
+        "line": 13,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "`match_stride` is ignored: with `hash`, the DLL matches by hash only.",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 0
+      },
+      "end": {
+        "line": 17,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "`match_width` is ignored: with `hash`, the DLL matches by hash only.",
+    "range": {
+      "start": {
+        "line": 21,
+        "character": 0
+      },
+      "end": {
+        "line": 21,
+        "character": 11
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "`match_height` is ignored: with `hash`, the DLL matches by hash only.",
+    "range": {
+      "start": {
+        "line": 22,
+        "character": 0
+      },
+      "end": {
+        "line": 22,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "[TextureOverrideOnlyEmptyKey] has no `hash` and no resource `match_*` key (`match_type`, `match_format`, `match_width`, …), so the DLL skips it.",
+    "range": {
+      "start": {
+        "line": 28,
+        "character": 1
+      },
+      "end": {
+        "line": 28,
+        "character": 28
+      }
+    }
   }
 ]

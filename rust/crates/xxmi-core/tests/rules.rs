@@ -141,6 +141,7 @@ rule_tests! {
     xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm114 => "XM114", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
     xm206 => "XM206", xm207 => "XM207", xm208 => "XM208", xm209 => "XM209", xm210 => "XM210",
+    xm211 => "XM211", xm212 => "XM212",
     xm403 => "XM403",
 }
 
@@ -268,7 +269,15 @@ fn stray_lines_are_reported_once_under_their_own_rule() {
                 || id == "XM403"
                 || matches!(
                     id,
-                    "XM102" | "XM103" | "XM109" | "XM110" | "XM111" | "XM204" | "XM209" | "XM210"
+                    "XM102"
+                        | "XM103"
+                        | "XM109"
+                        | "XM110"
+                        | "XM111"
+                        | "XM204"
+                        | "XM209"
+                        | "XM210"
+                        | "XM211"
                 )
         })
         .map(|d| {

@@ -25,6 +25,8 @@ import { XM113 } from './rules/hash-format.ts';
 import { XM114 } from './rules/setting-in-if.ts';
 import { XM209 } from './rules/global-redeclared.ts';
 import { XM210 } from './rules/local-redeclared.ts';
+import { XM211 } from './rules/locked-redeclared.ts';
+import { XM212 } from './rules/locked-assigned.ts';
 import { XM115 } from './rules/inline-comment.ts';
 import { suppressionFilter } from './suppress.ts';
 import type { Diagnostic, Rule, Severity } from './types.ts';
@@ -60,6 +62,8 @@ export const RULES: readonly Rule[] = [
   XM208,
   XM209,
   XM210,
+  XM211,
+  XM212,
   XM403,
 ];
 
