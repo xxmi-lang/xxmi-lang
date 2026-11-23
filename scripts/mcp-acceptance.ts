@@ -53,6 +53,25 @@ async function waitUntilReady(timeoutMs = 300_000): Promise<void> {
   }
 }
 
+// A cold server answers from the bundled spec until the head spec has been built.
+async function callUntil(
+  tool: string,
+  args: object,
+  ready: RegExp,
+  what: string,
+  timeoutMs = 300_000,
+): Promise<string> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const answer = await call(tool, args);
+    if (ready.test(answer)) return answer;
+    if (Date.now() > deadline) {
+      throw new Error(`timed out after ${timeoutMs / 1000} s waiting for ${what}`);
+    }
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+}
+
 const failures: string[] = [];
 
 function check(question: string, answer: string, expected: (string | RegExp)[]): void {
@@ -119,10 +138,16 @@ const lintGood = await call('lint_ini', {
 check('lint this ini (library reference resolves)', lintGood, [/0 errors/]);
 
 // The release answer is not asserted: a future release will gain the key as well.
+const headSpec = /spec: XXMI-Libs-Package \S+ \(head, [0-9a-f]{7}\)/;
 check(
   'spec_lookup at the branch head finds a key newer than the latest release',
-  await call('spec_lookup', { name: 'match_dhash', dll_ref: 'head' }),
-  ['key match_dhash', /spec: XXMI-Libs-Package \S+ \(head, [0-9a-f]{7}\)/],
+  await callUntil(
+    'spec_lookup',
+    { name: 'match_dhash', dll_ref: 'head' },
+    headSpec,
+    'the head spec',
+  ),
+  ['key match_dhash', headSpec],
 );
 check('spec_lookup names the spec it used', await call('spec_lookup', { name: 'match_dhash' }), [
   /spec: (XXMI-Libs-Package|bundled)/,

@@ -65,7 +65,7 @@ reach the agent after its edits.
 
 ### Hosted MCP server
 
-`packages/mcp-server` is a read-only MCP server over Streamable HTTP for agents without a shell
+`rust/crates/xxmi-mcp` is a read-only MCP server over Streamable HTTP for agents without a shell
 or a local clone: spec lookups with DLL source locations, ZZMI library symbols with their docs,
 source search, and `lint_ini`. It indexes `SpectrumQT/XXMI-Libs-Package`,
 `leotorrez/ZZMI-Package` and `leotorrez/XXMITools` and follows new commits every 15 minutes.
@@ -128,7 +128,7 @@ follows, and [docs/](docs/) for the design.
 ```bash
 pnpm install && pnpm build && pnpm test
 pnpm xxmi lint path/to/mod             # CLI from source
-docker build -f packages/mcp-server/Dockerfile -t xxmi-mcp .   # the MCP server image
+docker build -f docker/mcp/Dockerfile -t xxmi-mcp .   # the MCP server image
 pnpm build:binaries --target host      # single-file binaries (needs Rust)
 ```
 

@@ -84,8 +84,7 @@ fn version(name: &str, sha: &str, kind: &str) -> Value {
 
 /// Lays out the volume the indexer leaves behind: checkouts of the test fixtures and state.json.
 pub fn make_volume(dir: &Path) {
-    let fixtures =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../packages/mcp-server/test/fixtures");
+    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let mut repos = serde_json::Map::new();
     for (owner, name, alias, fixture, branch, tag) in REPOS {
         let shas = if tag.is_some() {

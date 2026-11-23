@@ -39,14 +39,14 @@ ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIM
 
 | Decision | Choice | Why |
 |---|---|---|
-| Language | TypeScript (Node 22+), strict mode | VS Code extension is TS; the MCP TS SDK is official; tree-sitter has Node and WASM bindings; lupomikti's tooling is TS/Deno |
+| Language | TypeScript (Node 22+), strict mode | VS Code extension is TS; tree-sitter has Node and WASM bindings; lupomikti's tooling is TS/Deno |
 | Parser | `tree-sitter-migoto` via `web-tree-sitter` (WASM) | Error-tolerant and incremental. WASM avoids native build pain on Windows. Native Node binding is an optional speedup later |
 | LSP | `vscode-languageserver` (node) | Standard; works for any stdio LSP client |
-| MCP | `@modelcontextprotocol/sdk`, Streamable HTTP transport | Remote-friendly; runs on Railway |
+| MCP | Streamable HTTP transport, protocol implemented in `xxmi-mcp` (no MCP SDK) | Remote-friendly; runs on Railway |
 | Monorepo | pnpm workspaces + turborepo (or plain pnpm scripts) | Simple |
 | Tests | vitest; golden fixtures under `fixtures/` | Fast; snapshot-friendly |
 | Binaries | Rust (`rust/`, cargo) for `xxmi`, with `xxmi-lsp` a copy of it, on win-x64, win-arm64, linux-x64, linux-arm64, macos-x64, macos-arm64 (`pnpm build:binaries`; the grammar, the spec and the ZZMI snapshot are embedded; Linux builds are static musl) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
-| Rust port | `rust/`: `xxmi-core`, the `xxmi` CLI and LSP, and `tree-sitter-migoto` built with `cc` (`rust-port.md`) | One static binary per platform, no Node or Bun at runtime. The MCP server still runs on the TypeScript core |
+| Rust port | `rust/`: `xxmi-core`, the `xxmi` CLI and LSP, and `tree-sitter-migoto` built with `cc` (`rust-port.md`) | One static binary per platform, no Node or Bun at runtime. The MCP server is ported too (`xxmi-mcp`) and is the only one |
 | Platforms | Windows, Linux, macOS are all first-class for the tooling. CI runs the test suite on all three | The game only runs on Windows/Proton, but mods are authored, fixed and reviewed anywhere. Only the DLL itself (and the `xxmi-dll-dev` skill's build steps) is Windows-only |
 | Config file | `xxmi.toml` at the mod or workspace root | Readable; lupomikti uses TOML too |
 
@@ -71,7 +71,6 @@ xxmi-lang/
 │   ├── spec-extractor/           # reads DLL C++ source → spec/generated/*.json
 │   ├── lsp/                      # xxmi-lsp server
 │   ├── cli/                      # xxmi
-│   ├── mcp-server/               # hosted MCP (Railway)
 │   └── vscode/                   # thin LSP client extension
 ├── plugin/                       # Claude Code plugin (skills, .lsp.json, .mcp.json)
 ├── dotnet/                       # .NET client library + NuGet packaging (10-dotnet.md); no language logic

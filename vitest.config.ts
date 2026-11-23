@@ -17,8 +17,6 @@ export default defineConfig({
       test: {
         name: `@xxmi-lang/${name}`,
         root: `packages/${name}`,
-        // Each test builds an app and indexes fixtures, which Windows runners can stretch past 5 s.
-        ...(name === 'mcp-server' && { testTimeout: 30_000 }),
       },
     })),
   },

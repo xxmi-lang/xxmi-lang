@@ -1,4 +1,4 @@
-// Shared by mcp-parity.mjs and mcp-load.mjs: a fixture data volume and the two servers on it.
+// Shared by mcp-load.mjs: a fixture data volume and the server on it.
 
 import { execFileSync, spawn } from 'node:child_process';
 import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const fixtures = join(root, 'packages/mcp-server/test/fixtures');
+const fixtures = join(root, 'rust/crates/xxmi-mcp/tests/fixtures');
 
 const SHA_A = 'a'.repeat(40);
 const SHA_TAG = 'c'.repeat(40);
@@ -67,11 +67,10 @@ export function localRemotesEnv(dir) {
 }
 
 const COMMANDS = {
-  ts: () => ['node', ['--conditions=source', join(root, 'packages/mcp-server/src/main.ts')]],
   rust: () => [process.env.XXMI_MCP_RS ?? join(root, 'rust/target/release/xxmi-mcp'), []],
 };
 
-/** Starts one server (`ts` or `rust`) on `port`; resolves once /healthz answers. */
+/** Starts one server (`rust`) on `port`; resolves once /healthz answers. */
 export async function startServer(kind, port, dataDir, env = {}) {
   const [command, args] = COMMANDS[kind]();
   const child = spawn(command, args, {

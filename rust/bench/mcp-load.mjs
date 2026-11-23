@@ -1,4 +1,4 @@
-// Load and memory of the TS and Rust MCP servers on the same fixture volume (docs/rust-port.md).
+// Load and memory of the Rust MCP server on a fixture volume (docs/rust-port.md).
 //
 //   node rust/bench/mcp-load.mjs [seconds] [concurrency]
 //
@@ -105,9 +105,9 @@ async function waitIndexed(port) {
 
 const scratch = mkdtempSync(join(tmpdir(), 'xxmi-mcp-load-'));
 try {
-  for (const kind of ['ts', 'rust']) makeVolume(join(scratch, `${kind}-fixture`));
-  const ports = { ts: 3921, rust: 3922 };
-  for (const kind of ['ts', 'rust']) {
+  for (const kind of ['rust']) makeVolume(join(scratch, `${kind}-fixture`));
+  const ports = { rust: 3922 };
+  for (const kind of ['rust']) {
     const r = await measure(kind, ports[kind], scratch);
     const build = await indexingPeak(kind, ports[kind] + 10, scratch);
     console.log(

@@ -8,13 +8,13 @@ This page is the original design. **What was built, and where it differs, is in 
 
 ```
 Railway service "xxmi-mcp" (1 replica, Dockerfile deploy)
-├── HTTP server (Node 22)
+├── HTTP server (Rust, axum)
 │   ├── POST/GET /mcp        MCP Streamable HTTP transport (stateless mode)
 │   ├── GET /healthz         Railway healthcheck
 │   └── POST /admin/refresh  token-protected manual reindex
 ├── Indexer (in-process scheduler)
 │   ├── every 15 min: `git ls-remote` each tracked repo; fetch on change
-│   ├── per new ref: build index with @xxmi-lang/core (`xxmi index`) + ripgrep-ready checkout
+│   ├── per new ref: build index with `xxmi-core` (`xxmi index`) + ripgrep-ready checkout
 │   └── on DLL change: run spec extractor → versioned spec
 └── Volume mounted at /data
     ├── repos/<owner>/<repo>/            bare clone + worktrees per indexed ref
@@ -23,7 +23,7 @@ Railway service "xxmi-mcp" (1 replica, Dockerfile deploy)
 ```
 
 - **One replica.** A Railway volume attaches to a single service instance, and the load is small. Scale vertically if needed.
-- **Tracked repos** (allowlist in `mcp-server/config/repos.toml`; the server never clones arbitrary URLs):
+- **Tracked repos** (allowlist in `rust/crates/xxmi-mcp/src/repos.rs`; the server never clones arbitrary URLs):
   - `SpectrumQT/XXMI-Libs-Package`: `master` plus release tags
   - `leotorrez/ZZMI-Package`: `main` plus tags
   - `leotorrez/XXMITools`: `main` plus tags
@@ -61,19 +61,9 @@ MCP **resources** (read-only): `xxmi://spec/{dll_ref}/sections.json`, `…/comma
 
 ## Deployment
 
-```dockerfile
-FROM node:22-bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends git ripgrep ca-certificates && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY . .
-RUN corepack enable && pnpm install --frozen-lockfile && pnpm --filter @xxmi-lang/mcp-server... build
-ENV NODE_ENV=production DATA_DIR=/data
-CMD ["node", "packages/mcp-server/dist/main.js"]
-```
-
 Railway autodeploys pushes to `main` once CI passes. Build settings live in the Railway service, not in the repo:
 
-- Dockerfile: `packages/mcp-server/Dockerfile.rust` (`dockerfilePath`)
+- Dockerfile: `docker/mcp/Dockerfile` (`dockerfilePath`)
 - Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
 - Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
@@ -91,13 +81,13 @@ Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config.
 
 ## Tests
 
-- Unit: each tool handler against a small fixture repo checked into `packages/mcp-server/test/fixtures/repos/`.
+- Unit: each tool handler against a small fixture repo checked into `rust/crates/xxmi-mcp/tests/fixtures/`.
 - Integration: start the server against fixture repos, connect with the MCP SDK client, and call every tool.
 - Contract: snapshot `tools/list` output, so changes to tool names or schemas are deliberate.
 
 ## As built (M6)
 
-Status (2026-10-20): implemented in `packages/mcp-server`, tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, autodeployed from `main` by Railway after CI passes (see Deployment). The sections above stay as the design; this one is what exists.
+Status (2026-10-20): implemented in `rust/crates/xxmi-mcp` (ported from the TypeScript `packages/mcp-server`, now removed), tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, autodeployed from `main` by Railway after CI passes (see Deployment). The sections above stay as the design; this one is what exists.
 
 ### Endpoints
 
@@ -126,7 +116,7 @@ All tools return compact text, or JSON with `format: "json"`. Errors come back a
 
 `repo` is `dll`, `zzmi`, `xxmitools` or `owner/name` of a tracked repo. `ref` is a branch, a tag or a commit prefix (7+ characters) of something indexed, or one of `latest` / `head` (the default branch's head, also what an omitted `ref` means), `latest-release`, `latest-prerelease`. The baseline repo (`migoto`, bo3b/3Dmigoto) is head-only and not offered by the package or library tools. Resources: `xxmi://spec` (the default spec), `xxmi://spec/{dll_ref}`, and `xxmi://spec/{dll_ref}/sections.json` / `…/commands.json`, all resolved like the tools' `dll_ref`; the JSON carries a `_spec` block (see "Specs per DLL version").
 
-The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolver`); the server only maps tool arguments to core calls, serves checkouts and enforces limits. `xxmi query` (`04-cli.md`) uses the same functions.
+The logic is in `xxmi-core` (`rust/crates/xxmi-core/src/query/`, `lint_texts`); the server only maps tool arguments to core calls, serves checkouts and enforces limits. `xxmi query` (`04-cli.md`) uses the same functions.
 
 ### Environment variables
 
@@ -173,16 +163,16 @@ The logic is in `@xxmi-lang/core` (`src/query/`, `lintTexts`, `VirtualPathResolv
 
 Git can't tell a release from a pre-release, so the one GitHub API call left is `GET https://api.github.com/repos/{owner}/{repo}/releases?per_page=30`. It runs only when a repo's set of tags differs from the one stored at the last successful lookup, and once at the first start; `/admin/refresh` forces it. The answer (`tag_name` to pre-release flag, draft flag, publish date, name) is kept in `state.json` until the tags change again. If the call fails or is rate limited, the previous map stays, new tags are indexed as plain tags (kind `tag`) until it works, one warning is logged, and the call is retried on a later poll at most once an hour.
 
-Each indexed version has a `kind`: `head` (default branch), `release`, `prerelease`, or `tag` (a git tag without a GitHub release, or not yet classified), and for tags its `tag` name and `publishedAt` when known. Per repo the indexer keeps the head, the newest `INDEXED_RELEASES` releases, and the newest `INDEXED_PRERELEASES` pre-releases that are newer than the newest release, ordered by `publishedAt` (tag-name order when dates are missing). Drafts are ignored. A repo with no releases at all keeps its newest `INDEXED_RELEASES` tags. The `baseline` role (bo3b/3Dmigoto) keeps the head only and never queries releases. The policy per role is in `src/selection.ts`.
+Each indexed version has a `kind`: `head` (default branch), `release`, `prerelease`, or `tag` (a git tag without a GitHub release, or not yet classified), and for tags its `tag` name and `publishedAt` when known. Per repo the indexer keeps the head, the newest `INDEXED_RELEASES` releases, and the newest `INDEXED_PRERELEASES` pre-releases that are newer than the newest release, ordered by `publishedAt` (tag-name order when dates are missing). Drafts are ignored. A repo with no releases at all keeps its newest `INDEXED_RELEASES` tags. The `baseline` role (bo3b/3Dmigoto) keeps the head only and never queries releases. The policy per role is in `rust/crates/xxmi-mcp/src/selection.rs`.
 
 `list_versions` adds `latestRelease` and `latestPrerelease` (`{name, sha, publishedAt}` or null) per repo and a `kind` on every version; the text output has a line each, e.g. `latest release: v1.2.3 (2026-10-31)`. No tool's default `ref` changed: it is still the default branch's head.
 
 ### Specs per DLL version
 
-The server extracts a spec from every indexed DLL version (head, releases, pre-releases) with the in-process spec extractor (`@xxmi-lang/spec-extractor`), using the baseline (bo3b/3Dmigoto head) for the xxmi flags. The overlay (`spec/overlay/*.toml`) is the one shipped with the server build, merged the same way core merges it into the bundled spec; it is not fetched at runtime. A new DLL release is therefore served without a redeploy, and the daily `spec-extract` PR only refreshes the fallback.
+The server extracts a spec from every indexed DLL version (head, releases, pre-releases) with the in-process spec extractor (`xxmi-spec-extractor`), using the baseline (bo3b/3Dmigoto head) for the xxmi flags. The overlay (`spec/overlay/*.toml`) is the one shipped with the server build, merged the same way core merges it into the bundled spec; it is not fetched at runtime. A new DLL release is therefore served without a redeploy, and the daily `spec-extract` PR only refreshes the fallback.
 
 - **When:** at the end of an index pass, after the new state is published, so builds never delay `ready`. One build at a time. If the baseline is not indexed yet, nothing is built and the next pass tries again. A failing build is recorded and never fails the pass.
-- **Where:** builds run in a `worker_threads` Worker (`src/specs/worker.ts`), killed after 120 s and recorded as failed. One extraction takes about 250 ms of synchronous CPU, which would stall every HTTP request on the main thread.
+- **Where:** builds run on a blocking thread (`rust/crates/xxmi-mcp/src/spec_build.rs`). After 120 s a build is recorded as failed, though its thread runs until it ends. One extraction takes about 250 ms of synchronous CPU, which would stall every HTTP request on the async workers.
 - **Volume:** `/data/specs/<dllSha>.json` holds `{dllSha, baselineSha, builder, builtAt, status, error?, warnings, spec}`, written by tmp and rename. An entry is used only when its `builder` (server version, extractor version and overlay hash) and `baselineSha` match the running ones; otherwise it is rebuilt. A `failed` entry is not retried until one of those changes. Specs of versions that are pruned are removed with them; only indexed versions' specs are held in memory.
 - **`dll_ref`** (`spec_lookup`, `spec_list`, `lint_ini`, the spec resources): `latest-release` (default), `latest-prerelease`, `head` / `latest`, a tag name, a commit prefix (7+ characters) or `bundled`. An unknown ref is an error that lists the valid choices.
 - **Fallback:** if the version's spec is pending or failed, or nothing is indexed yet, the bundled spec answers and the result's `spec.note` says which version was requested, why, and which DLL commit the bundled spec is from.
@@ -192,9 +182,9 @@ The server extracts a spec from every indexed DLL version (head, releases, pre-r
 
 ### Safety
 
-- Repos come from a code allowlist (`src/repos.ts`); callers can't name other URLs.
+- Repos come from a code allowlist (`rust/crates/xxmi-mcp/src/repos.rs`); callers can't name other URLs.
 - `read_source` and `search_source` paths are normalized and must stay inside the checkout (absolute paths, drive letters, `..`, NUL are refused); extraction skips symlinks.
-- `lint_ini` never touches the server's disk: files live in a virtual file system (`VirtualPathResolver`), so `include = ..\..\etc\hosts` just reports "not found", and `xxmi.toml` is not read. Paths must be relative `.ini` paths without `..`.
+- `lint_ini` never touches the server's disk: files live in a virtual file system, so `include = ..\..\etc\hosts` just reports "not found", and `xxmi.toml` is not read. Paths must be relative `.ini` paths without `..`.
 - Input caps and timeouts as in the table above; `search_source` uses ripgrep (linear-time regex), so a hostile pattern can't hang the server.
 - Rate limit per client IP: token bucket in memory, 429 with `Retry-After`.
 - Logs are JSON lines: request method, path, status and timing; tool name and timing; `lint_ini` sizes and counts. Submitted text is never logged. A client IP is logged only when it is rate limited.
@@ -202,21 +192,21 @@ The server extracts a spec from every indexed DLL version (head, releases, pre-r
 
 ### Docker and Railway
 
-`packages/mcp-server/Dockerfile` (build context: the repo root) builds with Node 22 and pnpm (`pnpm deploy --prod`), and runs on plain Alpine with only the `node` binary copied over, plus git and ripgrep: about 240 MB uncompressed (the figure predates git), 37 MB of it the app. It starts as root only to `chown` the volume mount (Railway mounts volumes as root), then runs `node --liftoff-only dist/main.js` as the unprivileged `node` user. The flag avoids the web-tree-sitter memory leak (`packages/core/src/runtime.ts`). The Dockerfile has a `HEALTHCHECK`; Railway uses the service's health check setting instead (see Deployment).
+`docker/mcp/Dockerfile` (build context: the repo root) builds the embedded spec with Node 22 and `xxmi-mcp` with Rust, then runs it on `debian:trixie-slim` with git, ripgrep and curl (about 311 MB). The container starts as root only to fix the volume's ownership, then drops to the unprivileged `node` user through `docker/mcp/docker-entrypoint.sh`. The Dockerfile has a `HEALTHCHECK`; Railway uses the service's health check setting instead (see Deployment).
 
 Run it locally:
 
 ```bash
-docker build -f packages/mcp-server/Dockerfile -t xxmi-mcp .
+docker build -f docker/mcp/Dockerfile -t xxmi-mcp .
 docker run --rm -p 3000:3000 -v xxmi-data:/data xxmi-mcp
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp
 ```
 
-From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-server/dist/main.js`.
+From source: `pnpm build && cd rust && DATA_DIR=./data cargo run --release -p xxmi-mcp`.
 
 **Railway setup (needs the maintainer's account):**
 
-1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `packages/mcp-server/Dockerfile.rust`, health check `/healthz`, restart policy `ON_FAILURE`.
+1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `docker/mcp/Dockerfile`, health check `/healthz`, restart policy `ON_FAILURE`.
 2. In the service: add a **volume** and mount it at `/data`.
 3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`:** Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so the image default of 1 keys every request on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
 4. Settings → Networking → **Generate domain** (or add a custom domain). Autodeploy from `main` after CI passes (see Deployment).
@@ -225,10 +215,10 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 
 ### Rust server
 
-`rust/crates/xxmi-mcp` is a drop-in port (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f packages/mcp-server/Dockerfile.rust -t xxmi-mcp-rs .`. It needs `git` and `rg` on the path, like the TS server.
-Railway builds the Rust image (`Dockerfile.rust`, see Deployment); CI builds both. `node rust/bench/mcp-parity.mjs` compares the two servers answer by answer.
+`rust/crates/xxmi-mcp` is the hosted server, ported from the former TypeScript one (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f docker/mcp/Dockerfile -t xxmi-mcp .`. It needs `git` and `rg` on the path.
+Railway builds this image (`docker/mcp/Dockerfile`, see Deployment).
 
-The Rust server also reads these (the TypeScript server does not have them):
+The server also reads these:
 
 - `WORKER_THREADS`: async worker threads. Default: available parallelism, capped at 4.
 - `MAX_INFLIGHT`: requests beyond this many in flight get 503 with `Retry-After`. Default: 512.
@@ -241,7 +231,7 @@ Tool calls run on blocking threads from a fixed pool of 8, which is not configur
 - **Git without clones or worktrees.** `git ls-remote` plus shallow fetches by sha into one bare repo per tracked repo, and `git archive` for the files, instead of full bare clones with worktrees. The volume holds one commit's objects plus its text files, a few MB per commit.
 - **Default `ref` is the default branch's head, not the latest release**, because the acceptance criterion is that a new package commit is served within 20 minutes. Pass a tag to get a release.
 - **Specs are built per indexed DLL version at runtime** (see "Specs per DLL version"), so a new DLL release needs no redeploy. The spec bundled with the server (updated by the daily `spec-extract` workflow's PR) is the fallback while a version's own spec is missing.
-- **Tracked repos are code (`src/repos.ts`), not `config/repos.toml`.**
+- **Tracked repos are code (`rust/crates/xxmi-mcp/src/repos.rs`), not `config/repos.toml`.**
 - **No `migration_guide` tool and no `xxmi://eras/…` resources:** the era docs belong to M5, which moved (`09-roadmap.md`).
 - **No `XXMI_MCP_KEYS`** API keys, no webhook endpoint.
 - **`lint_ini`'s `game` defaults to `zzmi`** (the only game profile so far), and its JSON adds a `package` field (repository and commit used).
@@ -249,4 +239,4 @@ Tool calls run on blocking threads from a fixed pool of 8, which is not configur
 
 ### Tests
 
-`packages/mcp-server/test`: tools through the SDK's in-memory transport on a fixture package and DLL (with a contract snapshot of `tools/list`), the indexer with a fake source client serving fixture trees (first pass, no-change pass, atomic swap, failed fetch, restart from the volume, release lookups), the real git code against a local repository built in a temp dir (listing, shallow fetch by sha, new commits and tags, moved and deleted tags), version selection and ref resolution, the HTTP server with the real SDK client (rate limit, spoofed `X-Forwarded-For`, body cap, lint caps, admin token), ripgrep search, path sandboxing, the releases lookup with a mocked `fetch`. Spec building is tested against the extractor's fixture sources (build, store validity rules, registry and ref resolution, indexer passes with a throwing builder, the worker timeout) and the tools against two fixture DLL versions that differ in one key. `scripts/mcp-acceptance.ts <url>` asks the three acceptance questions of a running server, plus a `dll_ref=head` spec lookup; CI builds the image and starts it on every run, and runs the script against it weekly.
+`rust/crates/xxmi-mcp/tests` (`cargo test --release`): `http.rs`, `limits.rs`, `indexer.rs`, `tools.rs` and `spec_build_tags.rs`, with shared helpers in `tests/support`. `scripts/mcp-acceptance.ts <url>` asks the three acceptance questions of a running server, plus a `dll_ref=head` spec lookup; CI builds the image and starts it on every run, and runs the script against it weekly.

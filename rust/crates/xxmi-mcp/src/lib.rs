@@ -1,4 +1,4 @@
-//! Hosted MCP server: the Rust port of packages/mcp-server (docs/06-mcp-server.md).
+//! Hosted MCP server (docs/06-mcp-server.md).
 
 pub mod app;
 pub mod bundled;

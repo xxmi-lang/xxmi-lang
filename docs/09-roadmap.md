@@ -120,10 +120,10 @@ Moved to the maintainer's C# app, together with M4 (see above). Old plan, for hi
 
 **Status (2026-10-20):** deployed to Railway (service `xxmi-mcp`, default domain `https://xxmi-mcp-production.up.railway.app/mcp`; a custom domain later). `scripts/mcp-acceptance.ts` passes against it, and the live rate limit, body cap and admin-token checks behave as designed (`TRUSTED_PROXY_HOPS=2` on Railway, see `06-mcp-server.md`).
 
-- `packages/mcp-server` serves nine tools and the spec resources over stateless Streamable HTTP; tools, env vars and design choices are in `06-mcp-server.md`, "As built".
+- `packages/mcp-server` (now `rust/crates/xxmi-mcp`) serves nine tools and the spec resources over stateless Streamable HTTP; tools, env vars and design choices are in `06-mcp-server.md`, "As built".
 - The three questions are answered by `scripts/mcp-acceptance.ts` against the Docker image running locally; CI builds the image, starts it, and runs the same script weekly.
 - The indexer polls every 15 minutes (`POLL_INTERVAL_MIN`), so a new ZZMI-Package commit is served within about 16 minutes: the check, a tarball download and the index build take under half a minute.
-- Rate limiting, input caps, the path sandbox and the indexer swap are covered by tests in `packages/mcp-server/test`.
+- Rate limiting, input caps, the path sandbox and the indexer swap are covered by tests in `rust/crates/xxmi-mcp/tests`.
 - Not in this milestone: the `migration_guide` tool and `xxmi://eras/…` resources (they belong to M5, which moved), spec re-extraction on the server, `XXMI_MCP_KEYS`.
 - Also delivered: `xxmi query` (`section-kinds`, `keys`, `command`, `operator`, `symbol`, `library`), which the MCP tools share their logic with (`packages/core/src/query/`). `refs` and `outline` are still open.
 - `plugin/.mcp.json` reads the server URL from `XXMI_MCP_URL`; the default is the public instance.
