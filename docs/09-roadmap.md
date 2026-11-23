@@ -113,7 +113,7 @@ Moved to the maintainer's C# app, together with M4 (see above). Old plan, for hi
 
 ## M6: Hosted MCP on Railway
 
-- `packages/mcp-server` per `06-mcp-server.md`; Dockerfile; `railway.toml`; volume; polling indexer.
+- `packages/mcp-server` per `06-mcp-server.md`; Dockerfile; Railway service settings; volume; polling indexer.
 - `.mcp.json` added to the plugin; `AGENTS.md`.
 
 **Accept:** a fresh Claude Code session with only the MCP configured (no local clone) can answer "what inputs does `CommandList\ZZMI\SetTextures` need", "where is `store` implemented in the DLL" and "lint this ini" correctly. A new ZZMI-Package commit is indexed within 20 minutes. Rate limiting and input caps are verified by tests.

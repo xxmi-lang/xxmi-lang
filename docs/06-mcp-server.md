@@ -71,24 +71,15 @@ ENV NODE_ENV=production DATA_DIR=/data
 CMD ["node", "packages/mcp-server/dist/main.js"]
 ```
 
-`railway.toml`:
+Railway autodeploys pushes to `main` once CI passes. Build settings live in the Railway service, not in the repo:
 
-```toml
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "packages/mcp-server/Dockerfile"
-
-[deploy]
-healthcheckPath = "/healthz"
-restartPolicyType = "ON_FAILURE"
-```
+- Dockerfile: `packages/mcp-server/Dockerfile.rust` (`dockerfilePath`)
+- Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
+- Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`, `INDEXED_TAGS=5`.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
-- Deploys run from `.github/workflows/deploy.yml` after `ci` passes on `main` (also after re-runs), or by hand via "Run workflow" with an optional `sha`. A commit that is no longer `main`'s HEAD is skipped, so an older commit never replaces a newer one.
-- Needs the repo secret `RAILWAY_PROJECT_TOKEN`: a Railway project token for the production environment (project settings → Tokens).
-- Railway's own autodeploy is disabled for the service.
 
 ## Client setup (for the README)
 
@@ -106,7 +97,7 @@ Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config.
 
 ## As built (M6)
 
-Status (2026-10-20): implemented in `packages/mcp-server`, tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, deployed from `main` after CI passes by `.github/workflows/deploy.yml` (see Deployment). The sections above stay as the design; this one is what exists.
+Status (2026-10-20): implemented in `packages/mcp-server`, tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, autodeployed from `main` by Railway after CI passes (see Deployment). The sections above stay as the design; this one is what exists.
 
 ### Endpoints
 
@@ -211,7 +202,7 @@ The server extracts a spec from every indexed DLL version (head, releases, pre-r
 
 ### Docker and Railway
 
-`packages/mcp-server/Dockerfile` (build context: the repo root) builds with Node 22 and pnpm (`pnpm deploy --prod`), and runs on plain Alpine with only the `node` binary copied over, plus git and ripgrep: about 240 MB uncompressed (the figure predates git), 37 MB of it the app. It starts as root only to `chown` the volume mount (Railway mounts volumes as root), then runs `node --liftoff-only dist/main.js` as the unprivileged `node` user. The flag avoids the web-tree-sitter memory leak (`packages/core/src/runtime.ts`). The Dockerfile has a `HEALTHCHECK`; Railway uses `railway.toml` instead.
+`packages/mcp-server/Dockerfile` (build context: the repo root) builds with Node 22 and pnpm (`pnpm deploy --prod`), and runs on plain Alpine with only the `node` binary copied over, plus git and ripgrep: about 240 MB uncompressed (the figure predates git), 37 MB of it the app. It starts as root only to `chown` the volume mount (Railway mounts volumes as root), then runs `node --liftoff-only dist/main.js` as the unprivileged `node` user. The flag avoids the web-tree-sitter memory leak (`packages/core/src/runtime.ts`). The Dockerfile has a `HEALTHCHECK`; Railway uses the service's health check setting instead (see Deployment).
 
 Run it locally:
 
@@ -225,17 +216,17 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 
 **Railway setup (needs the maintainer's account):**
 
-1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. `railway.toml` at the repo root selects the Dockerfile, the `/healthz` health check and the restart policy; nothing to configure in the build settings.
+1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `packages/mcp-server/Dockerfile.rust`, health check `/healthz`, restart policy `ON_FAILURE`.
 2. In the service: add a **volume** and mount it at `/data`.
 3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`:** Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so the image default of 1 keys every request on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
-4. Settings → Networking → **Generate domain** (or add a custom domain). Leave Railway's autodeploy off; deploys run from `.github/workflows/deploy.yml` (see Deployment).
+4. Settings → Networking → **Generate domain** (or add a custom domain). Autodeploy from `main` after CI passes (see Deployment).
 5. Check `https://<domain>/healthz` (`ready` turns true after about 10 seconds), then `node scripts/mcp-acceptance.ts https://<domain>/mcp`.
 6. (Done.) Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
 
 ### Rust server
 
 `rust/crates/xxmi-mcp` is a drop-in port (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f packages/mcp-server/Dockerfile.rust -t xxmi-mcp-rs .`. It needs `git` and `rg` on the path, like the TS server.
-Railway still uses the TypeScript image (`Dockerfile`) until the switch; CI builds both. `node rust/bench/mcp-parity.mjs` compares the two servers answer by answer.
+Railway builds the Rust image (`Dockerfile.rust`, see Deployment); CI builds both. `node rust/bench/mcp-parity.mjs` compares the two servers answer by answer.
 
 The Rust server also reads these (the TypeScript server does not have them):
 
