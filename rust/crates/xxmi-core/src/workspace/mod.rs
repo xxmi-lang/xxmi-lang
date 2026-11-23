@@ -23,7 +23,7 @@ use crate::paths::{PathResolver, relative_path, resolve_path};
 use crate::trace;
 
 use package::{default_excludes, find_package_root, path_namespace};
-use snapshot::SymbolSnapshot;
+use snapshot::Snapshots;
 use symbols::SymbolTable;
 use usage::Usage;
 
@@ -32,7 +32,7 @@ pub type FileId = usize;
 pub struct Workspace {
     lookup: &'static Lookup,
     resolver: PathResolver,
-    snapshots: &'static [SymbolSnapshot],
+    snapshots: Snapshots,
     /// In load order, which decides which of two duplicate sections the DLL keeps.
     files: Vec<IniFile>,
     file_ids: HashMap<PathBuf, FileId>,
@@ -62,11 +62,19 @@ pub struct Workspace {
 }
 
 impl Workspace {
-    pub fn new(lookup: &'static Lookup, snapshots: &'static [SymbolSnapshot]) -> Self {
+    pub fn new(lookup: &'static Lookup, snapshots: impl Into<Snapshots>) -> Self {
+        Self::with_resolver(lookup, snapshots, PathResolver::default())
+    }
+
+    pub fn with_resolver(
+        lookup: &'static Lookup,
+        snapshots: impl Into<Snapshots>,
+        resolver: PathResolver,
+    ) -> Self {
         Self {
             lookup,
-            resolver: PathResolver::default(),
-            snapshots,
+            resolver,
+            snapshots: snapshots.into(),
             files: Vec::new(),
             file_ids: HashMap::new(),
             package_roots: HashMap::new(),
@@ -226,7 +234,7 @@ impl Workspace {
                 for (id, file) in self.files.iter().enumerate() {
                     table.add_file(id, file);
                 }
-                for snapshot in self.snapshots {
+                for snapshot in self.snapshots.as_slice() {
                     if !snapshot.namespaces.iter().any(|ns| table.has_namespace(ns)) {
                         table.add_snapshot(snapshot);
                     }

@@ -98,10 +98,45 @@ pub fn display_path(path: &Path, base: &Path) -> String {
 /// resolver, so one resolver should serve a single lint run.
 #[derive(Default)]
 pub struct PathResolver {
+    /// Directory listings of a fixed set of in-memory files; the host file system is never read.
+    virtual_dirs: Option<HashMap<PathBuf, Rc<Vec<String>>>>,
     listings: RefCell<HashMap<PathBuf, Option<Rc<Vec<String>>>>>,
 }
 
 impl PathResolver {
+    /// A resolver over absolute paths of in-memory files,
+    /// so include and path checks never touch the host file system.
+    pub fn in_memory<'a>(paths: impl IntoIterator<Item = &'a Path>) -> Self {
+        let mut dirs: HashMap<PathBuf, Vec<String>> = HashMap::new();
+        for path in paths {
+            let mut child = path;
+            while let Some(parent) = child.parent() {
+                let name = child
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned();
+                let names = dirs.entry(parent.to_path_buf()).or_default();
+                if !names.contains(&name) {
+                    names.push(name);
+                }
+                child = parent;
+            }
+        }
+
+        let virtual_dirs = dirs
+            .into_iter()
+            .map(|(dir, mut names)| {
+                names.sort();
+                (dir, Rc::new(names))
+            })
+            .collect();
+        Self {
+            virtual_dirs: Some(virtual_dirs),
+            ..Self::default()
+        }
+    }
+
     pub fn resolve(&self, base_dir: &Path, ini_path: &str) -> Option<PathBuf> {
         let mut current = base_dir.to_path_buf();
         for segment in ini_path_segments(ini_path) {
@@ -122,11 +157,17 @@ impl PathResolver {
     }
 
     pub fn is_directory(&self, path: &Path) -> bool {
+        if let Some(dirs) = &self.virtual_dirs {
+            return dirs.contains_key(path);
+        }
         fs::metadata(path).is_ok_and(|m| m.is_dir())
     }
 
     /// Directory entries (names), or `None` if `dir` can't be read.
     pub fn list(&self, dir: &Path) -> Option<Rc<Vec<String>>> {
+        if let Some(dirs) = &self.virtual_dirs {
+            return dirs.get(dir).cloned();
+        }
         if let Some(cached) = self.listings.borrow().get(dir) {
             return cached.clone();
         }

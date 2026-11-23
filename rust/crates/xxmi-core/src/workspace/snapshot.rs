@@ -1,8 +1,9 @@
-//! Library symbol snapshots (docs/01-language-model.md §4 "Bundled library snapshot"): the
-//! sections, globals and namespaces of a package's libraries, so a mod linted on its own still
-//! resolves `CommandList\ZZMI\...`.
+//! Library symbol snapshots (docs/01-language-model.md §4 "Bundled library snapshot"):
+//! the sections, globals and namespaces of a package's libraries,
+//! so a mod linted on its own still resolves `CommandList\ZZMI\...`.
 
 use std::path::Path;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +13,47 @@ use crate::query::utf16_cmp;
 
 use super::Workspace;
 use super::symbols::global_variable_key;
+
+/// The library snapshots a workspace consults: the bundled ones, which live for the whole process,
+/// or one that a long-running host shares and may drop.
+#[derive(Clone, Debug)]
+pub enum Snapshots {
+    Bundled(&'static [SymbolSnapshot]),
+    Shared(Arc<SymbolSnapshot>),
+}
+
+impl Snapshots {
+    pub fn as_slice(&self) -> &[SymbolSnapshot] {
+        match self {
+            Self::Bundled(all) => all,
+            Self::Shared(one) => std::slice::from_ref(one),
+        }
+    }
+}
+
+impl From<&'static [SymbolSnapshot]> for Snapshots {
+    fn from(all: &'static [SymbolSnapshot]) -> Self {
+        Self::Bundled(all)
+    }
+}
+
+impl<const N: usize> From<&'static [SymbolSnapshot; N]> for Snapshots {
+    fn from(all: &'static [SymbolSnapshot; N]) -> Self {
+        Self::Bundled(all)
+    }
+}
+
+impl From<Arc<SymbolSnapshot>> for Snapshots {
+    fn from(one: Arc<SymbolSnapshot>) -> Self {
+        Self::Shared(one)
+    }
+}
+
+impl From<&Snapshots> for Snapshots {
+    fn from(snapshots: &Snapshots) -> Self {
+        snapshots.clone()
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SymbolSnapshot {

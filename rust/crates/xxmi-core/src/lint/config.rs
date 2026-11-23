@@ -107,11 +107,23 @@ pub fn parse_config(text: &str, path: &Path) -> Result<LintConfig, ConfigError> 
 /// Finds and parses the nearest xxmi.toml at or above a directory, caching per directory.
 #[derive(Default)]
 pub struct ConfigLoader {
+    /// No xxmi.toml is ever read (the server must not touch its own disk).
+    disabled: bool,
     cache: RefCell<HashMap<PathBuf, Rc<LintConfig>>>,
 }
 
 impl ConfigLoader {
+    pub fn disabled() -> Self {
+        Self {
+            disabled: true,
+            ..Self::default()
+        }
+    }
+
     pub fn for_directory(&self, dir: &Path) -> Result<Rc<LintConfig>, ConfigError> {
+        if self.disabled {
+            return Ok(Rc::new(LintConfig::default()));
+        }
         if let Some(cached) = self.cache.borrow().get(dir) {
             return Ok(Rc::clone(cached));
         }

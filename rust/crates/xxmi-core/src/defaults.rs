@@ -10,6 +10,11 @@ use crate::workspace::snapshot::SymbolSnapshot;
 const BUNDLED_SPEC: &str = include_str!(env!("XXMI_SPEC_JSON"));
 const BUNDLED_SNAPSHOTS: [&str; 1] = [include_str!(env!("XXMI_ZZMI_SNAPSHOT_JSON"))];
 
+/// The merged spec as JSON text, for callers that serve or re-read the document itself.
+pub fn bundled_spec_json() -> &'static str {
+    BUNDLED_SPEC
+}
+
 pub fn bundled_lookup() -> &'static Lookup {
     static LOOKUP: OnceLock<Lookup> = OnceLock::new();
     LOOKUP.get_or_init(|| {

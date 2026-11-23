@@ -4,6 +4,7 @@
 **/.vscode-test
 corpus
 dotnet
+rust/target
 .dll
 .zzmi-package
 .xxmi-backup

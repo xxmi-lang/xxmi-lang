@@ -52,7 +52,7 @@ impl<'a> Server<'a> {
         let options = LintOptions::bundled();
         Self {
             connection,
-            workspace: Workspace::new(options.lookup, options.snapshots),
+            workspace: Workspace::new(options.lookup, &options.snapshots),
             documents: Documents::default(),
             configs: ConfigLoader::default(),
             options,
