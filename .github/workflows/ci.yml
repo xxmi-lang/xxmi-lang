@@ -84,20 +84,6 @@ jobs:
             /util.h
           sparse-checkout-cone-mode: false
 
-      # The checkout is one commit without tags; spec-build-tags.test.ts needs these.
-      - name: Fetch DLL release tags
-        shell: bash
-        run: |
-          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
-              refs/tags/v1.2.0:refs/tags/v1.2.0 \
-              refs/tags/v1.2.1:refs/tags/v1.2.1 \
-              refs/tags/v1.2.2:refs/tags/v1.2.2 \
-              refs/tags/v1.2.3:refs/tags/v1.2.3 \
-              refs/tags/v1.3.0:refs/tags/v1.3.0 \
-              refs/tags/v1.3.1:refs/tags/v1.3.1 \
-              refs/tags/v1.3.2:refs/tags/v1.3.2 \
-              refs/tags/v1.3.3:refs/tags/v1.3.3
-
       - name: Check out 3Dmigoto (vanilla baseline)
         uses: actions/checkout@v7
         with:
@@ -114,9 +100,6 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - run: pnpm test
-        env:
-          XXMI_DLL_SRC: .dll/xxmi
-          MIGOTO_DLL_SRC: .dll/vanilla
 
       - name: spec/generated matches its DLL commit
         run: pnpm spec:extract --check
@@ -195,6 +178,71 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ripgrep
 
+      # The real-DLL tests (spec extractor, per-tag MCP spec builds) run on Linux only.
+      # XXMI_REQUIRE_DLL_SRC makes them fail, not skip, when a checkout goes missing.
+      - name: Read spec source commits
+        if: runner.os == 'Linux'
+        id: spec
+        run: |
+          echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")" >> "$GITHUB_OUTPUT"
+          echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
+
+      - name: Check out XXMI-Libs-Package (DLL source)
+        if: runner.os == 'Linux'
+        uses: actions/checkout@v7
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.spec.outputs.dll }}
+          path: .dll/xxmi
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      # The checkout is one commit without tags; spec_build_tags.rs needs these.
+      - name: Fetch DLL release tags
+        if: runner.os == 'Linux'
+        run: |
+          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
+              refs/tags/v1.2.0:refs/tags/v1.2.0 \
+              refs/tags/v1.2.1:refs/tags/v1.2.1 \
+              refs/tags/v1.2.2:refs/tags/v1.2.2 \
+              refs/tags/v1.2.3:refs/tags/v1.2.3 \
+              refs/tags/v1.3.0:refs/tags/v1.3.0 \
+              refs/tags/v1.3.1:refs/tags/v1.3.1 \
+              refs/tags/v1.3.2:refs/tags/v1.3.2 \
+              refs/tags/v1.3.3:refs/tags/v1.3.3
+
+      - name: Check out 3Dmigoto (vanilla baseline)
+        if: runner.os == 'Linux'
+        uses: actions/checkout@v7
+        with:
+          repository: bo3b/3Dmigoto
+          ref: ${{ steps.spec.outputs.baseline }}
+          path: .dll/vanilla
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      # Absolute paths: cargo runs each test binary from its crate directory.
+      - name: Point the real-DLL tests at the checkouts
+        if: runner.os == 'Linux'
+        run: |
+          {
+            echo "XXMI_DLL_SRC=$GITHUB_WORKSPACE/.dll/xxmi"
+            echo "MIGOTO_DLL_SRC=$GITHUB_WORKSPACE/.dll/vanilla"
+            echo "XXMI_REQUIRE_DLL_SRC=1"
+          } >> "$GITHUB_ENV"
+
       - name: Format
         if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
@@ -224,7 +272,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
 
       - id: rust-version
         shell: bash

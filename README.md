@@ -126,8 +126,9 @@ Rust (cargo), and Node 22.18+ with pnpm for the VS Code extension and scripts. S
 follows, and [docs/](docs/) for the design.
 
 ```bash
-pnpm install && pnpm test
-cd rust && cargo test
+cd rust && cargo test --release        # Rust tests
+pnpm install && pnpm test              # VS Code extension unit tests
+pnpm test:lsp                          # LSP protocol suite (XXMI_LSP_COMMAND points it at the server binary)
 pnpm xxmi lint path/to/mod             # CLI from source
 docker build -f docker/mcp/Dockerfile -t xxmi-mcp .   # the MCP server image
 pnpm build:binaries --target host      # single-file binaries (needs Rust)

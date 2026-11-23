@@ -1,5 +1,5 @@
-//! The lint engine: runs the rules over a workspace and renders
-//! the result. The CLI, and later the LSP and MCP frontends, lint through here.
+//! The lint engine: runs the rules over a workspace and renders the result.
+//! The CLI, and later the LSP and MCP frontends, lint through here.
 
 mod collect;
 pub mod config;

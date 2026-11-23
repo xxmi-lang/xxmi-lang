@@ -77,7 +77,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
 
       - id: rust-version
         shell: bash
@@ -129,7 +128,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
 
       - id: rust-version
         run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"

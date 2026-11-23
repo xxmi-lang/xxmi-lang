@@ -1,6 +1,6 @@
-//! CST to model lowering. Structure comes from the
-//! DLL-faithful line scanner; meaning within lines (references, declarations, statement kinds)
-//! comes from tree-sitter, run on each section separately. Never fails on file content.
+//! CST to model lowering. Structure comes from the DLL-faithful line scanner;
+//! meaning within lines (references, declarations, statement kinds) comes from tree-sitter,
+//! run on each section separately. Never fails on file content.
 
 use std::path::PathBuf;
 
@@ -17,8 +17,8 @@ pub struct LowerOptions<'a> {
     pub path: PathBuf,
     pub document: &'a Document,
     pub encoding: Encoding,
-    /// Namespace the DLL gives the file when it has no `namespace =`: its path relative to the
-    /// 3DMigoto folder with `\` separators, or '' for the main d3dx.ini.
+    /// Namespace the DLL gives the file when it has no `namespace =`: its path relative to
+    /// the 3DMigoto folder with `\` separators, or '' for the main d3dx.ini.
     pub default_namespace: String,
     pub lookup: &'a Lookup,
 }
@@ -158,8 +158,8 @@ fn line_models(text: &str, lines: &[ScannedLine], is_command_list: bool) -> Vec<
         .collect()
 }
 
-/// What the DLL dispatches on: the lower-cased key, minus the `pre `/`post ` list selector of a
-/// command-list line (ParseCommandList).
+/// What the DLL dispatches on: the lower-cased key, minus the `pre `/`post ` list selector
+/// of a command-list line (ParseCommandList).
 fn command_of(key: &str, is_command_list: bool) -> String {
     let lower = key.to_lowercase();
     if !is_command_list {

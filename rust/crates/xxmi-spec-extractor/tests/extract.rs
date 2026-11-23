@@ -482,9 +482,18 @@ fn stays_quiet_in_baseline_mode_when_an_xxmi_only_member_table_is_absent() {
 }
 
 /// Runs only with real checkouts: XXMI_DLL_SRC (XXMI-Libs-Package) and MIGOTO_DLL_SRC (3Dmigoto).
+/// CI sets XXMI_REQUIRE_DLL_SRC where they must exist, so a missing checkout fails instead of skipping.
 fn real_spec() -> Option<Spec> {
-    let dll = std::env::var("XXMI_DLL_SRC").ok()?;
-    let baseline = std::env::var("MIGOTO_DLL_SRC").ok()?;
+    let (Ok(dll), Ok(baseline)) = (
+        std::env::var("XXMI_DLL_SRC"),
+        std::env::var("MIGOTO_DLL_SRC"),
+    ) else {
+        assert!(
+            std::env::var_os("XXMI_REQUIRE_DLL_SRC").is_none(),
+            "XXMI_DLL_SRC and MIGOTO_DLL_SRC are required here"
+        );
+        return None;
+    };
     Some(
         extract_spec(ExtractOptions {
             dll_root: Path::new(&dll),

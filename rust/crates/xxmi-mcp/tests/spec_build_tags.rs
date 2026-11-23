@@ -10,9 +10,18 @@ const TAGS: [&str; 8] = [
     "v1.2.0", "v1.2.1", "v1.2.2", "v1.2.3", "v1.3.0", "v1.3.1", "v1.3.2", "v1.3.3",
 ];
 
+/// CI sets XXMI_REQUIRE_DLL_SRC where the checkouts must exist, so a missing one fails instead of skipping.
 fn sources() -> Option<(PathBuf, PathBuf)> {
-    let dll = std::env::var("XXMI_DLL_SRC").ok()?;
-    let migoto = std::env::var("MIGOTO_DLL_SRC").ok()?;
+    let (Ok(dll), Ok(migoto)) = (
+        std::env::var("XXMI_DLL_SRC"),
+        std::env::var("MIGOTO_DLL_SRC"),
+    ) else {
+        assert!(
+            std::env::var_os("XXMI_REQUIRE_DLL_SRC").is_none(),
+            "XXMI_DLL_SRC and MIGOTO_DLL_SRC are required here"
+        );
+        return None;
+    };
     Some((dll.into(), migoto.into()))
 }
 

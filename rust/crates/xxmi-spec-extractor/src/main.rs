@@ -167,7 +167,7 @@ fn write_files(files: &[(&str, String)], out: &Path) -> Result<(), ExtractError>
     Ok(())
 }
 
-/// The merged spec, as `JSON.stringify(loadSpec())` writes it into dist/spec.json.
+/// The merged spec (generated spec plus overlays), as `merged_spec_json` produces it for the build.
 fn write_full(
     spec: &mut xxmi_spec_extractor::Spec,
     args: &Args,
