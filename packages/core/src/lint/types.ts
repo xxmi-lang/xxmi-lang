@@ -32,7 +32,8 @@ export interface RuleContext {
   resolver: PathResolver;
   /** The 3DMigoto folder the file was loaded under, if found. */
   packageRoot: string | undefined;
-  report: (range: Range, message: string, fix?: Fix) => void;
+  /** `severity` overrides the rule's default, unless the user configured one. */
+  report: (range: Range, message: string, fix?: Fix, severity?: Severity) => void;
 }
 
 export interface Rule {

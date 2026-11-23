@@ -21,12 +21,19 @@ fn issues<'a>(context: &'a RuleContext) -> Vec<(&'a Issue, Option<&'a LineModel>
             .issues
             .iter()
             .map(move |issue| (issue, line_of(&section.lines, issue)))
+            // XM110 owns `key =`: it names the cause the syntax error only hints at.
+            .filter(|(_, line)| !has_empty_value(*line))
     });
     preamble.chain(sections).collect()
 }
 
 fn line_of<'a>(lines: &'a [LineModel], issue: &Issue) -> Option<&'a LineModel> {
     lines.iter().find(|line| line.scanned.line == issue.line)
+}
+
+fn has_empty_value(line: Option<&LineModel>) -> bool {
+    line.and_then(|line| line.scanned.value)
+        .is_some_and(|value| value.start == value.end)
 }
 
 pub fn check_parse_errors(context: &RuleContext) -> Vec<Finding> {

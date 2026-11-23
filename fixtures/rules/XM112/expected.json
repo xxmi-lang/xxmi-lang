@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "[TextureOverrideBody] has no `hash` and no resource `match_*` key (`match_type`, `match_format`, `match_width`, …), so the DLL skips it.",
+    "range": {
+      "start": {
+        "line": 0,
+        "character": 1
+      },
+      "end": {
+        "line": 0,
+        "character": 20
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM112",
+    "severity": "warning",
+    "message": "[TextureOverrideFiltered] has no `hash` and no resource `match_*` key (`match_type`, `match_format`, `match_width`, …), so the DLL skips it.",
+    "range": {
+      "start": {
+        "line": 3,
+        "character": 1
+      },
+      "end": {
+        "line": 3,
+        "character": 24
+      }
+    }
+  }
+]

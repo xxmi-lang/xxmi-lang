@@ -30,6 +30,10 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM107 | W | Duplicate section name within the same namespace | — |
 | XM108 | E | Wrong arg count or shape for a command (`store`, draw commands, …) | — |
 | XM109 | E | Unknown operator or malformed expression | — |
+| XM110 | W | Key with no value (the DLL ignores the line) | Comment out the line |
+| XM112 | W | TextureOverride with no `hash` and no resource-description `match_*` key | — |
+| XM113 | E / W | Hash value the DLL can't read as hex (error), or reads from a non-canonical form (warning) | — |
+| XM115 | W | `;` comment after a value (the DLL keeps it in the value) | Move the comment above the line |
 | XM201 | E | Unresolved `run = CommandList…` target | Suggest nearest symbol; offer to create the section |
 | XM202 | E | Unresolved resource reference (`ref`, `copy`, `Resource\N\X`) | Suggest nearest |
 | XM203 | W | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment) | Add to `[Constants]` |
@@ -60,6 +64,10 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/l
 - **XM107:** follows DLL load order, reporting the later duplicate. Duplicates are only compared within one package.
 - **XM108:** uses extracted argument counts (draw commands, `store`) and skips lines that already have a syntax error.
 - **XM109:** takes over from XM001 for parse errors on expression lines (`if …`, `$x = …`, `local …`).
+- **XM110:** the DLL drops a `key =` line with a "No value found" warning, in every section kind. XM105 skips empty values, so this rule owns them.
+- **XM112:** only `hash` and the resource-description keys (`match_type` … `match_msaa_quality`) let a TextureOverride match; `filter_index`, `match_priority` and the draw-call `match_first_index`-style keys don't, so they don't exempt the section. A section that has a `hash` line, even an unreadable one, is left to XM110 and XM113.
+- **XM113:** applies to every key the spec types as `hash`. The DLL reads `%16llx` and the whole value, so `0x` prefixes and short forms parse (warning), while anything else is rejected and the key counts as missing (error). TextureOverride hashes are cast to 32 bits, so more than 8 digits is an error there; other sections accept 8 or 16 digits (shader hashes are 64-bit). A severity set in `xxmi.toml` replaces the per-finding one.
+- **XM115:** a `;` at the start of a value or after a blank is part of the value for the DLL, so the line is read wrong. A `;` glued to text (`a;b.dds`) is left alone. The fix emits `\n` even in CRLF files. XM113 skips such values.
 - **XM202:** covers resource and pool references on both sides of `=`. `ParseTargetCustomResource` fails for an undeclared destination too.
 - **XM203:** checks locals first (declared earlier in the same section), then `$\ns\name`, then the global name, as `parse_command_list_var_name` does.
 - **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt.
@@ -139,6 +147,22 @@ Default severity: error. Wrong argument count for a command (`store`, draw comma
 ### XM109
 
 Default severity: error. Unknown operator or malformed expression. Quick fix: no.
+
+### XM110
+
+Default severity: warning. Key with no value (the DLL ignores the line). Quick fix: yes (comments the line out).
+
+### XM112
+
+Default severity: warning. TextureOverride with no `hash` and no resource-description `match_*` key. Quick fix: no.
+
+### XM113
+
+Default severity: error, lowered to warning per finding for forms the DLL accepts but that aren't canonical. Hash value the DLL can't read as hex. Quick fix: no.
+
+### XM115
+
+Default severity: warning. `;` comment after a value (the DLL keeps it in the value). Quick fix: yes (moves the comment above the line).
 
 ### XM201
 

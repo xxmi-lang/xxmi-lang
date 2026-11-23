@@ -45,6 +45,7 @@ fn check_kinds(context: &RuleContext, kinds: &[SymbolKind]) -> Vec<Finding> {
                 did_you_mean(&reference.text, candidates.iter().copied())
             ),
             fix: replace_fix(reference.span, &reference.text, &candidates, ""),
+            severity: None,
         });
     }
     findings

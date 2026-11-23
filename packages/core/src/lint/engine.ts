@@ -15,6 +15,10 @@ import { ConfigLoader, type RuleSetting } from './config.ts';
 import { XM101, XM102, XM103, XM104, XM105, XM106, XM107, XM108 } from './rules/structure.ts';
 import { XM201, XM202, XM203, XM204, XM205, XM206, XM207, XM208 } from './rules/references.ts';
 import { XM001, XM002, XM109 } from './rules/syntax.ts';
+import { XM110 } from './rules/empty-value.ts';
+import { XM112 } from './rules/no-hash.ts';
+import { XM113 } from './rules/hash-format.ts';
+import { XM115 } from './rules/inline-comment.ts';
 import { suppressionFilter } from './suppress.ts';
 import type { Diagnostic, Rule, Severity } from './types.ts';
 
@@ -30,6 +34,10 @@ export const RULES: readonly Rule[] = [
   XM107,
   XM108,
   XM109,
+  XM110,
+  XM112,
+  XM113,
+  XM115,
   XM201,
   XM202,
   XM203,
@@ -77,8 +85,8 @@ export function lintFile(
   for (const rule of RULES) {
     if (only && !only.has(rule.id)) continue;
     if (options.rulePrefixes && !options.rulePrefixes.some((p) => rule.id.startsWith(p))) continue;
-    const setting = options.overrides?.[rule.id] ?? config.rules[rule.id] ?? rule.severity;
-    if (setting === 'off') continue;
+    const configured = options.overrides?.[rule.id] ?? config.rules[rule.id];
+    if (configured === 'off') continue;
     rule.check({
       file,
       workspace,
@@ -86,10 +94,10 @@ export function lintFile(
       lookup: workspace.lookup,
       resolver: workspace.resolver,
       packageRoot: workspace.packageRoot(file),
-      report(range, message, fix) {
+      report(range, message, fix, severity) {
         diagnostics.push({
           id: rule.id,
-          severity: setting,
+          severity: configured ?? severity ?? rule.severity,
           message,
           path: file.path,
           range,

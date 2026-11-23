@@ -48,18 +48,20 @@ pub fn lint_file(
         {
             continue;
         }
-        let setting = options
+        let configured = options
             .overrides
             .get(rule.id)
             .or_else(|| config.rules.get(rule.id))
-            .copied()
-            .unwrap_or(RuleSetting::Level(rule.severity));
-        let RuleSetting::Level(severity) = setting else {
-            continue;
+            .copied();
+        let configured = match configured {
+            Some(RuleSetting::Off) => continue,
+            Some(RuleSetting::Level(severity)) => Some(severity),
+            None => None,
         };
 
         let findings = trace::span(rule.id, || (rule.check)(&context));
         for finding in findings {
+            let severity = configured.or(finding.severity).unwrap_or(rule.severity);
             diagnostics.push(diagnostic(file, rule, severity, finding));
         }
     }

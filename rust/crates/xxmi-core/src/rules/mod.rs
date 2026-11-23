@@ -4,11 +4,15 @@ mod argument_count;
 mod bare_line;
 mod duplicate_key;
 mod duplicate_section;
+mod empty_value;
 mod enum_value;
 mod flow_balance;
+mod hash_format;
+mod inline_comment;
 mod keywords;
 mod missing_file;
 mod missing_include;
+mod no_hash;
 mod syntax;
 mod unknown_key;
 mod unknown_namespace;
@@ -62,6 +66,8 @@ pub struct Finding {
     pub span: Span,
     pub message: String,
     pub fix: Option<FixSpec>,
+    /// Overrides the rule's default severity, unless the user configured one.
+    pub severity: Option<Severity>,
 }
 
 impl Finding {
@@ -70,6 +76,7 @@ impl Finding {
             span,
             message,
             fix: None,
+            severity: None,
         }
     }
 }
@@ -123,7 +130,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 19] = [
+pub const RULES: [Rule; 23] = [
     rule(
         "XM001",
         Severity::Error,
@@ -192,6 +199,32 @@ pub const RULES: [Rule; 19] = [
         "Unknown operator or malformed expression",
         syntax::check_expressions,
     ),
+    rule(
+        "XM110",
+        Severity::Warning,
+        "Key with no value (the DLL ignores the line)",
+        empty_value::check,
+    )
+    .with_fix(),
+    rule(
+        "XM112",
+        Severity::Warning,
+        "TextureOverride with no `hash` and no resource-description `match_*` key",
+        no_hash::check,
+    ),
+    rule(
+        "XM113",
+        Severity::Error,
+        "Hash value the DLL can't read as hex, or that isn't canonical (error or warning per finding)",
+        hash_format::check,
+    ),
+    rule(
+        "XM115",
+        Severity::Warning,
+        "`;` comment after a value (the DLL keeps it in the value)",
+        inline_comment::check,
+    )
+    .with_fix(),
     rule(
         "XM201",
         Severity::Error,

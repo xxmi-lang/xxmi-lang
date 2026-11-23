@@ -1,0 +1,66 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "warning",
+    "message": "Non-canonical hash \"0x0123abcd\": the DLL accepts it, but hashes are written as 8 hex digits with no `0x` prefix.",
+    "range": {
+      "start": {
+        "line": 1,
+        "character": 7
+      },
+      "end": {
+        "line": 1,
+        "character": 17
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "warning",
+    "message": "Non-canonical hash \"0123abc\": the DLL accepts it, but hashes are written as 8 hex digits with no `0x` prefix.",
+    "range": {
+      "start": {
+        "line": 4,
+        "character": 7
+      },
+      "end": {
+        "line": 4,
+        "character": 14
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "error",
+    "message": "Invalid hash \"0123abcg\": the DLL rejects it (Hash parse error) and treats the key as missing.",
+    "range": {
+      "start": {
+        "line": 7,
+        "character": 7
+      },
+      "end": {
+        "line": 7,
+        "character": 15
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "error",
+    "message": "Hash \"0123456789abcdef\" has more than 8 digits: a TextureOverride hash is 32-bit, so the DLL drops the high digits.",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 7
+      },
+      "end": {
+        "line": 10,
+        "character": 23
+      }
+    }
+  }
+]

@@ -1,0 +1,36 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM110",
+    "severity": "warning",
+    "message": "No value for `handling`; the DLL warns and ignores the line.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 0
+      },
+      "end": {
+        "line": 2,
+        "character": 10
+      }
+    },
+    "fix": {
+      "title": "Comment out the line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 0
+            }
+          },
+          "newText": "; "
+        }
+      ]
+    }
+  }
+]

@@ -117,6 +117,9 @@ mod tests {
     #[test]
     fn exactly_the_fixing_rules_have_fix() {
         let with_fix: Vec<&str> = RULES.iter().filter(|r| r.has_fix).map(|r| r.id).collect();
-        assert_eq!(with_fix, ["XM102", "XM105", "XM201", "XM202"]);
+        assert_eq!(
+            with_fix,
+            ["XM102", "XM105", "XM110", "XM115", "XM201", "XM202"]
+        );
     }
 }

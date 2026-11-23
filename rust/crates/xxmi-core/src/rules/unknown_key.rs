@@ -80,6 +80,7 @@ fn check_command_list_line(
             did_you_mean(command, candidates.iter().copied())
         ),
         fix: None,
+        severity: None,
     })
 }
 
@@ -107,6 +108,7 @@ fn check_regular_line(
                 "`{key}` is read by vanilla 3DMigoto but not by XXMI; the DLL ignores it."
             ),
             fix: None,
+            severity: None,
         });
     }
 
@@ -120,6 +122,7 @@ fn check_regular_line(
         span: key_span,
         message: format!("Unknown key `{key}` in [{name}]; the DLL ignores it.{hint}"),
         fix: replace_fix(key_span, key, known, ""),
+        severity: None,
     })
 }
 

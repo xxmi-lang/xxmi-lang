@@ -20,8 +20,11 @@ function issues(context: RuleContext): { issue: SyntaxIssue; line: LineModel | u
   for (const issue of file.preambleIssues)
     out.push({ issue, line: lineAt(file.preamble, issue.range.start.line) });
   for (const section of file.sections) {
-    for (const issue of section.syntaxIssues)
-      out.push({ issue, line: lineAt(section.lines, issue.range.start.line) });
+    for (const issue of section.syntaxIssues) {
+      const line = lineAt(section.lines, issue.range.start.line);
+      // XM110 owns `key =`: it names the cause the syntax error only hints at.
+      if (line?.value?.text !== '') out.push({ issue, line });
+    }
   }
   return out;
 }
