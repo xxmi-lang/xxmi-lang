@@ -76,8 +76,9 @@ impl GitCommand {
     }
 
     /// No prompts (a missing repo must fail, not hang).
-    /// `safe.directory` is set through the environment because the volume may belong
-    /// to another user than the one running git. No background gc or maintenance:
+    /// `safe.directory` is set through the environment
+    /// because the volume may belong to another user than the one running git.
+    /// No background gc or maintenance:
     /// a detached child would outlive the call and race a cache removal.
     fn spawn(&self, args: &[&str], call: &Call<'_>) -> Result<Child, ExecError> {
         let mut command = Command::new(&self.program);

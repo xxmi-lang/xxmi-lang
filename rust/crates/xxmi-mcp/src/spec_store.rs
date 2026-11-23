@@ -1,7 +1,7 @@
 //! Built specs on the volume: `<DATA_DIR>/specs/<dllSha>.json`, one per indexed DLL commit,
-//! in the shape the TypeScript server writes. A stored spec is served only
-//! when it was built from the same DLL and baseline commits by this builder,
-//! and is rebuilt otherwise.
+//! in the shape the TypeScript server writes.
+//! A stored spec is served only when it was built from the same DLL and baseline commits
+//! by this builder, and is rebuilt otherwise.
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
