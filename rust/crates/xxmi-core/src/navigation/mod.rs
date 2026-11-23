@@ -1,4 +1,4 @@
-//! Editor navigation and assistance over the workspace model (port of packages/core/src/navigation):
+//! Editor navigation and assistance over the workspace model:
 //! what is under the cursor, definition, references, rename, outline, hover and completion.
 //! Frontends (LSP, MCP) only translate these results to their protocols.
 

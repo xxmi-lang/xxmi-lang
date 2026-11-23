@@ -1,4 +1,4 @@
-# Tags and releases a version bump: a push to main that changes packages/core/src/version.ts creates
+# Tags and releases a version bump: a push to main that changes rust/Cargo.toml creates
 # v<VERSION> unless it exists, then calls release.yml (docs/10-dotnet.md "Releasing"). The caller's
 # permissions are the ceiling for the called workflow's jobs, so they list everything release.yml asks for.
 name: tag-release
@@ -6,7 +6,7 @@ name: tag-release
 on:
   push:
     branches: [main]
-    paths: [packages/core/src/version.ts]
+    paths: [rust/Cargo.toml]
   workflow_dispatch:
 
 permissions:
@@ -31,8 +31,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(sed -n "s/^export const VERSION = '\(.*\)';/\1/p" packages/core/src/version.ts)
-          test -n "$version" || { echo "No VERSION in packages/core/src/version.ts"; exit 1; }
+          version=$(node scripts/check-version.ts)
           tag="v$version"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then

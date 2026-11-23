@@ -1,4 +1,4 @@
-//! The parts of the merged spec the lint rules read (shape of packages/core/src/spec/types.ts).
+//! The parts of the merged spec the lint rules read.
 //!
 use serde::Deserialize;
 
@@ -250,7 +250,7 @@ pub struct SpecEnumValue {
 }
 
 impl Spec {
-    /// Parses a merged spec (the JSON shape of `dist/spec.json`).
+    /// Parses a merged spec (the JSON that `xxmi_spec_extractor::load::merged_spec_json` builds).
     pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }

@@ -21,8 +21,7 @@ use tower::ServiceExt;
 use crate::logger::Logger;
 
 /// How long a client may take to send a request head,
-/// which also bounds a keep-alive connection that stays silent;
-/// Node's `headersTimeout` of the TypeScript server.
+/// which also bounds a keep-alive connection that stays silent.
 pub const HEADER_READ_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// Connections still busy this long after a shutdown signal are dropped.

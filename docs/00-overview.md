@@ -27,28 +27,27 @@ ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIM
 
 ## Users
 
-| User | Surface | Main need |
-|---|---|---|
-| Mod author (human) | VS Code, Kate | Errors before launching the game, navigation, rename |
-| Mod fixer / maintainer | CLI, editor | Batch migrate and normalize, then review diffs |
-| AI agent, local (Claude Code etc.) | LSP via plugin, CLI, skills | Diagnostics after each edit, precise lookups |
-| AI agent, remote / no clone | Hosted MCP | Spec lookups, library catalog, source search, remote lint |
-| XXMI / ZZMI maintainers | CI | Lint the ZZMI package and XXMITools template output on every PR |
+| User                               | Surface                     | Main need                                                       |
+| ---------------------------------- | --------------------------- | --------------------------------------------------------------- |
+| Mod author (human)                 | VS Code, Kate               | Errors before launching the game, navigation, rename            |
+| Mod fixer / maintainer             | CLI, editor                 | Batch migrate and normalize, then review diffs                  |
+| AI agent, local (Claude Code etc.) | LSP via plugin, CLI, skills | Diagnostics after each edit, precise lookups                    |
+| AI agent, remote / no clone        | Hosted MCP                  | Spec lookups, library catalog, source search, remote lint       |
+| XXMI / ZZMI maintainers            | CI                          | Lint the ZZMI package and XXMITools template output on every PR |
 
 ## Stack decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Language | TypeScript (Node 22+), strict mode | VS Code extension is TS; tree-sitter has Node and WASM bindings; lupomikti's tooling is TS/Deno |
-| Parser | `tree-sitter-migoto` via `web-tree-sitter` (WASM) | Error-tolerant and incremental. WASM avoids native build pain on Windows. Native Node binding is an optional speedup later |
-| LSP | `vscode-languageserver` (node) | Standard; works for any stdio LSP client |
-| MCP | Streamable HTTP transport, protocol implemented in `xxmi-mcp` (no MCP SDK) | Remote-friendly; runs on Railway |
-| Monorepo | pnpm workspaces + turborepo (or plain pnpm scripts) | Simple |
-| Tests | vitest; golden fixtures under `fixtures/` | Fast; snapshot-friendly |
-| Binaries | Rust (`rust/`, cargo) for `xxmi`, with `xxmi-lsp` a copy of it, on win-x64, win-arm64, linux-x64, linux-arm64, macos-x64, macos-arm64 (`pnpm build:binaries`; the grammar, the spec and the ZZMI snapshot are embedded; Linux builds are static musl) | Kate and CLI users need no Node install. Anyone else can use the npm package on any OS with Node |
-| Rust port | `rust/`: `xxmi-core`, the `xxmi` CLI and LSP, and `tree-sitter-migoto` built with `cc` (`rust-port.md`) | One static binary per platform, no Node or Bun at runtime. The MCP server is ported too (`xxmi-mcp`) and is the only one |
-| Platforms | Windows, Linux, macOS are all first-class for the tooling. CI runs the test suite on all three | The game only runs on Windows/Proton, but mods are authored, fixed and reviewed anywhere. Only the DLL itself (and the `xxmi-dll-dev` skill's build steps) is Windows-only |
-| Config file | `xxmi.toml` at the mod or workspace root | Readable; lupomikti uses TOML too |
+| Decision    | Choice                                                                                                                                                                                                                                                | Why                                                                                                                                                                        |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language    | Rust for the core, CLI, LSP and MCP server; TypeScript for the VS Code extension                                                                                                                                                                      | One static binary per platform; tree-sitter has Rust bindings; lupomikti's tooling is TS/Deno                                                                              |
+| Parser      | `tree-sitter-migoto` via the `tree-sitter` crate (C sources vendored in `rust/crates/tree-sitter-migoto`, built with `cc`)                                                                                                                            | Error-tolerant and incremental. The parser is compiled into each binary                                                                                                    |
+| LSP         | `vscode-languageserver` (node)                                                                                                                                                                                                                        | Standard; works for any stdio LSP client                                                                                                                                   |
+| MCP         | Streamable HTTP transport, protocol implemented in `xxmi-mcp` (no MCP SDK)                                                                                                                                                                            | Remote-friendly; runs on Railway                                                                                                                                           |
+| Monorepo    | one Cargo workspace (`rust/`), plus pnpm for the VS Code extension and scripts                                                                                                                                                                        | Simple                                                                                                                                                                     |
+| Tests       | vitest; golden fixtures under `fixtures/`                                                                                                                                                                                                             | Fast; snapshot-friendly                                                                                                                                                    |
+| Binaries    | Rust (`rust/`, cargo) for `xxmi`, with `xxmi-lsp` a copy of it, on win-x64, win-arm64, linux-x64, linux-arm64, macos-x64, macos-arm64 (`pnpm build:binaries`; the grammar, the spec and the ZZMI snapshot are embedded; Linux builds are static musl) | No runtime to install                                                                                                                                                      |
+| Platforms   | Windows, Linux, macOS are all first-class for the tooling. CI runs the test suite on all three                                                                                                                                                        | The game only runs on Windows/Proton, but mods are authored, fixed and reviewed anywhere. Only the DLL itself (and the `xxmi-dll-dev` skill's build steps) is Windows-only |
+| Config file | `xxmi.toml` at the mod or workspace root                                                                                                                                                                                                              | Readable; lupomikti uses TOML too                                                                                                                                          |
 
 ## Repository layout
 
@@ -66,12 +65,11 @@ xxmi-lang/
 │   └── profiles/
 │       ├── zzmi.toml             # game profile: package paths, known libraries, hash sources, format eras
 │       └── gimi.toml ...         # later
-├── packages/
-│   ├── core/                     # parser wrapper, spec loader, symbol model, index, rules, transforms
-│   ├── spec-extractor/           # reads DLL C++ source → spec/generated/*.json
-│   ├── lsp/                      # xxmi-lsp server
-│   ├── cli/                      # xxmi
-│   └── vscode/                   # thin LSP client extension
+├── rust/                         # Cargo workspace: xxmi-core, xxmi (CLI, LSP), xxmi-mcp, xxmi-spec-extractor, tree-sitter-migoto
+├── packages/vscode/              # thin LSP client extension
+├── schema/                       # lint-output.v1.json
+├── snapshots/                    # bundled ZZMI library snapshot
+├── scripts/                      # pnpm scripts (build:binaries, grammar:update, spec:extract, ...)
 ├── plugin/                       # Claude Code plugin (skills, .lsp.json, .mcp.json)
 ├── dotnet/                       # .NET client library + NuGet packaging (10-dotnet.md); no language logic
 ├── editors/                      # Neovim and Kate config, shipped in each release zip

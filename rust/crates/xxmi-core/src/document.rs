@@ -1,8 +1,8 @@
 //! An open document: its text, line index, line scan and one tree per section.
 //!
-//! Sections are parsed on their own (as the TypeScript model does) so a syntax error can't spill
-//! into the next section. An edit re-scans the text, then re-parses only the sections whose text
-//! changed, handing tree-sitter the previous tree of the same section as the incremental base.
+//! Sections are parsed on their own so a syntax error can't spill into the next section.
+//! An edit re-scans the text, then re-parses only the sections whose text changed,
+//! handing tree-sitter the previous tree of the same section as the incremental base.
 
 use std::cell::OnceCell;
 use std::mem;
@@ -183,8 +183,8 @@ pub fn offset_at(text: &str, index: &LineIndex, position: Position) -> usize {
     offset
 }
 
-/// Chunks whose text is unchanged keep their tree; the others re-parse from the tree of the chunk
-/// at the same place in the old list.
+/// Chunks whose text is unchanged keep their tree;
+/// the others re-parse from the tree of the chunk at the same place in the old list.
 fn reparse_chunks(
     parser: &mut Parser,
     old_text: &str,
@@ -229,8 +229,8 @@ fn reparse_chunk(parser: &mut Parser, old_text: &str, old: Chunk, text: &str, sp
     Chunk::new(span, tree)
 }
 
-/// Pairs new chunks with old ones: the identical leading and trailing chunks, then the changed
-/// middle ones in order.
+/// Pairs new chunks with old ones: the identical leading and trailing chunks,
+/// then the changed middle ones in order.
 struct Alignment {
     prefix: usize,
     suffix: usize,
@@ -268,8 +268,8 @@ impl Alignment {
     }
 }
 
-/// One tree-sitter edit covering what differs between two texts: their common prefix and suffix
-/// stay out of it.
+/// One tree-sitter edit covering what differs between two texts:
+/// their common prefix and suffix stay out of it.
 fn diff_edit(old: &str, new: &str) -> InputEdit {
     let prefix = common_prefix(old, new);
     let suffix = common_suffix(old, new, prefix);

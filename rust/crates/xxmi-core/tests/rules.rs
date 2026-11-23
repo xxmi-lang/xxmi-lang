@@ -1,5 +1,5 @@
-//! Lints the repository's rule fixtures and compares against the golden output the TypeScript
-//! tests check in: fixtures/rules/XMnnn/{bad,good}(.ini|/) with expected.json (and fixed.ini when
+//! Lints the repository's rule fixtures and compares against the golden output checked in:
+//! fixtures/rules/XMnnn/{bad,good}(.ini|/) with expected.json (and fixed.ini when
 //! the rule has quick fixes), and fixtures/xxmi-1.3.1/*.expected.json.
 
 use std::fs;
@@ -172,12 +172,45 @@ fn crlf_files_report_the_same_diagnostics_as_lf() {
             "{id} with CRLF"
         );
         if let Ok(text) = fs::read_to_string(&crlf) {
-            assert_no_bare_lf(&id, &text, &actual);
+            assert_no_bare_lf(&id, &apply_fixes(&text, &actual));
         }
         checked += 1;
     }
     fs::remove_dir_all(&scratch).unwrap();
     assert!(checked > 15, "only {checked} single-file fixtures found");
+}
+
+/// Applying every fixture's fixes to a CRLF copy gives fixed.ini with CRLF breaks only.
+#[test]
+fn quick_fixes_on_crlf_files_keep_the_files_line_breaks() {
+    let scratch = std::env::temp_dir().join(format!("xxmi-crlf-fix-{}", std::process::id()));
+    fs::create_dir_all(&scratch).unwrap();
+
+    let mut checked = 0;
+    for entry in fs::read_dir(fixtures().join("rules")).unwrap() {
+        let dir = entry.unwrap().path();
+        let (bad, fixed) = (dir.join("bad.ini"), dir.join("fixed.ini"));
+        if !bad.is_file() || !fixed.is_file() {
+            continue;
+        }
+        let id = dir.file_name().unwrap().to_string_lossy().into_owned();
+
+        let crlf = scratch.join("bad.ini");
+        fs::write(&crlf, to_crlf(&fs::read(&bad).unwrap())).unwrap();
+        let before = fs::read_to_string(&crlf).unwrap();
+        let diagnostics = diagnose(&crlf, &scratch, Some(vec![id.clone()]));
+
+        let after = apply_fixes(&before, &diagnostics);
+        assert_no_bare_lf(&id, &after);
+        let expected = String::from_utf8(to_crlf(&fs::read(&fixed).unwrap())).unwrap();
+        assert_eq!(after, expected, "{id} fixed with CRLF");
+        checked += 1;
+    }
+    fs::remove_dir_all(&scratch).unwrap();
+    assert!(
+        checked > 5,
+        "only {checked} fixtures with quick fixes found"
+    );
 }
 
 /// Fix texts with CRLF breaks turned back into LF, to compare against the LF run.
@@ -194,8 +227,7 @@ fn normalise_fix_text(mut diagnostics: Vec<Value>) -> Vec<Value> {
     diagnostics
 }
 
-fn assert_no_bare_lf(id: &str, before: &str, diagnostics: &[Value]) {
-    let fixed = apply_fixes(before, diagnostics);
+fn assert_no_bare_lf(id: &str, fixed: &str) {
     let bare = fixed
         .match_indices('\n')
         .any(|(i, _)| !fixed[..i].ends_with('\r'));

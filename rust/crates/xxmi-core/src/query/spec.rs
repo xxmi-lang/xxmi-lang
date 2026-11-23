@@ -6,7 +6,6 @@ use serde::Serialize;
 use crate::lookup::Lookup;
 use crate::spec::{CommandForm, Meta, Spec, SpecCommand, SpecSection};
 
-/// Field order is the TypeScript object order of every entry kind, so one struct serves them all.
 #[derive(Debug, Serialize)]
 pub struct SpecEntry {
     pub kind: &'static str,

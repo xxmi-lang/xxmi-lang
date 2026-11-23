@@ -1,5 +1,4 @@
-//! Request handlers: each runs against the current model and answers with the JSON the
-//! TypeScript server sends.
+//! Request handlers: each runs against the current model and answers with JSON.
 
 use gen_lsp_types::{
     CodeActionParams, DocumentSymbolParams, ReferenceParams, RenameParams,

@@ -1,5 +1,3 @@
-//! File bytes to text (port of `decodeText` in packages/core/src/parser/index.ts).
-
 use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

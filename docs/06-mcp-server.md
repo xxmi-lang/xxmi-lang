@@ -87,7 +87,7 @@ Other clients (Cursor, Codex, etc.) use the same URL with their HTTP MCP config.
 
 ## As built (M6)
 
-Status (2026-10-20): implemented in `rust/crates/xxmi-mcp` (ported from the TypeScript `packages/mcp-server`, now removed), tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, autodeployed from `main` by Railway after CI passes (see Deployment). The sections above stay as the design; this one is what exists.
+Status (2026-10-20): implemented in `rust/crates/xxmi-mcp` (ported from the former TypeScript server, now removed), tested, and **deployed** to Railway as service `xxmi-mcp` at `https://xxmi-mcp-production.up.railway.app/mcp` (default domain; a custom domain later), with a volume at `/data`, one replica, autodeployed from `main` by Railway after CI passes (see Deployment). The sections above stay as the design; this one is what exists.
 
 ### Endpoints
 
@@ -192,7 +192,7 @@ The server extracts a spec from every indexed DLL version (head, releases, pre-r
 
 ### Docker and Railway
 
-`docker/mcp/Dockerfile` (build context: the repo root) builds the embedded spec with Node 22 and `xxmi-mcp` with Rust, then runs it on `debian:trixie-slim` with git, ripgrep and curl (about 311 MB). The container starts as root only to fix the volume's ownership, then drops to the unprivileged `node` user through `docker/mcp/docker-entrypoint.sh`. The Dockerfile has a `HEALTHCHECK`; Railway uses the service's health check setting instead (see Deployment).
+`docker/mcp/Dockerfile` (build context: the repo root) builds `xxmi-mcp` with Rust, then runs it on `debian:trixie-slim` with git, ripgrep and curl (about 311 MB). The container starts as root only to fix the volume's ownership, then drops to the unprivileged `node` user through `docker/mcp/docker-entrypoint.sh`. The Dockerfile has a `HEALTHCHECK`; Railway uses the service's health check setting instead (see Deployment).
 
 Run it locally:
 
@@ -202,7 +202,7 @@ docker run --rm -p 3000:3000 -v xxmi-data:/data xxmi-mcp
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp
 ```
 
-From source: `pnpm build && cd rust && DATA_DIR=./data cargo run --release -p xxmi-mcp`.
+From source: `cd rust && DATA_DIR=./data cargo run --release -p xxmi-mcp`.
 
 **Railway setup (needs the maintainer's account):**
 
@@ -215,8 +215,10 @@ From source: `pnpm build && cd rust && DATA_DIR=./data cargo run --release -p xx
 
 ### Rust server
 
-`rust/crates/xxmi-mcp` is the hosted server, ported from the former TypeScript one (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f docker/mcp/Dockerfile -t xxmi-mcp .`. It needs `git` and `rg` on the path.
+`rust/crates/xxmi-mcp` is the hosted server, ported from the former TypeScript one (same tools, endpoints, environment variables and volume layout). Run it from source with `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f docker/mcp/Dockerfile -t xxmi-mcp .`. It needs `git` and `rg` on the path.
 Railway builds this image (`docker/mcp/Dockerfile`, see Deployment).
+
+Load (`rust/bench/mcp-load.mjs 10 32`): about 5,500 requests/s, p50 2.2 ms, RSS 6 MB idle and 34-39 MB at peak. The former TypeScript server managed about 600 requests/s at 119 MB.
 
 The server also reads these:
 

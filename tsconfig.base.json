@@ -18,7 +18,6 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "skipLibCheck": true,
-    "customConditions": ["source"]
+    "skipLibCheck": true
   }
 }

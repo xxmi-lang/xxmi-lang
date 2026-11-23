@@ -12,12 +12,14 @@
     "build": "pnpm -r run build",
     "test": "vitest run",
     "test:corpus": "node scripts/test-corpus.ts",
+    "test:lsp": "vitest run --root tests/lsp-protocol",
+    "check:version": "node scripts/check-version.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "pnpm -r run typecheck && tsc -p scripts --noEmit",
+    "typecheck": "pnpm -r run typecheck && tsc -p scripts --noEmit && tsc -p tests/lsp-protocol --noEmit",
     "grammar:update": "node scripts/update-grammar.ts",
-    "spec:extract": "node packages/spec-extractor/src/cli.ts",
-    "xxmi": "node --conditions=source packages/cli/src/cli.ts",
+    "spec:extract": "cargo run --release -q --manifest-path rust/Cargo.toml -p xxmi-spec-extractor --",
+    "xxmi": "cargo run --release -q --manifest-path rust/Cargo.toml -p xxmi --",
     "build:binaries": "node scripts/build-binaries.ts"
   },
   "devDependencies": {
@@ -27,6 +29,7 @@
     "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.0",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "vscode-languageserver-protocol": "^3.18.4"
   }
 }

@@ -1,4 +1,4 @@
-// Load and memory of the Rust MCP server on a fixture volume (docs/rust-port.md).
+// Load and memory of the Rust MCP server on a fixture volume.
 //
 //   node rust/bench/mcp-load.mjs [seconds] [concurrency]
 //

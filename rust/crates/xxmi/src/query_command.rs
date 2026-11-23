@@ -1,4 +1,4 @@
-//! `xxmi query`: read-only lookups; kinds, output and exit codes match the TypeScript CLI.
+//! `xxmi query`: read-only lookups; kinds, output and exit codes.
 
 use std::env;
 use std::path::{Path, PathBuf};

@@ -6,10 +6,9 @@ LICENSE
 docs/
 CLAUDE.md
 fixtures/
-*.wasm
 .zzmi-package/
 spec/generated/
 .dll/
-packages/core/snapshots/
+snapshots/
 .vscode-test/
 rust/

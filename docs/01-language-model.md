@@ -6,7 +6,7 @@ This doc covers how we know what the language is (the spec), how we parse it (tr
 
 ### Why extract
 
-The DLL defines the language, and XXMI keeps extending it: `store`, pools, bitwise and shift operators, math functions (`sin(…)`, `saturate(…)`, …), `locked` globals, `->` member access, `Region(...)`. (`local` is older: vanilla 3DMigoto already has it.) A hand-written keyword list will drift. `packages/spec-extractor` reads the C++ source and writes `spec/generated/*.json`. A CI job reruns it against the latest XXMI-Libs-Package `master` and opens a PR when the output changes.
+The DLL defines the language, and XXMI keeps extending it: `store`, pools, bitwise and shift operators, math functions (`sin(…)`, `saturate(…)`, …), `locked` globals, `->` member access, `Region(...)`. (`local` is older: vanilla 3DMigoto already has it.) A hand-written keyword list will drift. `rust/crates/xxmi-spec-extractor` reads the C++ source and writes `spec/generated/*.json`. A CI job reruns it against the latest XXMI-Libs-Package `master` and opens a PR when the output changes.
 
 ### Sources
 
@@ -30,10 +30,10 @@ Line numbers are from `master` as of 2026-09-29 and will move. The extractor mus
 
 ### How the extractor finds things (M1)
 
-`packages/spec-extractor` reads `DirectX11/*.{cpp,h}` plus the root `util.h`. It strips comments (string-aware, so `L"//"` survives), then finds tables and functions by name:
+`xxmi-spec-extractor` reads `DirectX11/*.{cpp,h}` plus the root `util.h`. It strips comments (string-aware, so `L"//"` survives), then finds tables and functions by name:
 
 - **Section tables and key lists:** `{L"Name", bool}` arrays; `wchar_t *XIniKeys[]` whitelists, expanding same-file `#define` macros such as `TEXTURE_OVERRIDE_FUZZY_MATCHES`.
-- **Keys and their types:** `GetIni*(section, L"key", …)` call sites, typed by the getter (`GetIniInt` → `int`, `GetIniEnumClass(…, XNames)` → `enum:XNames`, a string passed straight to `ParseFormatString` → `enum:DXGIFormats`). Calls with a literal section name (`GetIniBool(L"Logging", …)`, `RegisterIniKeyBinding(L"Hunting", …)`) are collected from every file. Calls with a variable section are attributed through `SECTION_KEY_SOURCES` in `packages/spec-extractor/src/sections.ts`, the one hand-kept map from section to parser function. For command-list sections, only whitelisted keys count as keys; everything else is a command.
+- **Keys and their types:** `GetIni*(section, L"key", …)` call sites, typed by the getter (`GetIniInt` → `int`, `GetIniEnumClass(…, XNames)` → `enum:XNames`, a string passed straight to `ParseFormatString` → `enum:DXGIFormats`). Calls with a literal section name (`GetIniBool(L"Logging", …)`, `RegisterIniKeyBinding(L"Hunting", …)`) are collected from every file. Calls with a variable section are attributed through `SECTION_KEY_SOURCES` in `rust/crates/xxmi-spec-extractor/src/sections.rs`, the one hand-kept map from section to parser function. For command-list sections, only whitelisted keys count as keys; everything else is a command.
 - **Commands:** literal comparisons on the key, value or line (`!wcscmp(key, L"…")` is exact, `wcsncmp` / `.compare(0, n, …)` is a prefix match) in the dispatch functions, plus `ParseDrawCommandArgs(…, indirect, nargs, …)` for draw argument counts.
 - **Operators:** `operator_tokens[]`, plus precedence from the order of the `transform_operators_recursive(&tree, <group>, …, right_assoc, unary)` calls, and `DEFINE_OPERATOR(name, "pattern", …)` for each group member. Identifier patterns in `unary_operators` are the math functions.
 - **Enums:** every `EnumName_t<…> XNames[]` table, plus `DXGIFormats[]` from `util.h`.
@@ -44,7 +44,7 @@ Known limits: keys the DLL builds at runtime (`blend[0]`…`mask[7]`, via `swpri
 
 ### Output
 
-`spec/generated/` holds five files, written by `pnpm spec:extract` (`XXMI_DLL_SRC` = XXMI-Libs-Package checkout, `MIGOTO_DLL_SRC` = 3Dmigoto checkout). The TypeScript types are in `packages/core/src/spec/types.ts`.
+`spec/generated/` holds five files, written by `pnpm spec:extract` (`XXMI_DLL_SRC` = XXMI-Libs-Package checkout, `MIGOTO_DLL_SRC` = 3Dmigoto checkout). The types are in `rust/crates/xxmi-core/src/spec.rs`.
 
 ```jsonc
 // meta.json: no wall-clock timestamp, so the same commits give byte-identical output
@@ -66,7 +66,7 @@ Known limits: keys the DLL builds at runtime (`blend[0]`…`mask[7]`, via `swpri
 // enums.json: every EnumName_t table plus DXGIFormats
 ```
 
-`spec/overlay/*.toml` adds what extraction can't provide: human docs, examples, better value/arg types, deprecation notes, and "since XXMI version". `loadSpec()` in `@xxmi-lang/core` deep-merges the overlays over the generated spec, in file-name order. Tables address entries by name, case-insensitively:
+`spec/overlay/*.toml` adds what extraction can't provide: human docs, examples, better value/arg types, deprecation notes, and "since XXMI version". The build (`rust/crates/xxmi-spec-extractor/src/load.rs`) deep-merges the overlays over the generated spec, in file-name order. Tables address entries by name, case-insensitively:
 
 ```toml
 [commands.store]              # also [members.<name>], [functions.<name>], [enums.<name>]
@@ -89,7 +89,7 @@ DLL 1.3.2 renamed `snapshotoriginaltextures` / `restoreoriginaltextures` to `sna
 
 ## 2. Parser: tree-sitter-migoto
 
-Use **our fork** of lupomikti's grammar (`lupomikti/tree-sitter-migoto`, MIT, v0.9.4 as of 2026-10-19) through `web-tree-sitter`. Ship the `.wasm` inside `@xxmi-lang/core`.
+Use **our fork** of lupomikti's grammar (`lupomikti/tree-sitter-migoto`, MIT, v0.9.4 as of 2026-10-19) through the `tree-sitter` Rust crate. The C sources are vendored in `rust/crates/tree-sitter-migoto`.
 
 Fork policy:
 
@@ -97,11 +97,11 @@ Fork policy:
 - We don't open PRs to upstream. The fork should stay easy for lupomikti to pull from if they choose: small commits, each with a `test/corpus/` case, no reformatting of unrelated grammar code.
 - Periodically merge upstream `main` into the fork (a monthly CI job opens a PR in the fork when upstream has new commits). Resolve conflicts in favor of upstream's structure, then re-apply our fixes.
 - Keep node names compatible with upstream where possible, so their highlight and other queries keep working on our fork.
-- Consume the fork in `@xxmi-lang/core` via a pinned git dependency or a published package (e.g. `@xxmi-lang/tree-sitter-migoto`); pin to a commit or version.
+- Vendor the fork's C sources with `pnpm grammar:update`, and pin the commit in `rust/crates/tree-sitter-migoto/SOURCE.md`.
 - **DLL 1.3.1 syntax** (the fork keeps parsing these 1.3.1 names for per-version specs; fork branch `xxmi-dll-1.3.1-syntax`, commit `5d78a72`): `run = snapshotoriginaltextures` / `restoreoriginaltextures` parse as a `run_instruction` holding a `run_instruction_key_value` (no section reference), `ps->MatchTextures(ResourceX) = ResourceY` is an `assignment_statement` with a `shader_identifier` target, and member-call arguments accept `hex_integer` (`0x` plus 1-16 hex digits). The model needs no special case: resources inside `MatchTextures(...)` lower as ordinary `custom_resource` references. Fixtures: `fixtures/xxmi-1.3.1/`.
 - **DLL 1.3.2 syntax** (fork commit `e0df4ec` on branch `xxmi`): `run = snapshotinitialtextures` / `restoreinitialtextures` parse like the original-texture names. `[Filter…]` is a `setting_section` (its keys are ordinary settings). A `FilterX` reference is a `filter` node (`filter_prefix` plus `section_identifier`) wherever a resource operand goes: filter assignments (`FilterA = ref FilterB`, `= null`), `@FilterX`, `FilterX->format` and arguments such as `->HammingDistance(FilterX)`. In `ps-t[FilterX]` it is the `index_expression` of a `slot_expression`. The scanner leaves `filter_index` a plain setting key. The spec decides which names a DLL version accepts. Fixture: `fixtures/rules/XM001/good.ini`.
 - **Names at end of file and single-segment names** (fork commit `2a366ae` on branch `xxmi`, issue #20): a `run = CommandList\Name` value parses with or without a namespace, and the last line of a file needs no trailing newline. The DLL looks the whole value up as a section name (`CommandList.cpp` `FindExplicitCommandListSection`), so an unknown `CommandList\Name` is an XM201 unresolved reference, not a syntax error. Fixtures: `fixtures/rules/XM001/good.ini`, `fixtures/rules/XM201/bad.ini`.
-- **Current setup (M0):** the fork's WASM build is vendored at `packages/core/grammar/tree-sitter-migoto.wasm`, with `SOURCE.json` recording the fork commit, upstream version, tree-sitter CLI version and SHA-256 (a unit test checks the hash). Rebuild it from a clean fork checkout with `XXMI_GRAMMAR_SRC=<fork> pnpm grammar:update`. `web-tree-sitter` is pinned to the same version as the CLI that built the WASM. The fork's own CI (`xxmi-ci.yml`) runs `tree-sitter test --wasm` and checks that `src/` is regenerated; `upstream-sync.yml` is the monthly merge job.
+- **Current setup (M0):** the fork's C sources are vendored in `rust/crates/tree-sitter-migoto` (`src/parser.c`, `src/scanner.c`), with `SOURCE.md` recording the fork commit. Refresh them with `XXMI_GRAMMAR_SRC=<fork> pnpm grammar:update`. The fork's own CI (`xxmi-ci.yml`) runs `tree-sitter test --wasm` and checks that `src/` is regenerated; `upstream-sync.yml` is the monthly merge job.
 
 ### Known dialect gaps (measured 2026-09-30, fixed in M0)
 
@@ -122,14 +122,14 @@ Upstream 0.9.4 (merged into the fork 2026-10-19) fixed all four on its own; the 
 
 tree-sitter's recovery is heuristic. Most errors stay local, but some swallow the rest of the file: parsing a whole file, an unclosed `(` in `$y = ($x + 1` becomes one ERROR node that also covers every later section (`fixtures/parser/errors/unclosed-paren.ini`).
 
-Lowering avoids this (M2). `model/scan.ts` finds sections exactly the way the DLL's `ParseIniStream` does (a trimmed line starting with `[` is a header, `;` comments only at the start of a line, `key = value` split at the first `=`). Each section, and the preamble, is then parsed on its own with tree-sitter `includedRanges`, keeping absolute positions. A syntax error can't cross a section boundary, which also matches the DLL, which parses sections independently.
+Lowering avoids this (M2). `scan.rs` (`scan_ini`) finds sections exactly the way the DLL's `ParseIniStream` does (a trimmed line starting with `[` is a header, `;` comments only at the start of a line, `key = value` split at the first `=`). Each section, and the preamble, is then parsed on its own (`document.rs` parses the section's text slice), keeping absolute positions. A syntax error can't cross a section boundary, which also matches the DLL, which parses sections independently.
 
 ### Parser contract for core
 
 - `parse(text) → Tree` (incremental: `tree.edit` plus reparse on LSP `didChange`).
-- Implemented in M0 (`packages/core/src/parser/`): `initParser`, `createParser` (a parser of your own, for incremental use), `parseText` and `parseFile`, which return the tree plus its ERROR/MISSING nodes as `SyntaxIssue`s (outermost ERROR only, plus every MISSING). Positions are 0-based lines and UTF-16 columns, the LSP default. `parseFile` strips a UTF-8 BOM and decodes invalid UTF-8 lossily, reporting encoding `unknown` (the future XM002). Trees own WASM memory: call `tree.delete()`.
-- A CST-to-model lowering pass (`lower.ts`) builds the typed model below and never throws. ERROR and MISSING nodes become `XM001` diagnostics (see `02-diagnostics.md`), and lowering continues with the next section.
-- Keep a thin fallback line scanner: section headers plus `key = value` split. If the tree-sitter WASM fails to load, the CLI still gives basic lint.
+- Implemented in M0 (`rust/crates/xxmi-core/src/parse.rs`): `new_parser` builds the tree-sitter parser, and `collect_syntax_issues` returns the ERROR/MISSING nodes as `SyntaxIssue`s (outermost ERROR only, plus every MISSING).
+- A CST-to-model lowering pass (`model/lower.rs`, `lower_ini`) builds the typed model below and never throws. ERROR and MISSING nodes become `XM001` diagnostics (see `02-diagnostics.md`), and lowering continues with the next section.
+- Keep a thin fallback line scanner: section headers plus `key = value` split.
 
 ## 3. Semantic model
 
@@ -158,7 +158,7 @@ Confirm each rule against `_get_section_namespace`, `_get_section_path` and `_ge
 
 The DLL runs on Windows (or under Wine/Proton on Linux), so paths inside inis follow Windows rules no matter which OS the tooling runs on:
 
-- `\` and `/` are both separators in `include =`, `filename =` and similar keys. Never pass an ini path straight to Node's `path`; use `packages/core/src/paths.ts`, which normalizes them.
+- `\` and `/` are both separators in `include =`, `filename =` and similar keys. Never pass an ini path straight to the OS path APIs; use `rust/crates/xxmi-core/src/paths.rs`, which normalizes them.
 - File lookup is **case-insensitive** even on case-sensitive filesystems (Linux, some macOS setups). Resolve by scanning the directory and matching case-insensitively, and cache the listing. If a Linux user's file only matches with a different case, emit a hint, since it works in game but may confuse other tools.
 - Paths may contain spaces and non-ASCII characters (`Libraries\HP bar\`, CN folder names); XXMI supports UTF-8 paths.
 - Output paths (diagnostics, CLI, MCP) use `/` when shown to users, but edits written back into inis keep the file's existing separator style.
@@ -186,14 +186,14 @@ Most library docs are free-form `;` comments (see `main.ini` "Input/Usage" block
 
 - **Roots:** the opened folder, plus the **package root**. The package root comes from `xxmi.toml` (`package = "../../"`) or is auto-detected by walking up from the mod to a folder containing `d3dx.ini` and `Core/<Game>/`. In a typical XXMI install, `ZZMI/Mods/<mod>/` walks up to `ZZMI/`.
 - **Includes:** follow `[Include*]` `include`, `include_recursive` and `exclude_recursive` like the DLL does, including the recursive `Mods/` include from `d3dx.ini`. Files are indexed lazily: open files first, then include targets, then the rest in the background.
-- **Bundled library snapshot:** each release of `@xxmi-lang/core` embeds a pre-built index of the latest ZZMI package libraries (symbols and docs only). A user with just a mod folder still gets completion and hover for `CommandList\ZZMI\…`. A local package, when found, overrides the snapshot.
-- **As built (M2, `packages/core/src/workspace/`):**
+- **Bundled library snapshot:** each build of `xxmi-core` embeds a pre-built index of the latest ZZMI package libraries (symbols and docs only). A user with just a mod folder still gets completion and hover for `CommandList\ZZMI\…`. A local package, when found, overrides the snapshot.
+- **As built (M2, `rust/crates/xxmi-core/src/workspace/`):**
   - The package root is found by walking up to a folder with `d3dx.ini`; `xxmi.toml` `package =` is not read yet.
   - When a root is found, `d3dx.ini` (namespace `''`) and everything it `include`s are loaded, transitively. `include_recursive` folders (`Mods/`) are **not** bulk-loaded; only the files being linted are, each with the namespace the DLL would give it (its path from the root, `\`-separated).
   - Without a root, targets get path namespaces relative to the lint folder, which keeps them unique within the run.
   - `exclude_recursive` globs from `d3dx.ini` `[Include]` (ZZMI: `DISABLED*`, `desktop.ini`) are matched like `ParseIniFilesRecursive` does: caseless PCRE2 globs against each file and folder name below the package root (`DISABLED*` when there is no package). Linting a folder and the LSP's background index skip matching files. A file opened or linted on its own is still checked, but XM107 doesn't compare it with other files, since the DLL never loads it next to them. Files reached through `include =` are never excluded.
   - Symlinks: each path is its own file (the DLL loads both when both are walked), but an editor buffer applies to every loaded path of the same file on disk, so a library symlinked into `Core/` follows edits to its working copy.
-  - Library references then resolve through `packages/core/snapshots/zzmi.json`, built with `pnpm xxmi index <ZZMI package> --out packages/core/snapshots/zzmi.json --name zzmi`. A snapshot is used only when no loaded file declares any of its namespaces. CI checks it matches the pinned ZZMI-Package commit.
+  - Library references then resolve through `snapshots/zzmi.json`, built with `pnpm xxmi index <ZZMI package> --out snapshots/zzmi.json --name zzmi`. A snapshot is used only when no loaded file declares any of its namespaces. CI checks it matches the pinned ZZMI-Package commit.
   - Include-derived namespaces use the on-disk spelling and `\`; the DLL keeps the path as written in `include =`. This only matters for explicit references to path namespaces, which libraries don't use (they declare `namespace =`).
 - **Invalidation:** file watcher (LSP `workspace/didChangeWatchedFiles`). Re-lower only changed files, then re-resolve references in files that depend on changed symbols.
 

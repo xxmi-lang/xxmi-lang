@@ -88,7 +88,7 @@ fn value_commands(condition: &str, source: &str) -> Vec<SpecCommand> {
     comparisons(condition, VALUE)
         .iter()
         .map(|m| SpecCommand {
-            form: Some("value"),
+            form: Some("value".to_string()),
             ..command(m, "general", source, Vec::new())
         })
         .collect()

@@ -1,5 +1,4 @@
-//! XM102: a key the section's parser doesn't read (port of XM102 in
-//! packages/core/src/lint/rules/structure.ts).
+//! XM102: a key the section's parser doesn't read.
 
 use super::keywords::is_misplaced_flow;
 use super::{Finding, RuleContext, replace_fix};

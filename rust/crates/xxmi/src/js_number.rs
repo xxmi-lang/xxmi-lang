@@ -1,4 +1,4 @@
-//! `Number(text)` as JavaScript computes it, for `--max-warnings`: the TypeScript CLI accepts
+//! `Number(text)` as JavaScript computes it, for `--max-warnings`, which accepts
 //! whatever `Number` turns into a non-negative integer (`0x10`, `1e3`, an empty string as 0).
 
 /// `Number(text)`; `NaN` when it isn't a number.

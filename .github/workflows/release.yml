@@ -77,12 +77,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # The rust/ build embeds packages/core/dist/spec.json.
-      - run: pnpm build
 
       - id: rust-version
         shell: bash
@@ -134,12 +128,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # The rust/ build embeds packages/core/dist/spec.json.
-      - run: pnpm build
 
       - id: rust-version
         run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
@@ -201,16 +189,14 @@ jobs:
 
       - name: Read the version
         id: version
-        run: echo "version=$(node --conditions=source --input-type=module -e "import { VERSION } from './packages/core/src/version.ts'; console.log(VERSION)")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(node scripts/check-version.ts)" >> "$GITHUB_OUTPUT"
 
       - name: Tag matches the code's version
         if: needs.meta.outputs.publish == 'true'
         env:
           TAG: ${{ needs.meta.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
-        run: test "v$VERSION" = "$TAG" || { echo "Tag $TAG but packages/core/src/version.ts says $VERSION"; exit 1; }
-
-      - run: pnpm build
+        run: test "v$VERSION" = "$TAG" || { echo "Tag $TAG but rust/Cargo.toml says $VERSION"; exit 1; }
 
       - uses: actions/download-artifact@v8
         with:
@@ -308,8 +294,8 @@ jobs:
           "$lsp" --version
           "$xxmi" lint fixtures/rules/XM201/good.ini
           # Relative paths: Node on Windows can't spawn the MSYS-style /d/a/... path of $PWD.
-          XXMI_LSP_COMMAND="[\"unzipped/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"unzipped/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"unzipped/xxmi-lsp$exe\",\"--stdio\"]" pnpm test:lsp
+          XXMI_LSP_COMMAND="[\"unzipped/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm test:lsp
 
       # Install the packages built above in a fresh app, with no XXMI_PATH (docs/10-dotnet.md).
       - uses: actions/setup-dotnet@v6

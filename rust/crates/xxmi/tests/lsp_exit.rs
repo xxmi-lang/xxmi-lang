@@ -1,4 +1,4 @@
-//! Exit codes follow the LSP spec and the TypeScript server: 0 after `shutdown`, 1 without it,
+//! Exit codes follow the LSP spec: 0 after `shutdown`, 1 without it,
 //! whether the session ends with `exit` or with the client closing stdin.
 
 mod common;

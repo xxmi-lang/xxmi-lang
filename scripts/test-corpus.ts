@@ -1,7 +1,9 @@
 /**
- * Parses and lints every .ini under corpus/ and under a game package checkout. Prints the
- * parse-failure rate with the first error per failing file, and diagnostic counts per rule
- * compared against the baseline (a jump in one rule usually means a false-positive regression).
+ * Lints every .ini under corpus/ and under a game package checkout with the Rust `xxmi` binary
+ * (XXMI_PATH, else rust/target/release/xxmi built on demand). A file fails to parse when it has an
+ * XM001 diagnostic. Prints the parse-failure rate with the first error per failing file, and
+ * diagnostic counts per rule compared against the baseline (a jump in one rule usually means a
+ * false-positive regression).
  *
  *   XXMI_PACKAGE_SRC=../ZZMI-Package pnpm test:corpus [paths…] [--json] [--strict] [--update-baseline]
  *
@@ -15,24 +17,40 @@
  * Exit codes: 0 ok, 1 more parse failures or more diagnostics of some rule than the baseline
  * (or, with --strict, any parse failure or lint error), 2 usage error, 3 lint crashed.
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, delimiter, join, relative, resolve } from 'node:path';
-import { lintPaths, parseFile, type FileParseResult } from '../packages/core/src/index.ts';
 
 const REPO = resolve(import.meta.dirname, '..');
 const CORPUS = join(REPO, 'corpus');
 const BASELINE = join(CORPUS, '.baseline.json');
-const GRAMMAR_SOURCE = join(REPO, 'packages/core/grammar/SOURCE.json');
-const SKIP_DIRS = new Set(['.git', 'node_modules', '.xxmi-backup']);
+const GRAMMAR_SOURCE = join(REPO, 'rust/crates/tree-sitter-migoto/SOURCE.md');
+const MAX_OUTPUT_BYTES = 1 << 30;
 
 interface Root {
   label: string;
   dir: string;
 }
 
+type Encoding = 'utf8' | 'utf8bom' | 'unknown';
+
+/** The part of `xxmi lint --format json` (schema/lint-output.v1.json) this script reads. */
+interface LintOutput {
+  files: {
+    path: string;
+    encoding: Encoding;
+    diagnostics: {
+      id: string;
+      message: string;
+      range: { start: { line: number; character: number } };
+    }[];
+  }[];
+  summary: { error: number };
+}
+
 interface FileReport {
   path: string;
-  encoding: FileParseResult['encoding'];
+  encoding: Encoding;
   issues: number;
   first?: { line: number; character: number; message: string };
 }
@@ -84,66 +102,95 @@ function collectRoots(): Root[] {
   return roots;
 }
 
-function listIni(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory() && !SKIP_DIRS.has(entry.name)) out.push(...listIni(full));
-    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.ini')) out.push(full);
-  }
-  return out.sort();
-}
-
 /** Paths as users see them: relative to the cwd, with `/`. */
 function display(path: string): string {
   return relative(process.cwd(), path).replaceAll('\\', '/');
 }
 
-async function checkRoot(root: Root): Promise<RootReport> {
-  const files = listIni(root.dir);
-  const failures: FileReport[] = [];
-  let nonUtf8 = 0;
-  for (const file of files) {
-    const result = await parseFile(file);
-    result.tree.delete();
-    if (result.encoding === 'unknown') nonUtf8++;
-    const [first] = result.issues;
-    if (first) {
-      failures.push({
-        path: display(file),
-        encoding: result.encoding,
-        issues: result.issues.length,
+function xxmiBinary(): string {
+  if (process.env.XXMI_PATH) return process.env.XXMI_PATH;
+  execFileSync(
+    'cargo',
+    [
+      'build',
+      '--release',
+      '--quiet',
+      '--manifest-path',
+      join(REPO, 'rust/Cargo.toml'),
+      '-p',
+      'xxmi',
+    ],
+    { stdio: 'inherit' },
+  );
+  const exe = process.platform === 'win32' ? '.exe' : '';
+  return join(REPO, 'rust/target/release', `xxmi${exe}`);
+}
+
+/** Throws with the process's stderr unless it exited 0 or 1 (lint's "findings" code). */
+function runLint(dir: string): LintOutput {
+  const run = spawnSync(xxmi, ['lint', dir, '--format', 'json'], {
+    encoding: 'utf8',
+    maxBuffer: MAX_OUTPUT_BYTES,
+  });
+  if (run.error) throw run.error;
+  if (run.status !== 0 && run.status !== 1) {
+    throw new Error(`xxmi lint exited with ${run.status}\n${run.stderr}`);
+  }
+  return JSON.parse(run.stdout) as LintOutput;
+}
+
+function parseFailures(lint: LintOutput): FileReport[] {
+  return lint.files.flatMap((file) => {
+    const issues = file.diagnostics.filter((d) => d.id === 'XM001');
+    const [first] = issues;
+    if (!first) return [];
+    return [
+      {
+        path: file.path,
+        encoding: file.encoding,
+        issues: issues.length,
         first: {
           line: first.range.start.line + 1,
           character: first.range.start.character + 1,
           message: first.message,
         },
-      });
-    }
+      },
+    ];
+  });
+}
+
+function lintCounts(lint: LintOutput): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const file of lint.files) {
+    for (const d of file.diagnostics) counts[d.id] = (counts[d.id] ?? 0) + 1;
   }
+  return Object.fromEntries(Object.entries(counts).sort(([x], [y]) => (x < y ? -1 : 1)));
+}
+
+function checkRoot(root: Root): RootReport {
   const report: RootReport = {
     label: root.label,
     dir: display(root.dir),
-    files: files.length,
-    failed: failures.length,
-    failureRate: files.length === 0 ? 0 : failures.length / files.length,
-    nonUtf8,
-    failures,
+    files: 0,
+    failed: 0,
+    failureRate: 0,
+    nonUtf8: 0,
+    failures: [],
     lint: {},
     lintErrors: 0,
   };
   try {
-    const result = await lintPaths([root.dir]);
-    for (const f of result.files) {
-      for (const d of f.diagnostics) report.lint[d.id] = (report.lint[d.id] ?? 0) + 1;
-    }
-    report.lintErrors = result.summary.error;
+    const lint = runLint(root.dir);
+    report.files = lint.files.length;
+    report.failures = parseFailures(lint);
+    report.failed = report.failures.length;
+    report.failureRate = report.files === 0 ? 0 : report.failed / report.files;
+    report.nonUtf8 = lint.files.filter((f) => f.encoding === 'unknown').length;
+    report.lint = lintCounts(lint);
+    report.lintErrors = lint.summary.error;
   } catch (error) {
     report.crash = error instanceof Error ? (error.stack ?? error.message) : String(error);
   }
-  report.lint = Object.fromEntries(
-    Object.entries(report.lint).sort(([a], [b]) => (a < b ? -1 : 1)),
-  );
   return report;
 }
 
@@ -151,6 +198,11 @@ function readJson(path: string): Record<string, unknown> {
   return existsSync(path)
     ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>)
     : {};
+}
+
+/** The fork commit SOURCE.md records, e.g. `e0df4ec`. */
+function grammarCommit(): string | null {
+  return readFileSync(GRAMMAR_SOURCE, 'utf8').match(/commit `([0-9a-f]+)`/)?.[1] ?? null;
 }
 
 function percent(rate: number): string {
@@ -171,8 +223,8 @@ for (const root of roots) {
   }
 }
 
-const reports: RootReport[] = [];
-for (const root of roots) reports.push(await checkRoot(root));
+const xxmi = xxmiBinary();
+const reports = roots.map(checkRoot);
 
 const baselineFile = readJson(BASELINE);
 const baseline = baselineFile.parse as ParseBaseline | undefined;
@@ -243,10 +295,9 @@ if (flags.has('--update-baseline')) {
     console.error('corpus/ does not exist; nowhere to write the baseline.');
     process.exit(2);
   }
-  const grammar = readJson(GRAMMAR_SOURCE);
   const next: ParseBaseline = {
     updatedAt: new Date().toISOString(),
-    grammarCommit: typeof grammar.commit === 'string' ? grammar.commit : null,
+    grammarCommit: grammarCommit(),
     roots: Object.fromEntries(
       reports.map((r) => [
         r.label,

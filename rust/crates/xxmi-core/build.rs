@@ -1,32 +1,42 @@
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::exit;
 
-/// What the TypeScript build bundles, relative to this crate: the merged spec (generated JSON
-/// plus overlays) and the checked-in library snapshot.
-const EMBEDDED: [(&str, &str); 2] = [
-    ("XXMI_SPEC_JSON", "../../../packages/core/dist/spec.json"),
-    (
-        "XXMI_ZZMI_SNAPSHOT_JSON",
-        "../../../packages/core/snapshots/zzmi.json",
-    ),
-];
+use xxmi_spec_extractor::load::merged_spec_json;
 
 fn main() {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("cargo sets CARGO_MANIFEST_DIR");
+    let repo = Path::new(&manifest_dir).join("../../..");
 
-    for (variable, relative) in EMBEDDED {
-        let path = Path::new(&manifest_dir).join(relative);
-        println!("cargo:rerun-if-changed={}", path.display());
+    embed_spec(&repo.join("spec"));
+    embed_snapshot(&repo.join("snapshots/zzmi.json"));
+}
 
-        let Ok(path) = path.canonicalize() else {
-            eprintln!(
-                "error: {} is missing\n\
-                 run `pnpm install && pnpm build` at the repository root first (it writes \
-                 packages/core/dist/spec.json from spec/generated and spec/overlay)",
-                path.display()
-            );
-            exit(1);
-        };
-        println!("cargo:rustc-env={variable}={}", path.display());
-    }
+/// Merges spec/generated and spec/overlay into OUT_DIR, so the embedded spec cannot go stale.
+fn embed_spec(spec_root: &Path) {
+    println!("cargo:rerun-if-changed={}", spec_root.display());
+
+    let json = merged_spec_json(spec_root).unwrap_or_else(|problems| {
+        let list: Vec<String> = problems.iter().map(|p| format!("  - {p}")).collect();
+        fail(&format!("invalid spec:\n{}", list.join("\n")));
+    });
+    let out =
+        PathBuf::from(std::env::var("OUT_DIR").expect("cargo sets OUT_DIR")).join("spec.json");
+    fs::write(&out, json).unwrap_or_else(|e| fail(&format!("{}: {e}", out.display())));
+    println!("cargo:rustc-env=XXMI_SPEC_JSON={}", out.display());
+}
+
+/// The checked-in library snapshot, rebuilt with `xxmi index`.
+fn embed_snapshot(path: &Path) {
+    println!("cargo:rerun-if-changed={}", path.display());
+
+    let Ok(path) = path.canonicalize() else {
+        fail(&format!("{} is missing", path.display()));
+    };
+    println!("cargo:rustc-env=XXMI_ZZMI_SNAPSHOT_JSON={}", path.display());
+}
+
+fn fail(message: &str) -> ! {
+    eprintln!("error: {message}");
+    exit(1);
 }

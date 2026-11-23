@@ -1,5 +1,5 @@
-//! Workspace-wide symbols and DLL-order name resolution (port of packages/core/src/workspace/symbols.ts,
-//! docs/01-language-model.md §3 rules 1-7).
+//! Workspace-wide symbols and DLL-order name resolution
+//! (docs/01-language-model.md §3 rules 1-7).
 //!
 //! The DLL stores a prefixed section from a namespaced file as `Prefix\namespace\Local` and a
 //! global declared in namespace N as `$\n\name`. A reference first tries the name qualified with the

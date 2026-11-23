@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // Latency, memory and start-up of `xxmi lsp --stdio` against the docs/03-lsp.md targets, on a
-// ~5,000-line document (the one scripts/perf-lsp.ts builds, modText(999, 280)) opened next to a ZZMI
-// package workspace.
+// ~5,000-line generated document opened next to a ZZMI package workspace.
 //
 //   node rust/bench/lsp-latency.mjs            measure rust/target/release/xxmi
 //   XXMI_RS=path node rust/bench/lsp-latency.mjs

@@ -1,5 +1,4 @@
-//! Merges spec/overlay/*.toml documentation into an extracted spec,
-//! the same way as packages/core/src/spec/load.ts.
+//! Merges spec/overlay/*.toml documentation into an extracted spec.
 //! Overlay tables address generated entries by name, case-insensitively;
 //! an entry the DLL lacks is an error unless it is marked manual.
 

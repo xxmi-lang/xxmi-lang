@@ -1,5 +1,4 @@
-//! Drives `xxmi lsp --stdio` over JSON-RPC against fixtures/lsp/package, one step per handler
-//! (the same session as packages/lsp/test/protocol.test.ts).
+//! Drives `xxmi lsp --stdio` over JSON-RPC against fixtures/lsp/package, one step per handler.
 
 mod common;
 

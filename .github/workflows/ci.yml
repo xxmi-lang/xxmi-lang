@@ -20,7 +20,7 @@ permissions:
 
 env:
   # Pinned so PR CI doesn't break when the package changes; the weekly run uses main. Must match
-  # the commit in packages/core/snapshots/zzmi.json (rebuild it with `pnpm xxmi index`).
+  # the commit in snapshots/zzmi.json (rebuild it with `pnpm xxmi index`).
   ZZMI_PACKAGE_REF: 1ecd24dbc85f96239eaadeb7c4e0788aef7fae4f
 
 jobs:
@@ -42,8 +42,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Build first: the Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
-      - run: pnpm build
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Every manifest has the version of rust/Cargo.toml
+        run: pnpm check:version
 
       - run: pnpm lint
 
@@ -64,27 +76,13 @@ jobs:
           ref: ${{ steps.spec.outputs.dll }}
           path: .dll/xxmi
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
             /Injector/
             /util.h
           sparse-checkout-cone-mode: false
-
-      # The checkout is one commit without tags; spec-build-tags.test.ts needs these.
-      - name: Fetch DLL release tags
-        shell: bash
-        run: |
-          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
-              refs/tags/v1.2.0:refs/tags/v1.2.0 \
-              refs/tags/v1.2.1:refs/tags/v1.2.1 \
-              refs/tags/v1.2.2:refs/tags/v1.2.2 \
-              refs/tags/v1.2.3:refs/tags/v1.2.3 \
-              refs/tags/v1.3.0:refs/tags/v1.3.0 \
-              refs/tags/v1.3.1:refs/tags/v1.3.1 \
-              refs/tags/v1.3.2:refs/tags/v1.3.2 \
-              refs/tags/v1.3.3:refs/tags/v1.3.3
 
       - name: Check out 3Dmigoto (vanilla baseline)
         uses: actions/checkout@v7
@@ -93,7 +91,7 @@ jobs:
           ref: ${{ steps.spec.outputs.baseline }}
           path: .dll/vanilla
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
@@ -102,9 +100,6 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - run: pnpm test
-        env:
-          XXMI_DLL_SRC: .dll/xxmi
-          MIGOTO_DLL_SRC: .dll/vanilla
 
       - name: spec/generated matches its DLL commit
         run: pnpm spec:extract --check
@@ -132,37 +127,23 @@ jobs:
         shell: bash
         run: |
           pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
-          diff packages/core/snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
-
-      - id: rust-version
-        shell: bash
-        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ steps.rust-version.outputs.version }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
+          diff snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
 
       # docs/09-roadmap.md M3: test the compiled binaries, not just the Node build.
       - name: Build single-file binaries for this machine
         run: pnpm build:binaries --target host
 
-      - name: Protocol tests against the compiled xxmi-lsp, xxmi lsp and the TypeScript server
+      - name: Protocol tests against the compiled xxmi-lsp and xxmi lsp
         shell: bash
         run: |
           exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
-          XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"node\",\"--liftoff-only\",\"packages/lsp/dist/main.js\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm test:lsp
+          XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm test:lsp
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
   rust:
-    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS; the parity
-    # checks against the TypeScript CLI and server run on Linux, where the ZZMI package is checked out.
+    # The Rust binary: format, clippy and the test suites on each OS.
     strategy:
       fail-fast: false
       matrix:
@@ -184,13 +165,6 @@ jobs:
         with:
           workspaces: rust
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
       # The MCP server shells out to rg; its tests need it on PATH.
       - name: Install ripgrep (Linux)
         if: runner.os == 'Linux'
@@ -204,19 +178,70 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ripgrep
 
-      - run: pnpm install --frozen-lockfile
+      # The real-DLL tests (spec extractor, per-tag MCP spec builds) run on Linux only.
+      # XXMI_REQUIRE_DLL_SRC makes them fail, not skip, when a checkout goes missing.
+      - name: Read spec source commits
+        if: runner.os == 'Linux'
+        id: spec
+        run: |
+          echo "dll=$(node -p "require('./spec/generated/meta.json').dll.commit")" >> "$GITHUB_OUTPUT"
+          echo "baseline=$(node -p "require('./spec/generated/meta.json').baseline.commit")" >> "$GITHUB_OUTPUT"
 
-      # build.rs embeds packages/core/dist/spec.json.
-      - run: pnpm build
-
-      - name: Check out ZZMI-Package
-        if: matrix.os == 'ubuntu-latest'
+      - name: Check out XXMI-Libs-Package (DLL source)
+        if: runner.os == 'Linux'
         uses: actions/checkout@v7
         with:
-          repository: leotorrez/ZZMI-Package
-          ref: ${{ env.ZZMI_PACKAGE_REF }}
-          path: .zzmi-package
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.spec.outputs.dll }}
+          path: .dll/xxmi
           persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      # The checkout is one commit without tags; spec_build_tags.rs needs these.
+      - name: Fetch DLL release tags
+        if: runner.os == 'Linux'
+        run: |
+          git -C .dll/xxmi fetch --depth=1 --no-tags origin \
+              refs/tags/v1.2.0:refs/tags/v1.2.0 \
+              refs/tags/v1.2.1:refs/tags/v1.2.1 \
+              refs/tags/v1.2.2:refs/tags/v1.2.2 \
+              refs/tags/v1.2.3:refs/tags/v1.2.3 \
+              refs/tags/v1.3.0:refs/tags/v1.3.0 \
+              refs/tags/v1.3.1:refs/tags/v1.3.1 \
+              refs/tags/v1.3.2:refs/tags/v1.3.2 \
+              refs/tags/v1.3.3:refs/tags/v1.3.3
+
+      - name: Check out 3Dmigoto (vanilla baseline)
+        if: runner.os == 'Linux'
+        uses: actions/checkout@v7
+        with:
+          repository: bo3b/3Dmigoto
+          ref: ${{ steps.spec.outputs.baseline }}
+          path: .dll/vanilla
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
+      # Absolute paths: cargo runs each test binary from its crate directory.
+      - name: Point the real-DLL tests at the checkouts
+        if: runner.os == 'Linux'
+        run: |
+          {
+            echo "XXMI_DLL_SRC=$GITHUB_WORKSPACE/.dll/xxmi"
+            echo "MIGOTO_DLL_SRC=$GITHUB_WORKSPACE/.dll/vanilla"
+            echo "XXMI_REQUIRE_DLL_SRC=1"
+          } >> "$GITHUB_ENV"
 
       - name: Format
         if: matrix.os == 'ubuntu-latest'
@@ -227,15 +252,6 @@ jobs:
 
       - name: Tests
         run: cargo test --manifest-path rust/Cargo.toml --release --no-fail-fast
-
-      - name: Parity with the TypeScript CLI and language server
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          XXMI_PACKAGE_SRC: .zzmi-package/ZZMI
-        run: |
-          cargo build --release --manifest-path rust/Cargo.toml -p xxmi
-          node rust/bench/parity.mjs
-          node rust/bench/lsp-parity.mjs
 
   dotnet:
     # The .NET library (docs/10-dotnet.md) driving the compiled `xxmi` of this machine.
@@ -256,12 +272,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # The Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
-      - run: pnpm build
 
       - id: rust-version
         shell: bash

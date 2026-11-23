@@ -1,5 +1,4 @@
-//! The tree-sitter parser for the grammar and the ERROR/MISSING collection behind XM001
-//! (port of `collectSyntaxIssues` in packages/core/src/parser/index.ts).
+//! The tree-sitter parser for the grammar and the ERROR/MISSING collection behind XM001.
 
 use tree_sitter::{Node, Parser, Tree};
 

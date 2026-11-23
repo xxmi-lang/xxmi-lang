@@ -1397,6 +1397,7 @@ dependencies = [
  "toml",
  "tree-sitter",
  "tree-sitter-migoto",
+ "xxmi-spec-extractor",
 ]
 
 [[package]]

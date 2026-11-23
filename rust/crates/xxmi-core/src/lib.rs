@@ -1,4 +1,4 @@
-//! Spec-driven lint core for XXMI / 3DMigoto mod `.ini` files: the Rust port of `@xxmi-lang/core`.
+//! Spec-driven lint core for XXMI / 3DMigoto mod `.ini` files.
 
 pub mod defaults;
 pub mod diagnostic;

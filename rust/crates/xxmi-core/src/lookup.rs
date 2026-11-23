@@ -1,5 +1,5 @@
 //! DLL-faithful lookups over the spec: section kinds by prefix or exact name, commands by exact
-//! name then prefix (port of `SpecLookup` in packages/core/src/spec/lookup.ts).
+//! name then prefix.
 
 use std::collections::{HashMap, HashSet};
 

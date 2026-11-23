@@ -1,4 +1,4 @@
-//! Lints one loaded file against its workspace (`lintFile` in the TypeScript engine).
+//! Lints one loaded file against its workspace.
 
 use std::collections::HashSet;
 use std::path::Path;

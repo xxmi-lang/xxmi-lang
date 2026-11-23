@@ -46,8 +46,9 @@ Prefer these over reading whole repositories.
 - Ground truth, in order: the XXMI DLL source, the game package, our tree-sitter-migoto fork,
   then the docs. Never guess the language: every keyword in `spec/` traces to a DLL source
   location or is marked `"source": "manual"` with a note.
-- One core: LSP, CLI and MCP call `@xxmi-lang/core`; no parsing, resolution or rule logic in a
+- One core: LSP, CLI and MCP call `xxmi-core`; no parsing, resolution or rule logic in a
   frontend.
-- Tests for everything (`pnpm test`), and `pnpm lint && pnpm typecheck` clean. Rules need a
+- Tests for everything (`cargo test` in `rust/`, `pnpm test`), `cargo clippy` and `cargo fmt --check`
+  clean, and `pnpm lint && pnpm typecheck` clean. Rules need a
   good and a bad fixture. Don't vendor real mods; fixtures are minimal and hand-written.
 - Update the relevant `docs/` file when user-visible behavior changes.

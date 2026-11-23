@@ -1,5 +1,3 @@
-//! Which command-list keys bind mesh data (port of packages/core/src/model/mesh.ts).
-
 use super::{IniFile, Reference};
 
 /// `vb0`, `vb1`, ... as the DLL dispatches on them (lower-cased key).

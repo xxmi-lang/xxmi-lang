@@ -1,4 +1,4 @@
-//! Regenerates spec/generated/*.json from DLL source checkouts, like packages/spec-extractor.
+//! Regenerates spec/generated/*.json from DLL source checkouts.
 //!
 //!   XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> xxmi-spec-extract [--check]
 //!
@@ -167,7 +167,7 @@ fn write_files(files: &[(&str, String)], out: &Path) -> Result<(), ExtractError>
     Ok(())
 }
 
-/// The merged spec, as `JSON.stringify(loadSpec())` writes it into dist/spec.json.
+/// The merged spec (generated spec plus overlays), as `merged_spec_json` produces it for the build.
 fn write_full(
     spec: &mut xxmi_spec_extractor::Spec,
     args: &Args,

@@ -98,7 +98,7 @@ quick fixes). See [docs/10-dotnet.md](docs/10-dotnet.md).
 
 ```bash
 xxmi lint path/to/mod                  # text output; exit 1 if there are errors
-xxmi lint path/to/mod --format json    # schema: packages/cli/schema/lint-output.v1.json
+xxmi lint path/to/mod --format json    # schema: schema/lint-output.v1.json
 xxmi lint --help                       # every rule, with its default severity
 xxmi query command store               # docs, args and DLL source of a command
 xxmi query symbol 'CommandList\ZZMI\SetTextures'   # a library symbol: location, docs, usage
@@ -122,11 +122,13 @@ and silence one line with `; xxmi-disable-next-line XM205`.
 
 ## Development
 
-Node 22.18+ and pnpm. See [CLAUDE.md](CLAUDE.md) for the commands and the rules this repo
+Rust (cargo), and Node 22.18+ with pnpm for the VS Code extension and scripts. See [CLAUDE.md](CLAUDE.md) for the commands and the rules this repo
 follows, and [docs/](docs/) for the design.
 
 ```bash
-pnpm install && pnpm build && pnpm test
+cd rust && cargo test --release        # Rust tests
+pnpm install && pnpm test              # VS Code extension unit tests
+pnpm test:lsp                          # LSP protocol suite (XXMI_LSP_COMMAND points it at the server binary)
 pnpm xxmi lint path/to/mod             # CLI from source
 docker build -f docker/mcp/Dockerfile -t xxmi-mcp .   # the MCP server image
 pnpm build:binaries --target host      # single-file binaries (needs Rust)
@@ -147,4 +149,4 @@ pnpm build:binaries --target host      # single-file binaries (needs Rust)
 ## License
 
 GPL-3.0-or-later. The grammar build from tree-sitter-migoto is MIT
-(`packages/core/grammar/LICENSE.tree-sitter-migoto`).
+(`rust/crates/tree-sitter-migoto/SOURCE.md`).

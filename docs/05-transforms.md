@@ -42,7 +42,7 @@ Heuristics for "meaningless name" (also rule XM401): hex or hash-like names, `Re
 Each game profile defines an ordered list of **eras**. Each consecutive pair has a **recipe**:
 
 ```ts
-// packages/core/src/migrate/zzmi/position-to-blend-v1.ts
+// (design sketch) migrate/zzmi/position-to-blend-v1.ts
 export const recipe: MigrationRecipe = {
   from: 'position', to: 'blend-v1',
   detect(model): EraEvidence { /* signals + confidence */ },

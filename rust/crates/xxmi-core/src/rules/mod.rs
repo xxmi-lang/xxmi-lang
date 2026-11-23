@@ -1,4 +1,4 @@
-//! The lint rules, in the order the engine runs them (packages/core/src/lint/engine.ts).
+//! The lint rules, in the order the engine runs them.
 
 mod argument_count;
 mod bare_line;

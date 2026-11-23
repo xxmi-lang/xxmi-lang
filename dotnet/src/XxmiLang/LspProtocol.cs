@@ -73,7 +73,7 @@ namespace XxmiLang
         IReadOnlyList<WorkspaceFolder>? WorkspaceFolders,
         ClientCapabilities Capabilities);
 
-    // The wire shape of packages/cli/schema/lint-output.v1.json (the diagnostics are the public XxmiDiagnostic).
+    // The wire shape of schema/lint-output.v1.json (the diagnostics are the public XxmiDiagnostic).
     internal sealed record LintOutputJson(int Version, IReadOnlyList<LintFileJson>? Files);
 
     internal sealed record LintFileJson(string Path, string Encoding, IReadOnlyList<XxmiDiagnostic>? Diagnostics);

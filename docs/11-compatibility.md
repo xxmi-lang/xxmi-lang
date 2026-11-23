@@ -43,7 +43,7 @@ No other exit codes are used.
 
 ## Lint JSON (version 1)
 
-`xxmi lint --format json` prints one document. Its shape is in `packages/cli/schema/lint-output.v1.json`. The units and order are part of the contract:
+`xxmi lint --format json` prints one document. Its shape is in `schema/lint-output.v1.json`. The units and order are part of the contract:
 
 - Ranges use 0-based lines and UTF-16 code-unit columns, the LSP default. The text format shows both 1-based.
 - `files` are sorted byte-wise by the displayed `path`.

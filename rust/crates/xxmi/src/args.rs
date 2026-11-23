@@ -1,5 +1,4 @@
-//! Argument parsing with the behaviour of Node's strict `util.parseArgs`, so the Rust and
-//! TypeScript CLIs accept and reject the same command lines.
+//! Argument parsing with the behaviour of Node's strict `util.parseArgs`.
 
 use std::collections::{HashMap, HashSet};
 

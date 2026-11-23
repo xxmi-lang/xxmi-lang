@@ -1,5 +1,4 @@
-//! Built specs on the volume: `<DATA_DIR>/specs/<dllSha>.json`, one per indexed DLL commit,
-//! in the shape the TypeScript server writes.
+//! Built specs on the volume: `<DATA_DIR>/specs/<dllSha>.json`, one per indexed DLL commit.
 //! A stored spec is served only when it was built from the same DLL and baseline commits
 //! by this builder, and is rebuilt otherwise.
 

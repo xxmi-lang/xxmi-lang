@@ -1,4 +1,4 @@
-//! Workspace index (port of packages/core/src/workspace/workspace.ts, docs/01-language-model.md §4):
+//! Workspace index (docs/01-language-model.md §4):
 //! loads files with the namespaces the DLL would give them, follows `[Include]` like
 //! `ParseIncludedIniFiles`, and builds the symbol table.
 

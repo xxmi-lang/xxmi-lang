@@ -34,7 +34,7 @@ fn is_standalone_lsp() -> bool {
     stem.is_some_and(|stem| stem.eq_ignore_ascii_case("xxmi-lsp"))
 }
 
-/// A panic is an internal error like any other: exit 3, as the TypeScript CLI does.
+/// A panic is an internal error like any other: exit 3.
 fn run(args: &[String]) -> i32 {
     std::panic::catch_unwind(|| report(dispatch(args))).unwrap_or(3)
 }
