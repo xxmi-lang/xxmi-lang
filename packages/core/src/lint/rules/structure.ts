@@ -244,8 +244,11 @@ export const XM107: Rule = {
     // themselves: a disabled copy of a library isn't a duplicate of the enabled one.
     const firstByName = new Map<string, { path: string; line: number }>();
     const excluded = workspace.isExcluded(file.path);
+    const ownPackage = workspace.packageRoot(file);
     for (const other of workspace.files.values()) {
       if (other !== file && (excluded || workspace.isExcluded(other.path))) continue;
+      // One lint run can span several packages; the DLL only ever loads one.
+      if (workspace.packageRoot(other) !== ownPackage) continue;
       for (const section of other.sections) {
         const prefixed = lookup.sectionPrefix(section.name.text) !== undefined;
         // Global sections from included files merge into the main one instead of duplicating.

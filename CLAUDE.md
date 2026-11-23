@@ -19,6 +19,7 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 | `docs/08-editor-integration.md` | VS Code, Kate, HLSL, lupomikti compatibility |
 | `docs/09-roadmap.md` | What to build next, milestones, acceptance criteria |
 | `docs/10-dotnet.md` | The .NET library (`dotnet/`, NuGet packages `XxmiLang*`), or anything under `dotnet/` |
+| `docs/11-compatibility.md` | Changing CLI flags, exit codes, output formats, release assets |
 
 ## Ground truth, in priority order
 

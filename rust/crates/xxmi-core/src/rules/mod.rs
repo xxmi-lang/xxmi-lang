@@ -96,6 +96,8 @@ pub struct Rule {
     pub severity: Severity,
     /// One line, shown by `xxmi lint --help`.
     pub description: &'static str,
+    /// Whether the check can attach a quick fix to its findings.
+    pub has_fix: bool,
     pub check: fn(&RuleContext) -> Vec<Finding>,
 }
 
@@ -109,7 +111,15 @@ const fn rule(
         id,
         severity,
         description,
+        has_fix: false,
         check,
+    }
+}
+
+impl Rule {
+    const fn with_fix(mut self) -> Self {
+        self.has_fix = true;
+        self
     }
 }
 
@@ -137,7 +147,8 @@ pub const RULES: [Rule; 19] = [
         Severity::Warning,
         "Unknown key for this section kind",
         unknown_key::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM103",
         Severity::Error,
@@ -155,7 +166,8 @@ pub const RULES: [Rule; 19] = [
         Severity::Error,
         "Invalid enum value (resource `type`, `format`, key `type`, …)",
         enum_value::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM106",
         Severity::Error,
@@ -185,13 +197,15 @@ pub const RULES: [Rule; 19] = [
         Severity::Error,
         "Unresolved `run = CommandList…` / `CustomShader…` target",
         unresolved::check_commands,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM202",
         Severity::Error,
         "Unresolved resource reference (`ref`, `copy`, `Resource\\N\\X`, pools)",
         unresolved::check_resources,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM203",
         Severity::Warning,

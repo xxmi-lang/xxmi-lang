@@ -6,7 +6,9 @@ use std::time::{Duration, Instant};
 
 use lsp_server::{Connection, Message, Notification, Request, RequestId};
 use serde_json::{Value, json};
-use xxmi_core::lint::{ConfigLoader, LintOptions, RuleSetting, collect_ini_files, lint_file};
+use xxmi_core::lint::{
+    ConfigLoader, LintOptions, RuleSetting, collect_ini_files, lint_file, skipped_for_package,
+};
 use xxmi_core::trace;
 use xxmi_core::workspace::{FileId, Workspace};
 
@@ -234,6 +236,11 @@ impl<'a> Server<'a> {
             let Some(id) = self.workspace.file_id(&path) else {
                 continue;
             };
+            let package_root = self.workspace.package_root(&self.workspace.files()[id]);
+            if skipped_for_package(&self.options, package_root) {
+                self.send(publish(&uri, &[]));
+                continue;
+            }
             let large = !full && bytes > LARGE_FILE && self.utf16_len(&uri) > LARGE_FILE;
             self.options.rule_prefixes = large.then(|| vec!["XM0", "XM1"]);
 
@@ -280,6 +287,7 @@ impl<'a> Server<'a> {
         }
         self.configuration_request = None;
         self.options.overrides = rule_overrides(result.as_ref());
+        self.options.require_package = require_package(result.as_ref());
         self.publish(false);
     }
 
@@ -324,6 +332,15 @@ impl<'a> Server<'a> {
     }
 }
 
+/// `xxmi.requirePackage` of the settings answer; off unless it is `true`.
+fn require_package(result: Option<&Value>) -> bool {
+    result
+        .and_then(|settings| settings.get(0))
+        .and_then(|section| section.get("requirePackage"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+}
+
 /// `xxmi.rules` of the settings answer: rule id to setting name.
 fn rule_overrides(result: Option<&Value>) -> HashMap<String, RuleSetting> {
     let rules = result
@@ -336,4 +353,35 @@ fn rule_overrides(result: Option<&Value>) -> HashMap<String, RuleSetting> {
         .flatten()
         .filter_map(|(id, value)| Some((id.clone(), RuleSetting::parse(value.as_str()?)?)))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn require_package_is_read_from_the_first_settings_section() {
+        assert!(require_package(Some(&json!([{ "requirePackage": true }]))));
+        assert!(!require_package(Some(
+            &json!([{ "requirePackage": false }])
+        )));
+        assert!(!require_package(Some(
+            &json!([{ "requirePackage": "yes" }])
+        )));
+        assert!(!require_package(Some(&json!([{}]))));
+        assert!(!require_package(None));
+    }
+
+    #[test]
+    fn only_files_outside_a_package_are_skipped() {
+        let strict = LintOptions {
+            require_package: true,
+            ..LintOptions::bundled()
+        };
+        let lenient = LintOptions::bundled();
+
+        assert!(skipped_for_package(&strict, None));
+        assert!(!skipped_for_package(&strict, Some(Path::new("/pkg"))));
+        assert!(!skipped_for_package(&lenient, None));
+    }
 }
