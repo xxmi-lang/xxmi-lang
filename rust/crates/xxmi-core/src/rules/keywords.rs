@@ -43,8 +43,8 @@ pub fn flow_keyword(line: &LineModel, text: &str) -> Option<FlowKeyword> {
     }
 }
 
-/// A flow keyword where the DLL doesn't read flow control: the preamble (`None`) or a section
-/// that isn't a command list (`ParseCommandList` only runs on those).
+/// A flow keyword where the DLL doesn't read flow control: the preamble (`None`)
+/// or a section that isn't a command list (`ParseCommandList` only runs on those).
 /// Unknown sections are left to XM101.
 pub fn is_misplaced_flow(section: Option<&SectionModel>, line: &LineModel, text: &str) -> bool {
     let outside = match section {

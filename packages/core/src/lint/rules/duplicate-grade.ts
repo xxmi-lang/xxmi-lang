@@ -44,14 +44,20 @@ function valuesOf(section: SectionModel, command: string): string[] {
   return section.lines.filter((l) => l.command === command).map((l) => l.value?.text ?? '');
 }
 
-/** A Resource a `vb0`-`vb2` or `ib` line binds anywhere in the workspace, or backed by a `.buf` or `.ib` file. */
+/**
+ * A Resource a `vb0`-`vb2` or `ib` line binds anywhere in the workspace,
+ * or one backed by a `.buf` or `.ib` file.
+ */
 function isMeshResource(workspace: Workspace, { section }: Copy): boolean {
   if (section.kind !== 'resource') return false;
   if (usage(workspace).meshBound.has(section.qualifiedName.toLowerCase())) return true;
   return valuesOf(section, 'filename').some((v) => /\.(buf|ib)$/i.test(v));
 }
 
-/** A CommandList or TextureOverride that binds any `vb*` or `ib`, or a TextureOverride that skips or draws. */
+/**
+ * A CommandList or TextureOverride that binds any `vb*` or `ib`,
+ * or a TextureOverride that skips or draws.
+ */
 function isMeshList({ section }: Copy): boolean {
   if (section.kind !== 'commandlist' && section.kind !== 'textureoverride') return false;
   if (section.lines.some((l) => l.command !== undefined && isMeshSlot(l.command))) return true;

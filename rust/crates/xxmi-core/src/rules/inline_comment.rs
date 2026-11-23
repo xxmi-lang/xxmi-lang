@@ -1,6 +1,6 @@
 //! XM115: a `;` comment after a value on the same line.
 
-use super::{Finding, FixSpec, RuleContext};
+use super::{Finding, FixSpec, RuleContext, line_ending, line_start_indent};
 use crate::scan::Span;
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
@@ -47,13 +47,12 @@ fn move_above(text: &str, content: Span, comment: Span) -> Option<FixSpec> {
         return None;
     }
 
-    let line_start = text[..content.start].rfind('\n').map_or(0, |i| i + 1);
-    let indent = &text[line_start..content.start];
+    let (_, indent) = line_start_indent(text, content.start);
+    let eol = line_ending(text, content.start);
     Some(FixSpec {
         title: "Move the comment above the line".to_string(),
         span: content,
-        // A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
-        new_text: format!("{}\n{indent}{code}", comment.slice(text)),
+        new_text: format!("{}{eol}{indent}{code}", comment.slice(text)),
         also: Vec::new(),
     })
 }

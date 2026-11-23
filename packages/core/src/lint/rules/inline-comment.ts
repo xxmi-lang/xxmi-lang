@@ -1,5 +1,6 @@
 import type { Range } from '../../parser/index.ts';
 import type { LineModel } from '../../model/types.ts';
+import { lineEnding, lineStartIndent } from '../suggest.ts';
 import type { Fix, Rule } from '../types.ts';
 
 /**
@@ -20,14 +21,14 @@ function moveAbove(text: string, line: LineModel, at: number): Fix | undefined {
   const code = text.slice(start, at).replace(/[ \t]+$/, '');
   if (code.endsWith('=')) return undefined;
 
-  const indent = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
+  const { indent } = lineStartIndent(text, start);
+  const eol = lineEnding(text, start);
   return {
     title: 'Move the comment above the line',
-    // A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
     edits: [
       {
         range: line.content.span.range,
-        newText: `${text.slice(at, end)}\n${indent}${code}`,
+        newText: `${text.slice(at, end)}${eol}${indent}${code}`,
       },
     ],
   };

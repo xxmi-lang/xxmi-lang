@@ -11,8 +11,8 @@ fn closing_bracket(header: Span, text: &str) -> Option<usize> {
         .map(|offset| header.start + offset)
 }
 
-/// What follows the closing `]`, from the bracket on. A `;` suffix is not reported: the DLL
-/// ignores everything after the `]`, so a trailing comment changes nothing.
+/// What follows the closing `]`, from the bracket on. A `;` suffix is not reported:
+/// the DLL ignores everything after the `]`, so a trailing comment changes nothing.
 fn suffix_after_bracket(header: Span, text: &str) -> Option<(Span, Span)> {
     let bracket = closing_bracket(header, text)?;
     let after = Span {

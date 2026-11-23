@@ -9,8 +9,9 @@ export interface Redeclaration {
 }
 
 /**
- * ParseConstantsSection only registers globals from [Constants]; RegisterGlobalVariable refuses
- * a name it already holds, so the first declaration wins and the DLL warns "Redeclaration".
+ * ParseConstantsSection only registers globals from [Constants];
+ * RegisterGlobalVariable refuses a name it already holds,
+ * so the first declaration wins and the DLL warns "Redeclaration".
  */
 export function redeclaredGlobals(file: IniFile): Redeclaration[] {
   const firstByKey = new Map<string, number>();

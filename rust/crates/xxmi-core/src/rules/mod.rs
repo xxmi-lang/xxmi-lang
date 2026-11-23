@@ -122,6 +122,39 @@ fn comment_out_fix(content: Span) -> FixSpec {
     }
 }
 
+/// Start offset of the line holding `offset`, and the whitespace before `offset` on it.
+fn line_start_indent(text: &str, offset: usize) -> (usize, &str) {
+    let start = text[..offset].rfind('\n').map_or(0, |i| i + 1);
+    (start, &text[start..offset])
+}
+
+/// The line break an edit on the line holding `offset` should insert, so CRLF files stay CRLF.
+/// A last line without a terminator takes the file's first break.
+fn line_ending(text: &str, offset: usize) -> &'static str {
+    let newline = text[offset..]
+        .find('\n')
+        .map(|i| offset + i)
+        .or_else(|| text.find('\n'));
+    match newline {
+        Some(i) if text[..i].ends_with('\r') => "\r\n",
+        _ => "\n",
+    }
+}
+
+/// An insertion of `body` as a new line above the line holding `offset`, with that line's indent.
+fn insert_line_above(text: &str, offset: usize, body: &str) -> (Span, String) {
+    let (start, indent) = line_start_indent(text, offset);
+    let eol = line_ending(text, offset);
+    (Span { start, end: start }, format!("{indent}{body}{eol}"))
+}
+
+/// An insertion of `body` as a new line after `at`, indented like the line holding `indent_of`.
+fn insert_line_after(text: &str, at: usize, indent_of: usize, body: &str) -> (Span, String) {
+    let (_, indent) = line_start_indent(text, indent_of);
+    let eol = line_ending(text, at);
+    (Span { start: at, end: at }, format!("{eol}{indent}{body}"))
+}
+
 pub struct Rule {
     pub id: &'static str,
     pub severity: Severity,
@@ -231,7 +264,7 @@ pub const RULES: [Rule; 31] = [
     rule(
         "XM107",
         Severity::Warning,
-        "Duplicate section name within the same namespace",
+        "Duplicate section name within the same namespace (error, warning or info per finding)",
         duplicate_section::check,
     ),
     rule(

@@ -144,7 +144,8 @@ rule_tests! {
     xm403 => "XM403",
 }
 
-/// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change.
+/// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change,
+/// except that fixes insert the file's own line break.
 #[test]
 fn crlf_files_report_the_same_diagnostics_as_lf() {
     let scratch = std::env::temp_dir().join(format!("xxmi-crlf-{}", std::process::id()));
@@ -163,15 +164,41 @@ fn crlf_files_report_the_same_diagnostics_as_lf() {
         fs::write(&crlf, to_crlf(&fs::read(&bad).unwrap())).unwrap();
         let rules = Some(vec![id.clone()]);
 
+        let actual = diagnose(&crlf, &scratch, rules.clone());
         assert_eq!(
-            diagnose(&crlf, &scratch, rules.clone()),
+            normalise_fix_text(actual.clone()),
             diagnose(&bad, &dir, rules),
             "{id} with CRLF"
         );
+        if let Ok(text) = fs::read_to_string(&crlf) {
+            assert_no_bare_lf(&id, &text, &actual);
+        }
         checked += 1;
     }
     fs::remove_dir_all(&scratch).unwrap();
     assert!(checked > 15, "only {checked} single-file fixtures found");
+}
+
+/// Fix texts with CRLF breaks turned back into LF, to compare against the LF run.
+fn normalise_fix_text(mut diagnostics: Vec<Value>) -> Vec<Value> {
+    for d in &mut diagnostics {
+        let Some(edits) = d.get_mut("fix").and_then(|f| f["edits"].as_array_mut()) else {
+            continue;
+        };
+        for edit in edits {
+            let text = edit["newText"].as_str().unwrap().replace("\r\n", "\n");
+            edit["newText"] = json!(text);
+        }
+    }
+    diagnostics
+}
+
+fn assert_no_bare_lf(id: &str, before: &str, diagnostics: &[Value]) {
+    let fixed = apply_fixes(before, diagnostics);
+    let bare = fixed
+        .match_indices('\n')
+        .any(|(i, _)| !fixed[..i].ends_with('\r'));
+    assert!(!bare, "{id}: a fix left a bare LF in a CRLF file");
 }
 
 fn to_crlf(bytes: &[u8]) -> Vec<u8> {
@@ -228,8 +255,8 @@ fn xxmi_1_3_1_fixtures_match_the_golden_output() {
     );
 }
 
-/// fixtures/ownership: every line a dedicated rule names is reported by that rule alone, not also
-/// as XM001, XM102, XM103, XM109, XM110 or XM204.
+/// fixtures/ownership: every line a dedicated rule names is reported by that rule alone,
+/// not also as XM001, XM102, XM103, XM109, XM110 or XM204.
 #[test]
 fn stray_lines_are_reported_once_under_their_own_rule() {
     let dir = fixtures().join("ownership");

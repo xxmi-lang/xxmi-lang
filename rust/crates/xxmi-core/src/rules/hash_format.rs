@@ -43,13 +43,16 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
     findings
 }
 
-/// GetIniHash reads `sscanf("%16llx%n")` and rejects anything left over, so `0x` and short forms
-/// parse. A TextureOverride casts the result to 32 bits, silently dropping the high digits.
+/// GetIniHash reads `sscanf("%16llx%n")` and rejects anything left over,
+/// so `0x` and short forms parse.
+/// A TextureOverride casts the result to 32 bits, silently dropping the high digits.
 fn classify(written: &str, texture: bool) -> Option<(Severity, String)> {
-    let prefixed = written
+    let sign = written.chars().next().filter(|c| matches!(c, '+' | '-'));
+    let unsigned = &written[sign.map_or(0, |_| 1)..];
+    let prefixed = unsigned
         .get(..2)
         .is_some_and(|p| p.eq_ignore_ascii_case("0x"));
-    let digits = if prefixed { &written[2..] } else { written };
+    let digits = if prefixed { &unsigned[2..] } else { unsigned };
 
     let readable = !digits.is_empty()
         && written.len() <= MAX_CHARS
@@ -72,6 +75,10 @@ fn classify(written: &str, texture: bool) -> Option<(Severity, String)> {
         ));
     }
 
+    if let Some(sign) = sign {
+        return Some((Severity::Warning, signed_message(written, sign, texture)));
+    }
+
     let canonical_length = digits.len() == 8 || (!texture && digits.len() == 16);
     if !prefixed && canonical_length {
         return None;
@@ -83,6 +90,19 @@ fn classify(written: &str, texture: bool) -> Option<(Severity, String)> {
             "Non-canonical hash \"{written}\": the DLL accepts it, but hashes are written as {expected} hex digits with no `0x` prefix."
         ),
     ))
+}
+
+/// `%llx` follows the C standard and takes an optional sign; a `-` negates the unsigned value.
+fn signed_message(written: &str, sign: char, texture: bool) -> String {
+    let wraps = if sign == '-' {
+        " (`-` wraps the value to `ffffffff…`)"
+    } else {
+        ""
+    };
+    let expected = if texture { "8" } else { "8 or 16" };
+    format!(
+        "Signed hash \"{written}\": the DLL accepts the sign{wraps}, but hashes are written as {expected} hex digits with no sign or `0x` prefix."
+    )
 }
 
 #[cfg(test)]
@@ -101,7 +121,7 @@ mod tests {
 
     #[test]
     fn dll_accepted_forms_warn() {
-        for written in ["0x0123abcd", "0123abc", "0X1"] {
+        for written in ["0x0123abcd", "0123abc", "0X1", "-1", "+1", "-0x1"] {
             assert_eq!(
                 severity(written, true),
                 Some(Severity::Warning),
@@ -113,13 +133,7 @@ mod tests {
 
     #[test]
     fn dll_rejected_or_truncated_forms_are_errors() {
-        for written in [
-            "0123abcg",
-            "0x",
-            "-1",
-            "0123456789abcdef0",
-            "0x0123456789abcde",
-        ] {
+        for written in ["0123abcg", "0x", "0123456789abcdef0", "0x0123456789abcde"] {
             assert_eq!(severity(written, false), Some(Severity::Error), "{written}");
         }
         assert_eq!(severity("0123456789abcdef", true), Some(Severity::Error));

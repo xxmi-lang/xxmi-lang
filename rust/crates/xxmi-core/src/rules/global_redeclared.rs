@@ -13,8 +13,9 @@ pub struct Redeclaration {
     pub first: usize,
 }
 
-/// ParseConstantsSection only registers globals from [Constants]; RegisterGlobalVariable refuses
-/// a name it already holds, so the first declaration wins and the DLL warns "Redeclaration".
+/// ParseConstantsSection only registers globals from [Constants];
+/// RegisterGlobalVariable refuses a name it already holds,
+/// so the first declaration wins and the DLL warns "Redeclaration".
 pub fn redeclared_globals(file: &IniFile) -> Vec<Redeclaration> {
     let mut first_by_key: HashMap<String, usize> = HashMap::new();
     let mut redeclared = Vec::new();

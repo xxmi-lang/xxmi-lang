@@ -5,8 +5,8 @@ import type { Redeclaration } from './global-redeclared.ts';
 
 /**
  * declare_local_variable (CommandList.cpp) refuses a name that find_local_variable already sees
- * in the section's scope stack, so sibling branches may reuse a name but a nested one may not
- * shadow it. `if` opens a scope; `elif` and `else` clear the deepest one; `endif` closes it.
+ * in the section's scope stack: sibling branches may reuse a name, a nested one may not shadow it.
+ * `if` opens a scope; `elif` and `else` clear the deepest one; `endif` closes it.
  */
 export function redeclaredLocals(file: IniFile): Redeclaration[] {
   const redeclared: Redeclaration[] = [];

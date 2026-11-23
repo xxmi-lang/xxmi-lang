@@ -62,5 +62,37 @@
         "character": 23
       }
     }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "warning",
+    "message": "Signed hash \"+1\": the DLL accepts the sign, but hashes are written as 8 hex digits with no sign or `0x` prefix.",
+    "range": {
+      "start": {
+        "line": 13,
+        "character": 7
+      },
+      "end": {
+        "line": 13,
+        "character": 9
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM113",
+    "severity": "warning",
+    "message": "Signed hash \"-1\": the DLL accepts the sign (`-` wraps the value to `ffffffff…`), but hashes are written as 8 hex digits with no sign or `0x` prefix.",
+    "range": {
+      "start": {
+        "line": 16,
+        "character": 7
+      },
+      "end": {
+        "line": 16,
+        "character": 9
+      }
+    }
   }
 ]

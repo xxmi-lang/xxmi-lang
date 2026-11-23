@@ -6,7 +6,13 @@ import { dirname, relative, sep } from 'node:path';
 import type { IniFile, LineModel, SectionModel } from '../../model/types.ts';
 import { keyCommands } from '../../spec/lookup.ts';
 import type { SpecKey } from '../../spec/types.ts';
-import { commentOutFix, didYouMean, editDistance, replaceFix } from '../suggest.ts';
+import {
+  commentOutFix,
+  didYouMean,
+  editDistance,
+  insertLineAfter,
+  replaceFix,
+} from '../suggest.ts';
 import type { Fix, Rule, RuleContext } from '../types.ts';
 import { compareLoadOrder, relativeToRoot } from '../../workspace/load-order.ts';
 import { gradeDuplicate } from './duplicate-grade.ts';
@@ -35,8 +41,8 @@ export function flowKeyword(line: LineModel): 'if' | 'elif' | 'else' | 'endif' |
 }
 
 /**
- * A flow keyword where the DLL doesn't read flow control: the preamble (no section) or a section
- * that isn't a command list (`ParseCommandList` only runs on those).
+ * A flow keyword where the DLL doesn't read flow control: the preamble (no section)
+ * or a section that isn't a command list (`ParseCommandList` only runs on those).
  * Unknown sections are left to XM101.
  */
 export function isMisplacedFlow(section: SectionModel | undefined, line: LineModel): boolean {
@@ -44,7 +50,10 @@ export function isMisplacedFlow(section: SectionModel | undefined, line: LineMod
   return Boolean(outside) && flowKeyword(line) !== undefined;
 }
 
-/** `ParseIniKeyValLine` warns "Malformed line" and drops it. XM111 owns a stray `else` or `endif`. */
+/**
+ * `ParseIniKeyValLine` warns "Malformed line" and drops it.
+ * XM111 owns a stray `else` or `endif`.
+ */
 export function isMalformedLine(section: SectionModel, line: LineModel): boolean {
   const strict = section.spec !== undefined && !section.spec.allowsBareLines;
   return strict && !line.key && !isMisplacedFlow(section, line);
@@ -218,18 +227,12 @@ export const XM105: Rule = {
   },
 };
 
-/**
- * Adds `endif` after the section's last command, indented like the `if` it closes.
- * A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
- */
+/** Adds `endif` after the section's last command, indented like the `if` it closes. */
 function insertEndif(text: string, section: SectionModel, opening: LineModel): Fix {
   const last = section.lines.at(-1) ?? opening;
-  const at = last.content.span.range.end;
-  const { start } = opening.content.span;
-  const indent = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
   return {
     title: 'Add the missing `endif`',
-    edits: [{ range: { start: at, end: at }, newText: `\n${indent}endif` }],
+    edits: [insertLineAfter(text, last, opening, 'endif')],
   };
 }
 
@@ -279,7 +282,8 @@ function relativeLocation(from: IniFile, to: IniFile): string {
 export const XM107: Rule = {
   id: 'XM107',
   severity: 'warning',
-  description: 'Duplicate section name within the same namespace',
+  description:
+    'Duplicate section name within the same namespace (error, warning or info per finding)',
   check({ file, workspace, lookup, report }) {
     // The DLL keeps the first and warns for the rest, in its own load order (see load-order.ts).
     // Files it never loads (`exclude_recursive`, e.g. DISABLED folders) can only clash with

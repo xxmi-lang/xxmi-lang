@@ -13,7 +13,8 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                 continue;
             }
 
-            // ParseIniKeyValLine warns "No value found" and drops the line, so the key is never set.
+            // ParseIniKeyValLine warns "No value found" and drops the line,
+            // so the key is never set.
             let content = line.scanned.content;
             findings.push(Finding {
                 span: content,

@@ -1,5 +1,6 @@
 import type { LineModel, SectionModel } from '../../model/types.ts';
 import type { SpecSection } from '../../spec/types.ts';
+import { insertLineAbove } from '../suggest.ts';
 import type { Fix, Rule } from '../types.ts';
 import { flowKeyword } from './structure.ts';
 
@@ -27,8 +28,9 @@ interface Pending {
 }
 
 /**
- * The line as a setting of the section; ParseCommandList skips these keys before it reads flow
- * control, and the GetIni* readers never look at `if` (IniHandler.cpp).
+ * The line as a setting of the section;
+ * ParseCommandList skips these keys before it reads flow control,
+ * and the GetIni* readers never look at `if` (IniHandler.cpp).
  */
 function settingOf(spec: SpecSection, line: LineModel, report: number): Setting | undefined {
   const key = line.key?.text.toLowerCase();
@@ -43,15 +45,10 @@ function onlyCopy(branch: Setting[], wanted: Setting): Setting | undefined {
 }
 
 function hoistFix(text: string, ifLine: LineModel, first: Setting, copies: Setting[]): Fix {
-  const { start } = ifLine.content.span;
-  const indent = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
-  const at = { line: ifLine.line, character: 0 };
-
   return {
     title: `Move \`${first.key}\` above the \`if\``,
     edits: [
-      // A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
-      { range: { start: at, end: at }, newText: `${indent}${first.line.content.text}\n` },
+      insertLineAbove(text, ifLine, first.line.content.text),
       ...copies.map((copy) => ({
         range: {
           start: { line: copy.line.line, character: 0 },
@@ -64,8 +61,8 @@ function hoistFix(text: string, ifLine: LineModel, first: Setting, copies: Setti
 }
 
 /**
- * A setting that appears once, with the same value, in every branch of a chain that has an
- * `else` is set the same whichever branch runs, so one copy above the `if` replaces them all.
+ * A setting that appears once, with the same value, in every branch of a chain that has an `else`
+ * is set the same whichever branch runs, so one copy above the `if` replaces them all.
  * Only the first copy's report carries the fix, so applying every fix doesn't repeat it.
  */
 function attachHoists(text: string, chain: Chain, pending: Pending[]): void {
@@ -81,6 +78,22 @@ function attachHoists(text: string, chain: Chain, pending: Pending[]): void {
   }
 }
 
+function startElse(chain: Chain): void {
+  chain.hasElse = true;
+  chain.branches.push([]);
+}
+
+function flagSetting(spec: SpecSection, line: LineModel, chain: Chain, pending: Pending[]): void {
+  const setting = settingOf(spec, line, pending.length);
+  if (!setting) return;
+
+  pending.push({
+    line,
+    message: `\`${setting.key}\` inside an \`if\` is not conditional: the DLL reads it as a section setting, whatever the \`if\` says.`,
+  });
+  chain.branches.at(-1)?.push(setting);
+}
+
 function scanSection(
   text: string,
   section: SectionModel,
@@ -93,22 +106,11 @@ function scanSection(
     const top = open.at(-1);
     if (keyword === 'if') open.push({ ifLine: line, hasElse: false, branches: [[]] });
     else if (keyword === 'elif' && top) top.branches.push([]);
-    else if (keyword === 'else' && top) {
-      top.hasElse = true;
-      top.branches.push([]);
-    } else if (keyword === 'endif' && top) {
+    else if (keyword === 'else' && top) startElse(top);
+    else if (keyword === 'endif' && top) {
       open.pop();
       attachHoists(text, top, pending);
-    } else if (!keyword && top) {
-      const setting = settingOf(spec, line, pending.length);
-      if (!setting) continue;
-
-      pending.push({
-        line,
-        message: `\`${setting.key}\` inside an \`if\` is not conditional: the DLL reads it as a section setting, whatever the \`if\` says.`,
-      });
-      top.branches.at(-1)?.push(setting);
-    }
+    } else if (!keyword && top) flagSetting(spec, line, top, pending);
   }
 }
 

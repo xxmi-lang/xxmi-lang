@@ -9,8 +9,8 @@ use crate::scan::Span;
 
 const NON_UTF8: &str = "File isn't valid UTF-8 (likely GBK or Shift-JIS). The DLL reads inis as UTF-8, so non-ASCII text such as names and paths won't read as intended.";
 
-/// Every syntax issue with the line it sits on, preamble first, minus the lines a dedicated rule
-/// names more precisely.
+/// Every syntax issue with the line it sits on, preamble first,
+/// minus the lines a dedicated rule names more precisely.
 fn issues<'a>(context: &'a RuleContext) -> Vec<(&'a Issue, Option<&'a LineModel>)> {
     let file = context.file;
     let preamble = file

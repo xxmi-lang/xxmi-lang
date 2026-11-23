@@ -9,8 +9,8 @@ use crate::model::{IniFile, Scope, SectionModel};
 use crate::spec::SectionKind;
 
 /// declare_local_variable (CommandList.cpp) refuses a name that find_local_variable already sees
-/// in the section's scope stack, so sibling branches may reuse a name but a nested one may not
-/// shadow it. `if` opens a scope; `elif` and `else` clear the deepest one; `endif` closes it.
+/// in the section's scope stack: sibling branches may reuse a name, a nested one may not shadow it.
+/// `if` opens a scope; `elif` and `else` clear the deepest one; `endif` closes it.
 pub fn redeclared_locals(file: &IniFile, text: &str) -> Vec<Redeclaration> {
     let mut redeclared = Vec::new();
     for (index, section) in file.sections.iter().enumerate() {

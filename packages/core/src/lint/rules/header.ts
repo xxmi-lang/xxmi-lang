@@ -8,8 +8,9 @@ function closingBracket(header: ScannedLine): number {
 }
 
 /**
- * What follows the closing `]`, as the range to show and the range a fix removes. A `;` suffix is
- * not reported: the DLL ignores everything after the `]`, so a trailing comment changes nothing.
+ * What follows the closing `]`, as the range to show and the range a fix removes.
+ * A `;` suffix is not reported: the DLL ignores everything after the `]`,
+ * so a trailing comment changes nothing.
  */
 function suffixAfterBracket(
   header: ScannedLine,

@@ -66,8 +66,8 @@ fn normalized_lines((file, section): (&IniFile, &SectionModel)) -> Vec<String> {
         .collect()
 }
 
-/// A Resource a `vb0`-`vb2` or `ib` line binds anywhere in the workspace, or backed by a
-/// `.buf` or `.ib` file.
+/// A Resource a `vb0`-`vb2` or `ib` line binds anywhere in the workspace,
+/// or one backed by a `.buf` or `.ib` file.
 fn is_mesh_resource(context: &RuleContext, (file, section): (&IniFile, &SectionModel)) -> bool {
     if section.kind != Some(SymbolKind::Resource) {
         return false;
@@ -91,8 +91,8 @@ fn has_mesh_filename(file: &IniFile, section: &SectionModel) -> bool {
         .any(|value| value.ends_with(".buf") || value.ends_with(".ib"))
 }
 
-/// A CommandList or TextureOverride that binds any `vb*` or `ib`, or a TextureOverride that
-/// skips or draws.
+/// A CommandList or TextureOverride that binds any `vb*` or `ib`,
+/// or a TextureOverride that skips or draws.
 fn is_mesh_list((file, section): (&IniFile, &SectionModel)) -> bool {
     let kind = section.kind;
     if !matches!(

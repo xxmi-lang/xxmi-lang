@@ -4,16 +4,26 @@ import { commentStart } from './inline-comment.ts';
 /** `%16llx` in GetIniHash counts the `0x` prefix in its width. */
 const MAX_CHARS = 16;
 
+/** `%llx` follows the C standard and takes an optional sign; a `-` negates the unsigned value. */
+function signedMessage(written: string, sign: string, texture: boolean): string {
+  const wraps = sign === '-' ? ' (`-` wraps the value to `ffffffff…`)' : '';
+  const expected = texture ? '8' : '8 or 16';
+  return `Signed hash "${written}": the DLL accepts the sign${wraps}, but hashes are written as ${expected} hex digits with no sign or \`0x\` prefix.`;
+}
+
 /**
- * GetIniHash reads `sscanf("%16llx%n")` and rejects anything left over, so `0x` and short forms
- * parse. A TextureOverride casts the result to 32 bits, silently dropping the high digits.
+ * GetIniHash reads `sscanf("%16llx%n")` and rejects anything left over,
+ * so `0x` and short forms parse.
+ * A TextureOverride casts the result to 32 bits, silently dropping the high digits.
  */
 export function classifyHash(
   written: string,
   texture: boolean,
 ): { severity: Severity; message: string } | undefined {
-  const prefixed = /^0x/i.test(written);
-  const digits = prefixed ? written.slice(2) : written;
+  const sign = /^[+-]/.exec(written)?.[0];
+  const unsigned = sign ? written.slice(1) : written;
+  const prefixed = /^0x/i.test(unsigned);
+  const digits = prefixed ? unsigned.slice(2) : unsigned;
 
   const readable = /^[0-9a-f]+$/i.test(digits) && written.length <= MAX_CHARS;
   if (!readable) {
@@ -29,6 +39,8 @@ export function classifyHash(
       message: `Hash "${written}" has more than 8 digits: a TextureOverride hash is 32-bit, so the DLL drops the high digits.`,
     };
   }
+
+  if (sign) return { severity: 'warning', message: signedMessage(written, sign, texture) };
 
   const canonicalLength = digits.length === 8 || (!texture && digits.length === 16);
   if (!prefixed && canonicalLength) return undefined;

@@ -44,6 +44,41 @@ export function commentOutFix(range: import('../parser/index.ts').Range): import
   };
 }
 
+type Edit = import('./types.ts').Fix['edits'][number];
+type Line = import('../model/types.ts').LineModel;
+
+/** Start offset of the line holding `offset`, and the text before `offset` on it. */
+export function lineStartIndent(text: string, offset: number): { start: number; indent: string } {
+  const start = text.lastIndexOf('\n', offset - 1) + 1;
+  return { start, indent: text.slice(start, offset) };
+}
+
+/**
+ * The line break an edit on the line holding `offset` should insert, so CRLF files stay CRLF.
+ * A last line without a terminator takes the file's first break.
+ */
+export function lineEnding(text: string, offset: number): '\r\n' | '\n' {
+  const found = text.indexOf('\n', offset);
+  const newline = found === -1 ? text.indexOf('\n') : found;
+  return newline > 0 && text[newline - 1] === '\r' ? '\r\n' : '\n';
+}
+
+/** An insertion of `body` as a new line above `line`, with its indent. */
+export function insertLineAbove(text: string, line: Line, body: string): Edit {
+  const { start } = line.content.span;
+  const { indent } = lineStartIndent(text, start);
+  const at = { line: line.line, character: 0 };
+  return { range: { start: at, end: at }, newText: `${indent}${body}${lineEnding(text, start)}` };
+}
+
+/** An insertion of `body` as a new line after `last`, indented like `like`. */
+export function insertLineAfter(text: string, last: Line, like: Line, body: string): Edit {
+  const at = last.content.span.range.end;
+  const { indent } = lineStartIndent(text, like.content.span.start);
+  const eol = lineEnding(text, last.content.span.end);
+  return { range: { start: at, end: at }, newText: `${eol}${indent}${body}` };
+}
+
 /** A "replace with the suggestion" quick fix, if there is a suggestion. */
 export function replaceFix(
   range: import('../parser/index.ts').Range,
