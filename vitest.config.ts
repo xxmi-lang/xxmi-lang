@@ -14,7 +14,12 @@ export default defineConfig({
   test: {
     projects: readdirSync('packages').map((name) => ({
       extends: true,
-      test: { name: `@xxmi-lang/${name}`, root: `packages/${name}` },
+      test: {
+        name: `@xxmi-lang/${name}`,
+        root: `packages/${name}`,
+        // Each test builds an app and indexes fixtures, which Windows runners can stretch past 5 s.
+        ...(name === 'mcp-server' && { testTimeout: 30_000 }),
+      },
     })),
   },
 });
