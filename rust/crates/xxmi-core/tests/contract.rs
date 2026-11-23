@@ -22,6 +22,8 @@ const MESSY: &str = "[Bogus]\n[Resource\\R]\nbogus_key = 1\n[Resource\\S]\nbogus
 
 #[test]
 fn files_sort_by_path_and_diagnostics_by_position_then_rule() {
+    // Absolute on every platform: Windows adds a drive letter, so expectations go through the same resolver.
+    let shown = |path: &str| resolve_path(Path::new(path)).to_string_lossy().into_owned();
     let files: Vec<(PathBuf, String)> = ["/v/b/z.ini", "/v/a/y.ini", "/v/B/x.ini", "/v/a/Y.ini"]
         .iter()
         .map(|path| (PathBuf::from(path), MESSY.to_string()))
@@ -36,10 +38,8 @@ fn files_sort_by_path_and_diagnostics_by_position_then_rule() {
         .iter()
         .map(|f| f["path"].as_str().unwrap())
         .collect();
-    assert_eq!(
-        paths,
-        ["/v/B/x.ini", "/v/a/Y.ini", "/v/a/y.ini", "/v/b/z.ini"]
-    );
+    let expected = ["/v/B/x.ini", "/v/a/Y.ini", "/v/a/y.ini", "/v/b/z.ini"].map(shown);
+    assert_eq!(paths, expected);
 
     for file in document["files"].as_array().unwrap() {
         let keys: Vec<(u64, u64, &str)> = file["diagnostics"]
