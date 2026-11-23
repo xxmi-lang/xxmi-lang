@@ -9,12 +9,17 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
     // themselves: a disabled copy of a library isn't a duplicate of the enabled one.
     let workspace = context.workspace;
     let excluded = workspace.is_excluded(&context.file.path, None);
+    let own_package = context.package_root;
 
     let mut first_by_name: HashMap<String, (usize, u32)> = HashMap::new();
     let mut findings = Vec::new();
     for (id, other) in workspace.files().iter().enumerate() {
         let is_this = id == context.file_id;
         if !is_this && (excluded || workspace.is_excluded(&other.path, None)) {
+            continue;
+        }
+        // One lint run can span several packages; the DLL only ever loads one.
+        if workspace.package_root(other) != own_package {
             continue;
         }
 
