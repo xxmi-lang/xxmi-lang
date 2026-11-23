@@ -1,5 +1,6 @@
-//! Just enough C++ reading to pull tables and call sites out of the DLL source. Everything is
-//! located by symbol name, never by line number, so the extractor survives source drift.
+//! Just enough C++ reading to pull tables and call sites out of the DLL source.
+//! Everything is located by symbol name, never by line number,
+//! so the extractor survives source drift.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -133,18 +134,22 @@ impl CppFile {
             .split('\n')
             .map(|l| l.strip_suffix('\r').unwrap_or(l))
             .collect();
+
         let define = cached_regex(&format!(
             r"^[ \t]*#define[ \t]+{}(?-u:\b)(.*)$",
             regex::escape(name)
         ));
+
         let (start, first) = lines.iter().enumerate().find_map(|(i, l)| {
             define
                 .captures(l)
                 .map(|c| (i, c.get(1).map_or("", |m| m.as_str())))
         })?;
+
         let mut body: Vec<&str> = Vec::new();
         let mut line = first;
         let mut i = start + 1;
+
         loop {
             let trimmed = line.trim_end_matches(is_space);
             let continued = trimmed.ends_with('\\');
@@ -159,6 +164,7 @@ impl CppFile {
             line = lines[i];
             i += 1;
         }
+
         Some(body.join("\n"))
     }
 
@@ -171,8 +177,9 @@ impl CppFile {
     }
 }
 
-/// Matches of `pattern` that aren't directly preceded by one of `forbidden` (the lookbehind
-/// the regex crate lacks); a rejected match resumes one character later, like a regex engine.
+/// Matches of `pattern` that aren't directly preceded by one of `forbidden`
+/// (the lookbehind the regex crate lacks);
+/// a rejected match resumes one character later, like a regex engine.
 fn unprefixed_matches<'h>(pattern: &Regex, code: &'h str, forbidden: &[u8]) -> Vec<Match<'h>> {
     let mut found = Vec::new();
     let mut at = 0;
@@ -205,8 +212,8 @@ fn next_char_boundary(s: &str, i: usize) -> usize {
 #[cfg(test)]
 mod tests;
 
-/// Blanks out line and block comments (one space per UTF-16 unit, newlines kept), leaving string
-/// and char literals intact.
+/// Blanks out line and block comments (one space per UTF-16 unit, newlines kept),
+/// leaving string and char literals intact.
 pub fn strip_comments(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = String::with_capacity(text.len());
@@ -304,6 +311,7 @@ pub fn split_top_level(code: &str) -> Vec<&str> {
     let mut depth = 0i32;
     let mut start = 0;
     let mut i = 0;
+
     while i < bytes.len() {
         match bytes[i] {
             b'"' | b'\'' => {
@@ -320,6 +328,7 @@ pub fn split_top_level(code: &str) -> Vec<&str> {
         }
         i += 1;
     }
+
     let last = trim(&code[start..]);
     if !last.is_empty() {
         parts.push(last);

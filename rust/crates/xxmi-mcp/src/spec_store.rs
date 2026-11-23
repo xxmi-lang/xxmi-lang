@@ -1,6 +1,7 @@
-//! Built specs on the volume: `<DATA_DIR>/specs/<dllSha>.json`, one per indexed DLL commit, in the
-//! shape the TypeScript server writes. A stored spec is served only when it was built from the
-//! same DLL and baseline commits by this builder, and is rebuilt otherwise.
+//! Built specs on the volume: `<DATA_DIR>/specs/<dllSha>.json`, one per indexed DLL commit,
+//! in the shape the TypeScript server writes. A stored spec is served only
+//! when it was built from the same DLL and baseline commits by this builder,
+//! and is rebuilt otherwise.
 
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -47,9 +48,10 @@ impl SpecHeader {
     }
 }
 
-/// Leaking a spec is the price of the `&'static` model references core hands out, so a spec that
-/// is loaded again (after an eviction, or by a second reader) must reuse its first lookup: the
-/// leak is then one per build, not one per load.
+/// Leaking a spec is the price of the `&'static` model references core hands out,
+/// so a spec that is loaded again
+/// (after an eviction, or by a second reader) must reuse its first lookup:
+/// the leak is then one per build, not one per load.
 type BuildKey = (String, String, String, String);
 
 static LOOKUPS: LazyLock<Mutex<HashMap<BuildKey, &'static Lookup>>> =
@@ -90,8 +92,8 @@ fn slot_of(stored: StoredSpec) -> Option<SpecSlot> {
     extracted(&stored.header, stored.spec?).map(SpecSlot::Ready)
 }
 
-/// Reads the spec file of `dll_sha` when it was built from these inputs. Takes no lock: it does
-/// file I/O and parsing.
+/// Reads the spec file of `dll_sha` when it was built from these inputs. Takes no lock:
+/// it does file I/O and parsing.
 fn load_current(store: &Store, dll_sha: &str, baseline_sha: &str, builder: &str) -> Option<Cached> {
     let stored = read_json_blocking::<StoredSpec>(&store.spec_file(dll_sha))?;
     if !stored.header.is_current(dll_sha, baseline_sha, builder) {
@@ -129,8 +131,7 @@ impl VolumeSpecs {
         &self.builder
     }
 
-    /// The baseline commit stored specs must have been built against; unknown until it is
-    /// indexed.
+    /// The baseline commit stored specs must have been built against; unknown until it is indexed.
     pub fn baseline_sha(&self) -> Option<String> {
         Some(self.catalog.repo_state(baseline_repo())?.branch.sha)
     }
@@ -143,8 +144,8 @@ impl VolumeSpecs {
         self.slots.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Whether a current build result (spec or failure) exists for `dll_sha`. Called from the
-    /// indexer's async pass, so a cache miss reads the file on a blocking thread.
+    /// Whether a current build result (spec or failure) exists for `dll_sha`.
+    /// Called from the indexer's async pass, so a cache miss reads the file on a blocking thread.
     pub async fn has_current(&self, dll_sha: &str) -> bool {
         let Some(baseline_sha) = self.baseline_sha() else {
             return false;
@@ -210,8 +211,8 @@ impl VolumeSpecs {
         Ok(())
     }
 
-    /// Drops the specs of DLL commits that are no longer indexed, from memory and from the
-    /// volume; returns their shas.
+    /// Drops the specs of DLL commits that are no longer indexed, from memory and from the volume;
+    /// returns their shas.
     pub async fn retain(&self, keep: &HashSet<String>) -> Vec<String> {
         self.lock().retain(|sha, _| keep.contains(sha));
         let mut removed = Vec::new();

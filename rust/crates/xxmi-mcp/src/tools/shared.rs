@@ -35,8 +35,8 @@ pub struct ToolOutput {
     pub data: Value,
 }
 
-/// `expected` failures are ones the caller can act on (bad input, unknown ref, warming up); the
-/// rest are bugs, and their message stays in the log.
+/// `expected` failures are ones the caller can act on (bad input, unknown ref, warming up);
+/// the rest are bugs, and their message stays in the log.
 #[derive(Debug)]
 pub struct ToolError {
     pub message: String,
@@ -154,8 +154,8 @@ fn encode_cursor(offset: usize) -> String {
     out
 }
 
-/// Lenient like Node's `Buffer.from(text, 'base64url')`: characters outside the alphabet are
-/// skipped and decoding stops at `=`.
+/// Lenient like Node's `Buffer.from(text, 'base64url')`:
+/// characters outside the alphabet are skipped and decoding stops at `=`.
 fn decode_cursor(cursor: &str) -> String {
     let mut bytes = Vec::new();
     let (mut acc, mut bits) = (0u32, 0);

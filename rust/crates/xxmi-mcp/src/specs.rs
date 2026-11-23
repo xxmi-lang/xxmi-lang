@@ -1,6 +1,7 @@
-//! The specs the server can answer with: the one bundled with this release (always there) and the
-//! ones built per indexed DLL commit. `resolve` maps a `dll_ref` to one of them, falling back to
-//! the bundled spec with a note while a version's own spec is missing.
+//! The specs the server can answer with:
+//! the one bundled with this release (always there) and the ones built per indexed DLL commit.
+//! `resolve` maps a `dll_ref` to one of them,
+//! falling back to the bundled spec with a note while a version's own spec is missing.
 
 use std::sync::Arc;
 
@@ -76,6 +77,7 @@ impl ResolvedSpec {
     /// The `spec` block of a tool's structured result.
     pub fn block(&self) -> Value {
         let mut block = Map::new();
+
         block.insert(
             "source".into(),
             if self.extracted {
@@ -85,14 +87,17 @@ impl ResolvedSpec {
             }
             .into(),
         );
+
         block.insert("dllRef".into(), self.dll_ref.clone().into());
         block.insert("dllSha".into(), self.dll_sha.clone().into());
         block.insert("tag".into(), json!(self.tag));
         block.insert("kind".into(), json!(self.kind));
         block.insert("dllCommitDate".into(), self.dll_commit_date.clone().into());
+
         if let Some(note) = &self.note {
             block.insert("note".into(), note.clone().into());
         }
+
         Value::Object(block)
     }
 
@@ -148,8 +153,8 @@ impl SpecRegistry {
         }
     }
 
-    /// The spec for a `dll_ref`: unknown refs are an error, missing specs fall back to the
-    /// bundled one.
+    /// The spec for a `dll_ref`:
+    /// unknown refs are an error, missing specs fall back to the bundled one.
     pub fn resolve(
         &self,
         catalog: &Catalog,

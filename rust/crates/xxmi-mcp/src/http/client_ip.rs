@@ -24,8 +24,9 @@ fn forwarded_chain(headers: &HeaderMap) -> Vec<String> {
         .collect()
 }
 
-/// The entry `hops` from the right of `X-Forwarded-For`: each trusted proxy appends the address
-/// it saw, so the entries to the left of that are client-controlled and never picked.
+/// The entry `hops` from the right of `X-Forwarded-For`:
+/// each trusted proxy appends the address it saw,
+/// so the entries to the left of that are client-controlled and never picked.
 pub fn client_ip(headers: &HeaderMap, socket: Option<&str>, hops: usize) -> String {
     let fallback = socket.unwrap_or("unknown").to_string();
     if hops == 0 {

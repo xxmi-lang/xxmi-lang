@@ -1,5 +1,5 @@
-//! Unpacks a tar stream into a directory, keeping only the text files worth browsing. The
-//! filter is the safety net for a repository that suddenly ships gigabytes of textures.
+//! Unpacks a tar stream into a directory, keeping only the text files worth browsing.
+//! The filter is the safety net for a repository that suddenly ships gigabytes of textures.
 
 use std::fs;
 use std::io::{self, Read};

@@ -1,6 +1,7 @@
 //! Polls the tracked repos and keeps the volume current (docs/06-mcp-server.md "Architecture").
-//! Per pass: `git ls-remote` each repo, work out the wanted versions, fetch and extract each
-//! missing commit, build the symbol index for packages, and only then publish the new state.
+//! Per pass: `git ls-remote` each repo, work out the wanted versions,
+//! fetch and extract each missing commit, build the symbol index for packages,
+//! and only then publish the new state.
 //! Readers keep the old checkout until the swap, and a failed fetch leaves everything as it was.
 //! Specs per DLL version are built after publishing, so they never delay readiness.
 

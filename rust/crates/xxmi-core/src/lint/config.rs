@@ -1,5 +1,5 @@
-//! `xxmi.toml`: the nearest one up the tree from a file wins (docs/02-diagnostics.md
-//! "Configuration").
+//! `xxmi.toml`: the nearest one up the tree from a file wins
+//! (docs/02-diagnostics.md "Configuration").
 //!
 //!   [rules]
 //!   XM204 = "off"

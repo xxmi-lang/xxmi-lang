@@ -49,8 +49,8 @@ impl Drop for CancelOnDrop {
 }
 
 /// The core's documents are not `Send`, so a tool runs start to finish on one blocking thread.
-/// The permit travels into the task and is released only when the work ends, even after a
-/// timeout has dropped the caller; a task still queued by then does not start.
+/// The permit travels into the task and is released only when the work ends,
+/// even after a timeout has dropped the caller; a task still queued by then does not start.
 pub async fn run_blocking(ctx: Arc<ToolContext>, run: SyncTool, args: Args) -> ToolResult {
     let permit = ctx.blocking.admit()?;
     let cancelled = Arc::new(AtomicBool::new(false));

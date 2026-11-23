@@ -1,6 +1,7 @@
-//! Read-only access to indexed checkouts: a source tree for the DLL scans, `read_source`
-//! excerpts and ripgrep-backed `search_source`. Paths from callers are normalized and must stay
-//! inside the checkout (docs/06-mcp-server.md "Security and limits").
+//! Read-only access to indexed checkouts:
+//! a source tree for the DLL scans, `read_source` excerpts and ripgrep-backed `search_source`.
+//! Paths from callers are normalized and must stay inside the checkout
+//! (docs/06-mcp-server.md "Security and limits").
 
 pub mod excerpt;
 pub mod implementation;

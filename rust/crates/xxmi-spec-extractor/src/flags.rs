@@ -13,6 +13,7 @@ fn visit_identities(body: &mut SpecBody, visit: &mut impl FnMut(String, &mut boo
     for b in &mut body.builtin_sections {
         visit(id(&["builtin", &b.name]), &mut b.xxmi);
     }
+
     for s in &mut body.sections {
         visit(id(&["section", &s.name]), &mut s.xxmi);
         for k in &mut s.keys {
@@ -22,24 +23,29 @@ fn visit_identities(body: &mut SpecBody, visit: &mut impl FnMut(String, &mut boo
             visit(id(&["dynamic", &s.name, &d.kind]), &mut d.xxmi);
         }
     }
+
     for c in &mut body.commands {
         visit(id(&["command", &c.kind, &c.name]), &mut c.xxmi);
         for v in &mut c.values {
             visit(id(&["value", &c.kind, &c.name, &v.name]), &mut v.xxmi);
         }
     }
+
     for m in &mut body.resource_members {
         visit(id(&["member", &m.name]), &mut m.xxmi);
     }
+
     for f in &mut body.functions {
         visit(id(&["function", &f.name]), &mut f.xxmi);
     }
+
     for t in &mut body.operators.tokens {
         visit(id(&["token", &t.token]), &mut t.xxmi);
     }
     for p in &mut body.operators.precedence {
         visit(id(&["precedence", &p.group]), &mut p.xxmi);
     }
+
     for e in &mut body.enums {
         visit(id(&["enum", &e.name]), &mut e.xxmi);
         for v in &mut e.values {

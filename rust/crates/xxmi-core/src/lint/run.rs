@@ -55,8 +55,9 @@ pub fn lint_text(
     lint_targets(&workspace, &[id], options)
 }
 
-/// Lints in-memory files that never touch the host file system: includes and path checks resolve
-/// against `files` only. A d3dx.ini opens first, since it decides the package root of the rest.
+/// Lints in-memory files that never touch the host file system:
+/// includes and path checks resolve against `files` only.
+/// A d3dx.ini opens first, since it decides the package root of the rest.
 pub fn lint_texts(
     files: &[(PathBuf, String)],
     options: &LintOptions,

@@ -104,8 +104,8 @@ pub struct PathResolver {
 }
 
 impl PathResolver {
-    /// A resolver over absolute paths of in-memory files, so include and path checks never touch
-    /// the host file system.
+    /// A resolver over absolute paths of in-memory files,
+    /// so include and path checks never touch the host file system.
     pub fn in_memory<'a>(paths: impl IntoIterator<Item = &'a Path>) -> Self {
         let mut dirs: HashMap<PathBuf, Vec<String>> = HashMap::new();
         for path in paths {

@@ -1,5 +1,6 @@
-//! The repositories the server tracks. The allowlist is code, not input: the server never fetches
-//! a repository that isn't listed here (docs/06-mcp-server.md "Security and limits").
+//! The repositories the server tracks. The allowlist is code, not input:
+//! the server never fetches a repository that isn't listed here
+//! (docs/06-mcp-server.md "Security and limits").
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RepoRole {

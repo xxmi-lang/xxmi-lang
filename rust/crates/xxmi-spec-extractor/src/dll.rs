@@ -80,8 +80,9 @@ impl DllSource {
             files.push(read_source(&util, "util.h".to_string(), edit)?);
         }
 
-        // Other binaries built from the same repo read d3dx.ini too: the D3DCompiler wrapper and
-        // the Injector (3DMigoto Loader). Only their literal-section reads are used.
+        // Other binaries built from the same repo read d3dx.ini too:
+        // the D3DCompiler wrapper and the Injector (3DMigoto Loader).
+        // Only their literal-section reads are used.
         let mut missing = Vec::new();
         for component in COMPONENT_DIRS {
             let dir = root.join(component);
@@ -140,10 +141,11 @@ fn read_source(
     Ok(CppFile::new(name, &text))
 }
 
-/// Runs extraction steps. In strict mode (the XXMI DLL) a missing anchor aborts extraction, so
-/// source drift is noticed instead of silently shrinking the spec. In lenient mode (the vanilla
-/// baseline, which lacks XXMI-only tables) a missing anchor is recorded and the step yields its
-/// fallback. An `xxmi_only` step is expected to miss in the baseline, so it falls back silently.
+/// Runs extraction steps. In strict mode (the XXMI DLL) a missing anchor aborts extraction,
+/// so source drift is noticed instead of silently shrinking the spec. In lenient mode
+/// (the vanilla baseline, which lacks XXMI-only tables) a missing anchor is recorded
+/// and the step yields its fallback.
+/// An `xxmi_only` step is expected to miss in the baseline, so it falls back silently.
 pub struct Extraction {
     pub dll: DllSource,
     pub strict: bool,

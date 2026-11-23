@@ -1,6 +1,7 @@
 //! The bare repositories the server fetches into, one per tracked repo
-//! (`<DATA_DIR>/git/<owner>/<repo>.git`). They only ever hold shallow fetches of the commits we
-//! index, and are deleted and rebuilt when damaged or too big.
+//! (`<DATA_DIR>/git/<owner>/<repo>.git`).
+//! They only ever hold shallow fetches of the commits we index,
+//! and are deleted and rebuilt when damaged or too big.
 
 use std::collections::HashSet;
 use std::future::Future;
@@ -85,8 +86,9 @@ impl BareCaches {
         self.recreated.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Runs `op` against a healthy cache; after a git failure that is not a timeout, rebuilds the
-    /// cache and runs it once more. Network outages fail the same way twice and then propagate.
+    /// Runs `op` against a healthy cache;
+    /// after a git failure that is not a timeout, rebuilds the cache and runs it once more.
+    /// Network outages fail the same way twice and then propagate.
     pub async fn with_recovery<T, F, Fut>(&self, repo: &TrackedRepo, op: F) -> Result<T, String>
     where
         F: Fn() -> Fut,
@@ -119,8 +121,8 @@ impl BareCaches {
         }
 
         if let Err(error) = self.shallow_fetch(repo, sha).await {
-            // Servers without protocol v2 may refuse a fetch by sha; the ref it was listed under
-            // works.
+            // Servers without protocol v2 may refuse a fetch by sha;
+            // the ref it was listed under works.
             let Some(hint) = ref_hint else {
                 return Err(error);
             };

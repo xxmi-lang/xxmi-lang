@@ -162,8 +162,9 @@ pub fn extract_enums(x: &Extraction) -> Result<Vec<SpecEnum>, AnchorNotFound> {
         return Err(AnchorNotFound::new("DirectX11", "EnumName_t tables", ""));
     }
 
-    // `format =` values: ParseFormatString (util.h) accepts these names, with or without the
-    // DXGI_FORMAT_ prefix, or the numeric DXGI_FORMAT value (the index in this table).
+    // `format =` values: ParseFormatString (util.h) accepts these names,
+    // with or without the DXGI_FORMAT_ prefix, or the numeric DXGI_FORMAT value
+    // (the index in this table).
     let formats = x.step(None, || {
         let file = x.dll.file("util.h")?;
         let names = string_literals(file.array_initializer("DXGIFormats")?);

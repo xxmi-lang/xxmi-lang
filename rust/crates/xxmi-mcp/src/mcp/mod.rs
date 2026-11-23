@@ -1,5 +1,5 @@
-//! The `/mcp` endpoint: stateless JSON-RPC over HTTP, answering the way the SDK transport of the
-//! TypeScript server does.
+//! The `/mcp` endpoint:
+//! stateless JSON-RPC over HTTP, answering the way the SDK transport of the TypeScript server does.
 
 mod initialize;
 mod methods;

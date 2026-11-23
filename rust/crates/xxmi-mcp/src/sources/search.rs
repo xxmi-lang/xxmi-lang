@@ -1,5 +1,5 @@
-//! `search_source`: ripgrep over a checkout. ripgrep's regex engine runs in linear time, so a
-//! hostile pattern cannot hang the server, and a deadline kills it when the tree is slow.
+//! `search_source`: ripgrep over a checkout. ripgrep's regex engine runs in linear time,
+//! so a hostile pattern cannot hang the server, and a deadline kills it when the tree is slow.
 
 use std::path::Path;
 use std::process::Stdio;

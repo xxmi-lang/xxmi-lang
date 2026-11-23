@@ -1,6 +1,6 @@
 //! Process spawning for git: argument arrays only (never a shell) and a timeout on every call.
-//! Children are killed when their handle drops, so a cancelled or timed out call leaves nothing
-//! running.
+//! Children are killed when their handle drops,
+//! so a cancelled or timed out call leaves nothing running.
 
 use std::fmt;
 use std::path::Path;
@@ -75,10 +75,10 @@ impl GitCommand {
         }
     }
 
-    /// No prompts (a missing repo must fail, not hang). `safe.directory` is set through the
-    /// environment because the volume may belong to another user than the one running git. No
-    /// background gc or maintenance: a detached child would outlive the call and race a cache
-    /// removal.
+    /// No prompts (a missing repo must fail, not hang).
+    /// `safe.directory` is set through the environment because the volume may belong
+    /// to another user than the one running git. No background gc or maintenance:
+    /// a detached child would outlive the call and race a cache removal.
     fn spawn(&self, args: &[&str], call: &Call<'_>) -> Result<Child, ExecError> {
         let mut command = Command::new(&self.program);
         command

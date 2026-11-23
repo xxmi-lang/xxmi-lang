@@ -1,6 +1,7 @@
-//! Merges spec/overlay/*.toml documentation into an extracted spec, the same way as
-//! packages/core/src/spec/load.ts. Overlay tables address generated entries by name,
-//! case-insensitively; an entry the DLL lacks is an error unless it is marked manual.
+//! Merges spec/overlay/*.toml documentation into an extracted spec,
+//! the same way as packages/core/src/spec/load.ts.
+//! Overlay tables address generated entries by name, case-insensitively;
+//! an entry the DLL lacks is an error unless it is marked manual.
 
 use std::fs;
 use std::path::Path;
@@ -420,8 +421,8 @@ fn field_problem(field: &str, value: &Value, is_extra: bool) -> Option<String> {
     Some(format!("`{field}` must be {expected}"))
 }
 
-/// The `xxmi` flag and documentation of an entry that only exists in the overlay; `None`
-/// (with problems) if it isn't allowed.
+/// The `xxmi` flag and documentation of an entry that only exists in the overlay;
+/// `None` (with problems) if it isn't allowed.
 fn manual_entry(
     raw: &Table,
     path: &str,

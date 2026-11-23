@@ -1,5 +1,5 @@
-//! Git-backed upstream access: `ls-remote` for refs and `git archive` for files, never a
-//! checkout. The bare caches it fetches into are in bare.rs.
+//! Git-backed upstream access: `ls-remote` for refs and `git archive` for files, never a checkout.
+//! The bare caches it fetches into are in bare.rs.
 
 mod bare;
 mod extract;
@@ -33,8 +33,8 @@ pub struct CommitInfo {
 
 pub struct GitSources {
     bare: BareCaches,
-    /// Which ref pointed at a commit at the last `list_refs`: the fallback when a sha can't be
-    /// fetched.
+    /// Which ref pointed at a commit at the last `list_refs`:
+    /// the fallback when a sha can't be fetched.
     ref_hints: Mutex<HashMap<String, HashMap<String, String>>>,
 }
 

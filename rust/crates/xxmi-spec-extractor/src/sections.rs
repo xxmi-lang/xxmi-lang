@@ -16,9 +16,9 @@ const INI: &str = "IniHandler.cpp";
 #[derive(Clone, Copy)]
 struct KeySource {
     file: &'static str,
-    /// Functions whose `GetIni*(section, L"key", …)` calls read keys of this section. More than
-    /// one names alternatives across DLL versions: every one that exists is read, and it's an
-    /// error only if none does.
+    /// Functions whose `GetIni*(section, L"key", …)` calls read keys of this section.
+    /// More than one names alternatives across DLL versions:
+    /// every one that exists is read, and it's an error only if none does.
     functions: &'static [&'static str],
     /// `wchar_t *X[]` list of keys a command-list section parses outside the command list.
     whitelist: Option<&'static str>,
@@ -79,8 +79,8 @@ fn key_sources(section: &str) -> Vec<KeySource> {
             reads(INI, &["ParseTopology"]),
             reads(INI, &["ParseSamplerState"]),
         ],
-        // XXMI split the per-section parser (ParseResourceSection) out of the loop that vanilla
-        // 3DMigoto still reads keys in (ParseResourceSections).
+        // XXMI split the per-section parser (ParseResourceSection) out of the loop
+        // that vanilla 3DMigoto still reads keys in (ParseResourceSections).
         "Resource" => vec![
             reads(INI, &["ParseResourceSection", "ParseResourceSections"]),
             reads(INI, &["ParseResourceInitialData"]),

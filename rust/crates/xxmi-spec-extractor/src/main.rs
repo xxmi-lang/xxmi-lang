@@ -3,11 +3,12 @@
 //!   XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> xxmi-spec-extract [--check]
 //!
 //! --dll DIR / --baseline DIR / --out DIR override the environment and the default output
-//! (spec/generated under the working directory). --check writes nothing and exits 1 if the
-//! output would differ from what is on disk. --full FILE also writes the merged spec (the
-//! overlays of DIR/overlay, DIR from --spec-root, default spec) as compact JSON. --dll-commit,
-//! --dll-commit-date, --dll-repository (and the --baseline-* forms) stand in for git metadata
-//! when a source is not a git checkout.
+//! (spec/generated under the working directory).
+//! --check writes nothing and exits 1 if the output would differ from what is on disk.
+//! --full FILE also writes the merged spec
+//! (the overlays of DIR/overlay, DIR from --spec-root, default spec) as compact JSON. --dll-commit,
+//! --dll-commit-date, --dll-repository
+//! (and the --baseline-* forms) stand in for git metadata when a source is not a git checkout.
 //!
 //! Exit codes: 0 ok, 1 --check found a difference, 2 usage error, 3 extraction failed.
 

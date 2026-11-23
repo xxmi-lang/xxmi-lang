@@ -1,5 +1,5 @@
-//! JavaScript string semantics the extractor's output depends on: which characters count as
-//! whitespace, and how many UTF-16 units a span has.
+//! JavaScript string semantics the extractor's output depends on:
+//! which characters count as whitespace, and how many UTF-16 units a span has.
 
 /// `\s` in JavaScript: ASCII whitespace, NBSP, the BOM and the Unicode space separators.
 pub fn is_space(c: char) -> bool {
@@ -48,8 +48,10 @@ pub fn integer_value(text: &str) -> Option<i64> {
     if t.is_empty() {
         return Some(0);
     }
+
     let radix = |digits: &str, radix: u32| i64::from_str_radix(digits, radix).ok();
     let lower = t.to_ascii_lowercase();
+
     if let Some(d) = lower.strip_prefix("0x") {
         return radix(d, 16);
     }
@@ -59,9 +61,11 @@ pub fn integer_value(text: &str) -> Option<i64> {
     if let Some(d) = lower.strip_prefix("0b") {
         return radix(d, 2);
     }
+
     if lower.chars().any(|c| c.is_ascii_alphabetic() && c != 'e') {
         return None;
     }
+
     let value: f64 = lower.parse().ok()?;
     (value.is_finite() && value.fract() == 0.0 && value.abs() < 9e15).then_some(value as i64)
 }

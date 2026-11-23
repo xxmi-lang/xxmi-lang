@@ -1,8 +1,9 @@
-//! Loads indexed package checkouts through core (`Workspace`, `SymbolSnapshot`): the same code
-//! builds the symbol index at indexing time and answers `library_*` and `lint_ini` later.
+//! Loads indexed package checkouts through core (`Workspace`, `SymbolSnapshot`):
+//! the same code builds the symbol index at indexing time
+//! and answers `library_*` and `lint_ini` later.
 //!
-//! A `Workspace` is not `Send`, so every load happens inside one blocking task and lives
-//! only as long as the tool call that needs its docs.
+//! A `Workspace` is not `Send`, so every load happens inside one blocking task
+//! and lives only as long as the tool call that needs its docs.
 
 use std::collections::HashMap;
 use std::io;
@@ -31,8 +32,8 @@ impl LoadedIndex {
     }
 }
 
-/// Parses the package of `reference`. The lookup is the bundled spec's: a package index must not
-/// change with the DLL versions indexed.
+/// Parses the package of `reference`. The lookup is the bundled spec's:
+/// a package index must not change with the DLL versions indexed.
 pub fn load_package(reference: &ResolvedRef) -> io::Result<LoadedIndex> {
     load_checkout(reference.repo, &reference.dir)
 }
@@ -55,8 +56,8 @@ fn build_snapshot(repo: &TrackedRepo, sha: &str, loaded: &LoadedIndex) -> Symbol
     SymbolSnapshot::build(&loaded.workspace, &loaded.root, name, source)
 }
 
-/// The symbol snapshot of a package checkout that isn't published yet (the indexer's staging
-/// directory).
+/// The symbol snapshot of a package checkout that isn't published yet
+/// (the indexer's staging directory).
 pub fn index_checkout(
     repo: &TrackedRepo,
     sha: &str,
@@ -104,9 +105,10 @@ impl Lru {
     }
 }
 
-/// The snapshots of the package commits seen recently. A commit's snapshot never changes, so a
-/// hit is always valid; the least recently used one goes first so the cache stays bounded however
-/// many commits the indexer sees.
+/// The snapshots of the package commits seen recently.
+/// A commit's snapshot never changes, so a hit is always valid;
+/// the least recently used one goes first
+/// so the cache stays bounded however many commits the indexer sees.
 pub struct PackageCache {
     max_entries: usize,
     snapshots: Mutex<Lru>,

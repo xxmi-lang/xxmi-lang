@@ -82,8 +82,8 @@ fn values(code: &str, source: &str) -> Vec<SpecCommandValue> {
     out
 }
 
-/// Blocks that test only `val` (`snapshotinitialtextures`): the keyword is the command, whatever
-/// the key is, so on a bare line it is the whole line.
+/// Blocks that test only `val` (`snapshotinitialtextures`):
+/// the keyword is the command, whatever the key is, so on a bare line it is the whole line.
 fn value_commands(condition: &str, source: &str) -> Vec<SpecCommand> {
     comparisons(condition, VALUE)
         .iter()
@@ -148,9 +148,10 @@ static COMMA: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"ConsumeSeparator(?-u:\s)*\((?-u:\s)*SeparatorMode::Comma(?-u:\s)*\)").unwrap()
 });
 
-/// Argument count of a command whose parser (the `return ParseX(…)` in `body`) reads its value
-/// with `CommandArgumentReader`: one more than the comma separators it consumes, provided it
-/// insists on consuming all input (`args.Finished()`).
+/// Argument count of a command whose parser
+/// (the `return ParseX(…)` in `body`) reads its value with `CommandArgumentReader`:
+/// one more than the comma separators it consumes,
+/// provided it insists on consuming all input (`args.Finished()`).
 fn reader_arg_count(file: &CppFile, body: &str) -> Option<i64> {
     let handler = HANDLER.captures(body)?.get(1)?.as_str();
     let code = file.try_function_body(handler)?;
@@ -273,9 +274,10 @@ fn prefixes(file: &CppFile) -> Result<Vec<SpecCommand>, AnchorNotFound> {
         .collect())
 }
 
-/// The `members[]` table in a `ParseTargetMember` function: `ResourceCopyTarget` for
-/// `->Region(…)` etc., `ShaderTarget` for `->cb_first_slot` etc. Argument kinds are the
-/// `MemberArg::Type` names (`unsigned`, `float`, `string`, `hash`, `resource`, …).
+/// The `members[]` table in a `ParseTargetMember` function:
+/// `ResourceCopyTarget` for `->Region(…)` etc., `ShaderTarget` for `->cb_first_slot` etc.
+/// Argument kinds are the `MemberArg::Type` names
+/// (`unsigned`, `float`, `string`, `hash`, `resource`, …).
 fn target_members(
     file: &CppFile,
     function: &str,
@@ -283,12 +285,14 @@ fn target_members(
 ) -> Result<Vec<SpecResourceMember>, AnchorNotFound> {
     static ARG: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"MemberArg::Type::((?-u:\w)+)").unwrap());
+
     let body = CppFile::new(
         format!("{}#{function}", file.name),
         file.function_body(function)?,
     );
     let source = format!("{}:{function}", file.name);
     let mut members = Vec::new();
+
     for entry in split_top_level(body.array_initializer("members")?) {
         let inner = entry.strip_prefix('{').unwrap_or(entry);
         let inner = inner.strip_suffix('}').unwrap_or(inner);
@@ -308,6 +312,7 @@ fn target_members(
             docs: Default::default(),
         });
     }
+
     if members.is_empty() {
         return Err(AnchorNotFound::new(
             &file.name,
@@ -315,6 +320,7 @@ fn target_members(
             "empty members[] table",
         ));
     }
+
     Ok(members)
 }
 
@@ -360,8 +366,8 @@ pub fn extract_commands(x: &Extraction) -> Result<Commands, AnchorNotFound> {
     let general = general_commands(cl)?;
     let draw = draw_commands(cl)?;
 
-    // ParseCommandListGeneralCommands falls through to ParseDrawCommand for anything else, so a
-    // draw keyword is never also a general one; keep the general entry if both ever match.
+    // ParseCommandListGeneralCommands falls through to ParseDrawCommand for anything else,
+    // so a draw keyword is never also a general one; keep the general entry if both ever match.
     let fresh_draw: Vec<SpecCommand> = draw
         .into_iter()
         .filter(|d| !general.iter().any(|g| g.name == d.name))

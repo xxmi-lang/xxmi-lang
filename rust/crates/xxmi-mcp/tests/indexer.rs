@@ -1,5 +1,5 @@
-//! The indexer against local git remotes: `insteadOf` points the GitHub URLs at them, so a pass
-//! runs the real `ls-remote`, `fetch` and `archive` without a network.
+//! The indexer against local git remotes: `insteadOf` points the GitHub URLs at them,
+//! so a pass runs the real `ls-remote`, `fetch` and `archive` without a network.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

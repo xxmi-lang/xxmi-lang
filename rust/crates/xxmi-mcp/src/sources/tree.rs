@@ -1,5 +1,5 @@
-//! A checkout as a read-only source tree, shared per directory because checkouts never change
-//! once published.
+//! A checkout as a read-only source tree,
+//! shared per directory because checkouts never change once published.
 
 use std::collections::HashMap;
 use std::fs;

@@ -42,8 +42,8 @@ pub fn is_tool(name: &str) -> bool {
     definition(name).is_some()
 }
 
-/// Checks and defaults `arguments` by the tool's input schema; the error is the issue text the
-/// protocol layer reports.
+/// Checks and defaults `arguments` by the tool's input schema;
+/// the error is the issue text the protocol layer reports.
 pub fn validate_arguments(name: &str, arguments: &Map<String, Value>) -> Result<Args, Vec<String>> {
     let schema = definition(name)
         .and_then(|tool| tool.get("inputSchema"))
@@ -75,9 +75,9 @@ async fn dispatch(ctx: Arc<ToolContext>, name: &str, args: Args) -> ToolResult {
     }
 }
 
-/// Answers with an error once `limit` has passed. The dropped call stops waiting on its work: a
-/// queued blocking task is skipped, a subprocess is killed (`kill_on_drop`), and a running one
-/// finishes on its own.
+/// Answers with an error once `limit` has passed. The dropped call stops waiting on its work:
+/// a queued blocking task is skipped, a subprocess is killed (`kill_on_drop`),
+/// and a running one finishes on its own.
 pub async fn with_timeout(
     name: &str,
     limit: Duration,

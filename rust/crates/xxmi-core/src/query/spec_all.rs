@@ -1,5 +1,6 @@
-//! Lookups across every spec kind (`lookup_spec`, `list_spec`): the MCP `spec_lookup` and
-//! `spec_list` tools. Port of `lookupSpec` and `listSpec` in packages/core/src/query/spec.ts.
+//! Lookups across every spec kind (`lookup_spec`, `list_spec`):
+//! the MCP `spec_lookup` and `spec_list` tools.
+//! Port of `lookupSpec` and `listSpec` in packages/core/src/query/spec.ts.
 
 use crate::lookup::Lookup;
 use crate::spec::{MemberTarget, SectionKind, SpecSection};
@@ -156,8 +157,8 @@ pub fn lookup_spec(lookup: &'static Lookup, query: &SpecQuery) -> Vec<SpecEntry>
         .collect()
 }
 
-/// Names (with one-line docs) of one kind. `key` needs a known `section`; otherwise the message
-/// is the error the tool shows.
+/// Names (with one-line docs) of one kind. `key` needs a known `section`;
+/// otherwise the message is the error the tool shows.
 pub fn list_spec(
     lookup: &'static Lookup,
     kind: &str,

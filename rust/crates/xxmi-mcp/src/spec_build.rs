@@ -1,5 +1,6 @@
-//! Builds the final spec of one DLL commit: the extractor's output plus the overlay shipped with
-//! this server build, the same merge the bundled spec gets.
+//! Builds the final spec of one DLL commit:
+//! the extractor's output plus the overlay shipped with this server build,
+//! the same merge the bundled spec gets.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -12,8 +13,8 @@ use xxmi_spec_extractor::{EXTRACTOR_VERSION, ExtractOptions, GitInfo, extract_sp
 
 pub const BUILD_TIMEOUT: Duration = Duration::from_secs(120);
 
-/// Builds running at once. Each holds a whole spec model, so the memory bound matters more than
-/// the speed.
+/// Builds running at once.
+/// Each holds a whole spec model, so the memory bound matters more than the speed.
 const MAX_PARALLEL_BUILDS: usize = 1;
 
 const OVERLAYS: [(&str, &str); 3] = [
@@ -66,9 +67,9 @@ fn fnv_hex(text: &str) -> String {
     format!("{hash:016x}")[..8].to_string()
 }
 
-/// Names everything a stored spec depends on besides the sources, so a deploy that changes the
-/// release, the extractor or the overlay rebuilds the specs. The `rust-` prefix keeps the two
-/// servers from trusting each other's specs.
+/// Names everything a stored spec depends on besides the sources,
+/// so a deploy that changes the release, the extractor or the overlay rebuilds the specs.
+/// The `rust-` prefix keeps the two servers from trusting each other's specs.
 pub fn builder_id() -> String {
     let overlay_text: String = OVERLAYS.iter().map(|(_, text)| *text).collect();
     format!(
@@ -137,8 +138,8 @@ impl SpecBuilder {
         }
     }
 
-    /// The permit stays with the thread, not the caller: a build that outlives its timeout still
-    /// occupies its slot until it really ends.
+    /// The permit stays with the thread, not the caller:
+    /// a build that outlives its timeout still occupies its slot until it really ends.
     pub async fn build(&self, input: BuildInput) -> Result<BuiltSpec, String> {
         let permit = self
             .slots

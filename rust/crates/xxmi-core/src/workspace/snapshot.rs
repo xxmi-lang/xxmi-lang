@@ -1,6 +1,6 @@
-//! Library symbol snapshots (docs/01-language-model.md §4 "Bundled library snapshot"): the
-//! sections, globals and namespaces of a package's libraries, so a mod linted on its own still
-//! resolves `CommandList\ZZMI\...`.
+//! Library symbol snapshots (docs/01-language-model.md §4 "Bundled library snapshot"):
+//! the sections, globals and namespaces of a package's libraries,
+//! so a mod linted on its own still resolves `CommandList\ZZMI\...`.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -14,8 +14,8 @@ use crate::query::utf16_cmp;
 use super::Workspace;
 use super::symbols::global_variable_key;
 
-/// The library snapshots a workspace consults: the bundled ones, which live for the whole
-/// process, or one that a long-running host shares and may drop.
+/// The library snapshots a workspace consults: the bundled ones, which live for the whole process,
+/// or one that a long-running host shares and may drop.
 #[derive(Clone, Debug)]
 pub enum Snapshots {
     Bundled(&'static [SymbolSnapshot]),

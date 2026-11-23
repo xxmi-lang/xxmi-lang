@@ -1,5 +1,6 @@
-//! "Where does the DLL implement this?" (`find_implementation`): spec entries carry the DLL
-//! source symbol they were extracted from (`CommandList.cpp:ParseCommandListGeneralCommands`);
+//! "Where does the DLL implement this?" (`find_implementation`):
+//! spec entries carry the DLL source symbol they were extracted from
+//! (`CommandList.cpp:ParseCommandListGeneralCommands`);
 //! this resolves that symbol to lines of a DLL source tree, plus other mentions of the keyword.
 //! Port of packages/core/src/query/implementation.ts.
 

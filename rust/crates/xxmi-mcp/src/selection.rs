@@ -37,8 +37,8 @@ fn runs(text: &str) -> Vec<&str> {
     runs
 }
 
-/// `localeCompare` for the short ASCII runs of a tag name: letters ignore case first, and a
-/// lowercase letter sorts before its capital on a tie.
+/// `localeCompare` for the short ASCII runs of a tag name:
+/// letters ignore case first, and a lowercase letter sorts before its capital on a tie.
 fn compare_text(a: &str, b: &str) -> Ordering {
     a.to_lowercase()
         .cmp(&b.to_lowercase())
@@ -108,9 +108,10 @@ fn of_kind(versions: &[VersionRef], kind: &str) -> Vec<VersionRef> {
     found
 }
 
-/// The tag versions to index, newest first: the newest releases, then the pre-releases newer
-/// than the newest release. Tags GitHub knows nothing about only count when the repo has no
-/// releases at all, or while the release map is stale (a new tag may be a pre-release).
+/// The tag versions to index, newest first:
+/// the newest releases, then the pre-releases newer than the newest release.
+/// Tags GitHub knows nothing about only count when the repo has no releases at all,
+/// or while the release map is stale (a new tag may be a pre-release).
 pub fn select_versions(
     role: RepoRole,
     tags: &[RemoteTag],

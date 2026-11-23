@@ -1,5 +1,6 @@
-//! Which refs of which repos are indexed right now, and how tool inputs (`ref`, `repo`) map to
-//! a checkout. Loaded from `state.json` once; the indexer is the only writer.
+//! Which refs of which repos are indexed right now, and how tool inputs
+//! (`ref`, `repo`) map to a checkout. Loaded from `state.json` once;
+//! the indexer is the only writer.
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -13,8 +14,8 @@ use crate::upstream::releases::ReleasesState;
 
 pub const KIND_HEAD: &str = "head";
 
-/// `kind` is head, release, prerelease or tag: a git tag without a GitHub release, or one GitHub
-/// hasn't been asked about yet.
+/// `kind` is head, release, prerelease or tag:
+/// a git tag without a GitHub release, or one GitHub hasn't been asked about yet.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VersionRef {
@@ -123,8 +124,8 @@ fn find_version<'a>(entry: &'a RepoState, wanted: &str) -> Option<&'a VersionRef
     })
 }
 
-/// Files from before release tracking have no `kind` on their tags; refs whose checkout is gone
-/// are dropped.
+/// Files from before release tracking have no `kind` on their tags;
+/// refs whose checkout is gone are dropped.
 fn present_on_volume(store: &Store, mut saved: StateFile) -> StateFile {
     let mut state = StateFile::default();
     for repo in &TRACKED_REPOS {
@@ -179,8 +180,9 @@ impl Catalog {
         self.snapshot().repos.get(repo.alias).cloned()
     }
 
-    /// True once every tracked repo but the baseline has its default branch indexed: the baseline
-    /// only backs DLL comparisons, so a failing one must not keep the server "warming up".
+    /// True once every tracked repo but the baseline has its default branch indexed:
+    /// the baseline only backs DLL comparisons,
+    /// so a failing one must not keep the server "warming up".
     pub fn ready(&self) -> bool {
         let state = self.snapshot();
         TRACKED_REPOS
@@ -218,8 +220,8 @@ impl Catalog {
     }
 
     /// The checkout for `wanted`: omitted, `latest` or `head` is the default branch;
-    /// `latest-release` and `latest-prerelease` follow the releases; otherwise a tag or branch
-    /// name, or a commit sha prefix (7+ characters) of an indexed ref.
+    /// `latest-release` and `latest-prerelease` follow the releases;
+    /// otherwise a tag or branch name, or a commit sha prefix (7+ characters) of an indexed ref.
     pub fn resolve(
         &self,
         repo: &'static TrackedRepo,

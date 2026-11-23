@@ -1,5 +1,6 @@
-//! Ports of packages/spec-extractor/test/extract.test.ts: the synthetic DLL pair in
-//! fixtures/spec-extractor, source-drift failures, and the real DLL when its checkouts are given.
+//! Ports of packages/spec-extractor/test/extract.test.ts:
+//! the synthetic DLL pair in fixtures/spec-extractor, source-drift failures,
+//! and the real DLL when its checkouts are given.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -102,14 +103,17 @@ fn gives_every_entry_a_source() {
     let (spec, _) = extract_fixture();
     let body = &spec.body;
     let mut sources: Vec<&str> = Vec::new();
+
     for s in &body.sections {
         sources.push(&s.source);
         sources.extend(s.keys.iter().map(|k| k.source.as_str()));
     }
+
     sources.extend(body.commands.iter().map(|c| c.source.as_str()));
     sources.extend(body.operators.tokens.iter().map(|t| t.source.as_str()));
     sources.extend(body.operators.precedence.iter().map(|p| p.source.as_str()));
     sources.extend(body.enums.iter().map(|e| e.source.as_str()));
+
     let well_formed = |s: &str| {
         let Some((file, symbol)) = s.split_once(':') else {
             return false;
@@ -123,6 +127,7 @@ fn gives_every_entry_a_source() {
                 .bytes()
                 .all(|b| b.is_ascii_alphanumeric() || b"_:".contains(&b))
     };
+
     assert!(sources.iter().all(|s| well_formed(s)), "{sources:?}");
 }
 
@@ -130,11 +135,14 @@ fn gives_every_entry_a_source() {
 fn flags_only_what_the_vanilla_baseline_lacks() {
     let (spec, _) = extract_fixture();
     let body = &spec.body;
+
     assert_eq!(flag(&body.sections, "Pool"), Some(true));
     assert_eq!(flag(&body.sections, "Resource"), Some(false));
+
     let resource = section(&spec, "Resource");
     assert_eq!(flag(&resource.keys, "color_space"), Some(true));
     assert_eq!(flag(&resource.keys, "type"), Some(false));
+
     for (name, expected) in [
         ("store", true),
         ("commandlist", true),
@@ -146,6 +154,7 @@ fn flags_only_what_the_vanilla_baseline_lacks() {
     ] {
         assert_eq!(flag(&body.commands, name), Some(expected), "{name}");
     }
+
     for (token, expected) in [("<<", true), ("&", true), ("//", false)] {
         assert_eq!(
             flag(&body.operators.tokens, token),
@@ -153,12 +162,14 @@ fn flags_only_what_the_vanilla_baseline_lacks() {
             "{token}"
         );
     }
+
     let shift = body
         .operators
         .precedence
         .iter()
         .find(|p| p.group == "shift_operators");
     assert_eq!(shift.map(|p| p.xxmi), Some(true));
+
     assert!(body.resource_members.iter().all(|m| m.xxmi));
     assert_eq!(flag(&body.functions, "sin"), Some(true));
     assert_eq!(flag(&body.enums, "PoolIndexTypeNames"), Some(true));
@@ -172,6 +183,7 @@ fn reports_the_anchors_the_baseline_lacks() {
 #[test]
 fn extracts_resource_and_shader_target_members_with_their_argument_kinds() {
     let (spec, _) = extract_fixture();
+
     let member = |name: &str| {
         spec.body
             .resource_members
@@ -179,6 +191,7 @@ fn extracts_resource_and_shader_target_members_with_their_argument_kinds() {
             .find(|m| m.name == name)
             .unwrap()
     };
+
     let match_textures = member("matchtextures");
     assert_eq!(match_textures.args, ["resource"]);
     assert_eq!(
@@ -186,10 +199,12 @@ fn extracts_resource_and_shader_target_members_with_their_argument_kinds() {
         "CommandList.cpp:ShaderTarget::ParseTargetMember"
     );
     assert!(match_textures.xxmi);
+
     assert!(member("cb_mask").args.is_empty());
     assert_eq!(match_textures.target, "shader");
     assert_eq!(member("cb_mask").target, "shader");
     assert_eq!(member("region").target, "resource");
+
     assert_eq!(
         member("region").source,
         "CommandList.cpp:ResourceCopyTarget::ParseTargetMember"
@@ -200,20 +215,24 @@ fn extracts_resource_and_shader_target_members_with_their_argument_kinds() {
 fn extracts_keywords_that_only_test_the_value() {
     let (spec, _) = extract_fixture();
     let snapshot = command(&spec, "snapshotoriginaltextures");
+
     assert_eq!(snapshot.kind, "general");
     assert_eq!(snapshot.match_kind, xxmi_spec_extractor::MatchKind::Exact);
     assert!(snapshot.xxmi);
     assert_eq!(snapshot.form, Some("value"));
+
     assert_eq!(
         command(&spec, "restoreoriginaltextures").form,
         Some("value")
     );
+
     assert_eq!(command(&spec, "store").form, None);
 }
 
 #[test]
 fn extracts_keys_from_whitelists_getters_comparisons_and_literal_sections() {
     let (spec, _) = extract_fixture();
+
     assert_eq!(
         keys(&spec, "TextureOverride"),
         [
@@ -224,6 +243,7 @@ fn extracts_keys_from_whitelists_getters_comparisons_and_literal_sections() {
             "match_format:enum:DXGIFormats",
         ]
     );
+
     assert_eq!(
         keys(&spec, "Resource"),
         [
@@ -236,6 +256,7 @@ fn extracts_keys_from_whitelists_getters_comparisons_and_literal_sections() {
             "data:string",
         ]
     );
+
     assert_eq!(
         keys(&spec, "Include"),
         [
@@ -244,10 +265,12 @@ fn extracts_keys_from_whitelists_getters_comparisons_and_literal_sections() {
             "user_config:string"
         ]
     );
+
     assert_eq!(
         keys(&spec, "Logging"),
         ["log_level:enum:LogVerbosityNames", "debug:bool"]
     );
+
     assert_eq!(
         keys(&spec, "Loader"),
         [
@@ -258,6 +281,7 @@ fn extracts_keys_from_whitelists_getters_comparisons_and_literal_sections() {
             "delay:int",
         ]
     );
+
     assert_eq!(keys(&spec, "Rendering"), ["storage_directory:string"]);
 }
 
@@ -503,10 +527,12 @@ fn real_dll_covers_every_section_prefix_and_operator_token_with_a_source() {
 fn real_dll_flags_xxmi_features() {
     let Some(spec) = real_spec() else { return };
     let body = &spec.body;
+
     assert_eq!(flag(&body.commands, "store"), Some(true));
     assert_eq!(flag(&body.sections, "Pool"), Some(true));
     assert!(!body.resource_members.is_empty());
     assert!(body.resource_members.iter().all(|m| m.xxmi));
+
     for name in [
         "cb_first_slot",
         "cb_last_slot",
@@ -523,6 +549,7 @@ fn real_dll_flags_xxmi_features() {
             "{name}"
         );
     }
+
     // Vanilla 3DMigoto already has these; they must not be flagged.
     for name in [
         "run",
@@ -536,6 +563,7 @@ fn real_dll_flags_xxmi_features() {
     ] {
         assert_eq!(flag(&body.commands, name), Some(false), "{name}");
     }
+
     let resource = section(&spec, "Resource");
     for key in ["type", "format", "filename", "stride"] {
         assert_eq!(flag(&resource.keys, key), Some(false), "{key}");

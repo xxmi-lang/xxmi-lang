@@ -6,8 +6,8 @@
 //!   <DATA_DIR>/state.json                        which refs are indexed
 //!   <DATA_DIR>/tmp/                              staging area
 //!
-//! Everything becomes visible by a rename, so a crash never leaves a half-written checkout or
-//! state file behind. Only the indexer writes.
+//! Everything becomes visible by a rename,
+//! so a crash never leaves a half-written checkout or state file behind. Only the indexer writes.
 
 use std::collections::HashSet;
 use std::io;
@@ -164,8 +164,8 @@ pub fn read_json_blocking<T: DeserializeOwned>(path: &Path) -> Option<T> {
     serde_json::from_slice(&std::fs::read(path).ok()?).ok()
 }
 
-/// A JSON file parsed; a missing or unreadable file is `None`, as a half-written volume is no
-/// reason to fail a request.
+/// A JSON file parsed;
+/// a missing or unreadable file is `None`, as a half-written volume is no reason to fail a request.
 pub async fn read_json<T: DeserializeOwned + Send + 'static>(path: PathBuf) -> Option<T> {
     let bytes = tokio::fs::read(&path).await.ok()?;
     tokio::task::spawn_blocking(move || serde_json::from_slice(&bytes).ok())

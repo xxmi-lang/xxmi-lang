@@ -1,6 +1,6 @@
-//! GitHub release metadata: the one thing `git` can't tell us (release vs pre-release). The only
-//! GitHub API call the server makes, and only when a repo's tag set changed, so the
-//! unauthenticated limit (60/hour per IP) is never in play.
+//! GitHub release metadata: the one thing `git` can't tell us (release vs pre-release).
+//! The only GitHub API call the server makes, and only when a repo's tag set changed,
+//! so the unauthenticated limit (60/hour per IP) is never in play.
 
 use std::collections::BTreeMap;
 use std::future::Future;
@@ -161,8 +161,9 @@ pub struct RefreshOptions<'a> {
     pub force: bool,
 }
 
-/// The release state to use for `tags`: the stored one while the tag set is unchanged, else a
-/// fresh lookup. A failed lookup keeps the previous map and is retried at most hourly.
+/// The release state to use for `tags`:
+/// the stored one while the tag set is unchanged, else a fresh lookup.
+/// A failed lookup keeps the previous map and is retried at most hourly.
 pub async fn refresh_releases(
     lookup: &impl ReleaseLookup,
     repo: &'static TrackedRepo,

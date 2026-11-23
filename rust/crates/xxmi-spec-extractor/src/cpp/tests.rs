@@ -4,6 +4,7 @@ use super::*;
 fn strip_comments_keeps_comment_markers_inside_string_literals() {
     let code = "x = L\"//\"; // gone\ny = \"/*\"; /* gone\n too */ z = 1;";
     let stripped = strip_comments(code);
+
     assert!(stripped.contains("L\"//\""));
     assert!(stripped.contains("\"/*\""));
     assert!(!stripped.contains("gone"));

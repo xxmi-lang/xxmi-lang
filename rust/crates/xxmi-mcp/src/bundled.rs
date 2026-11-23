@@ -1,5 +1,5 @@
-//! The spec and library snapshots built into this release, served until a version's own spec
-//! exists.
+//! The spec and library snapshots built into this release,
+//! served until a version's own spec exists.
 
 use std::sync::{Arc, LazyLock};
 

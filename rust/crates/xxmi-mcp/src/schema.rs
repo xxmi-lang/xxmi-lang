@@ -1,5 +1,5 @@
-//! Validates tool arguments against the `inputSchema` the server advertises, with the messages of
-//! the zod schemas the TypeScript server builds that schema from.
+//! Validates tool arguments against the `inputSchema` the server advertises,
+//! with the messages of the zod schemas the TypeScript server builds that schema from.
 
 use serde_json::{Map, Value};
 
@@ -149,8 +149,8 @@ fn expected_type(prop: &Map<String, Value>) -> &'static str {
     }
 }
 
-/// The arguments with defaults applied and unknown keys dropped, or every issue found, in the
-/// order of the schema's properties.
+/// The arguments with defaults applied and unknown keys dropped, or every issue found,
+/// in the order of the schema's properties.
 pub fn validate(
     schema: &Value,
     args: &Map<String, Value>,

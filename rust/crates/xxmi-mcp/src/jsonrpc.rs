@@ -1,5 +1,5 @@
-//! JSON-RPC 2.0 envelopes as the TypeScript server's MCP SDK shapes them: message validation and
-//! the key order of results and errors.
+//! JSON-RPC 2.0 envelopes as the TypeScript server's MCP SDK shapes them:
+//! message validation and the key order of results and errors.
 
 use serde_json::{Value, json};
 
