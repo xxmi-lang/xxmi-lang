@@ -8,6 +8,7 @@ comes from lupomikti's `Migoto` syntax definition.
    into your syntax folder:
    - Linux: `~/.local/share/org.kde.syntax-highlighting/syntax/`
    - Linux (Flatpak): `~/.var/app/org.kde.kate/data/org.kde.syntax-highlighting/syntax/`
+   - macOS: `~/Library/Application Support/org.kde.syntax-highlighting/syntax/`
    - Windows: `%USERPROFILE%\AppData\Local\org.kde.syntax-highlighting\syntax\`
 
    Restart Kate. `.ini` files should open in the **Migoto** mode (Tools → Mode). If a mod's
@@ -17,7 +18,13 @@ comes from lupomikti's `Migoto` syntax definition.
    system are in [INSTALL.md](../../INSTALL.md).
 3. **LSP client.** Enable Settings → Configure Kate → Plugins → **LSP Client**, then open
    Settings → Configure Kate → LSP Client → **User Server Settings** and paste
-   [`lspclient-settings.json`](lspclient-settings.json). On Linux and macOS, replace
+   [`lspclient-settings.json`](lspclient-settings.json). The settings file lives at:
+   - Linux: `~/.config/kate/lspclient/settings.json`
+   - Linux (Flatpak): `~/.var/app/org.kde.kate/config/kate/lspclient/settings.json`
+   - macOS: `~/Library/Preferences/kate/lspclient/settings.json`
+   - Windows: `%LOCALAPPDATA%\kate\lspclient\settings.json`
+
+   On Linux and macOS, replace
    `"xxmi-lsp"` in `command` with the **full path** (e.g. `/home/YOUR_NAME/.local/bin/xxmi-lsp`;
    `echo ~/.local/bin/xxmi-lsp` prints yours). Kate started from the desktop menu doesn't get
    the PATH your terminal has, so the plain name may not be found, especially with fish (the

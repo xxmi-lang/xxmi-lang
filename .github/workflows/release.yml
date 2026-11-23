@@ -327,6 +327,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.meta.outputs.tag }}
+
       - uses: actions/download-artifact@v8
         with:
           name: release
@@ -344,6 +348,21 @@ jobs:
             gh release upload "$TAG" --repo "$REPO" --clobber "${files[@]}"
           else
             gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes "${files[@]}"
+          fi
+
+      # Appended after the generated notes; a re-run that already has the table leaves the body alone.
+      - name: Add the checksums to the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.meta.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          body=$(gh release view "$TAG" --repo "$REPO" --json body --jq .body)
+          if [[ "$body" != *'## Checksums'* ]]; then
+            cd release
+            table=$(../.github/scripts/release_checksums.sh . xxmi-*.zip xxmi-lang-*.vsix)
+            printf '%s\n\n%s\n' "$body" "$table" > "$RUNNER_TEMP/notes.md"
+            gh release edit "$TAG" --repo "$REPO" --notes-file "$RUNNER_TEMP/notes.md"
           fi
 
   # Its own job so a failed push can be re-run without touching the GitHub release.

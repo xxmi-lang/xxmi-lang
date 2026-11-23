@@ -1,6 +1,8 @@
 # 08 — Editor integration
 
-Priority: **VS Code** and **Kate**. Helix, Neovim, Zed and Sublime work later through their generic LSP support.
+Priority: **VS Code** and **Kate**. Neovim ships a config too (see [Neovim](#neovim)). Helix, Zed and Sublime work later through their generic LSP support.
+
+Every release zip carries an `editors/` folder with the editor config and `manifest.json` for installers (see `editors/README.md`).
 
 ## Relationship to lupomikti's work
 
@@ -16,7 +18,7 @@ Our position: **LSP features on top of their grammars, never competing grammars.
 
 A thin client, `vscode-languageclient/node`:
 
-- Activates on language `migoto`. Adds the `xxmi.*` settings (`xxmi.profile`, `xxmi.packagePath`, `xxmi.rules`, `xxmi.lsp.path` to override the bundled server).
+- Activates on language `migoto`. Adds the `xxmi.*` settings listed under "As built" below (`xxmi.profile` and `xxmi.packagePath` are planned, not built).
 - Bundles the Rust `xxmi` binary for each platform (`bin/<os>-<arch>/`) and starts `xxmi lsp --stdio`, so no separate install is needed.
 - If lupomikti's extension isn't installed, show a one-time prompt linking to it (highlighting comes from there). Until it's on the Marketplace, link to their `.vsix` release.
 - Commands: `XXMI: Migrate mod…`, `XXMI: Normalize mod…`, `XXMI: Show detected format era`, `XXMI: Restart server`.
@@ -29,7 +31,9 @@ A thin client, `vscode-languageclient/node`:
 
 - **Language:** declares the language `migoto` with the same extensions as lupomikti's extension (`.ini`, `.3dm`, `.migoto`) but no grammar, so it works on its own and merges with theirs. It prompts once to install their extension if it's missing.
 - **Server:** the bundled `xxmi` binary for the current platform, run as `xxmi lsp --stdio`. `xxmi.lsp.path` runs another executable (the `xxmi` binary or a standalone `xxmi-lsp`) with `--stdio`.
-- **Settings and commands:** `xxmi.rules`, `xxmi.lsp.path`, and the command `XXMI: Restart server`. `xxmi.profile`, `xxmi.packagePath`, the migrate/normalize commands and semantic tokens come with later milestones.
+- **Settings and commands:** `xxmi.rules`, `xxmi.lsp.path`, `xxmi.lsp.preferPath`, `xxmi.requirePackage`, and the command `XXMI: Restart server`. `xxmi.profile` (planned, not built), `xxmi.packagePath`, the migrate/normalize commands and semantic tokens come with later milestones.
+  - `xxmi.lsp.preferPath` (default off): run `xxmi-lsp` from PATH when it's found, otherwise the bundled server. `xxmi.lsp.path`, when set, still wins.
+  - `xxmi.requirePackage` (default off): only report diagnostics for `.ini` files inside a mod package (a folder tree with a `d3dx.ini`). Nothing reads it yet; the server side is a separate PR.
 - **Tests:** `pnpm --filter ./packages/vscode test:vscode` starts a real VS Code with the extension and checks diagnostics after an edit, go to definition into a library, cross-file rename and hover (CI runs it under xvfb).
 - **Not yet:** publishing to the Marketplace and Open VSX, which needs the publisher accounts.
 
@@ -38,7 +42,7 @@ A thin client, `vscode-languageclient/node`:
 No plugin code needed. Kate's built-in **LSP Client** plugin runs any stdio server.
 
 1. Install lupomikti's `migoto.xml` (their README lists the directories; on Linux `~/.local/share/org.kde.syntax-highlighting/syntax/`, on Flatpak under `~/.var/app/org.kde.kate/data/…`). This gives the `Migoto` highlighting mode.
-2. Add to Kate's LSP client user config (Settings → LSP Client → User Server Settings), shipped as `clients/kate/lspclient-settings.json`:
+2. Add to Kate's LSP client user config (Settings → LSP Client → User Server Settings), shipped as `editors/kate/lspclient-settings.json`:
 
 ```json
 {
@@ -53,7 +57,7 @@ No plugin code needed. Kate's built-in **LSP Client** plugin runs any stdio serv
 
 3. Turn on semantic highlighting in the LSP Client settings if it's off.
 
-As built: `clients/kate/lspclient-settings.json` (plus `rootIndicationFileNames`: `d3dx.ini`, `xxmi.toml`) and `clients/kate/README.md`. Kate itself hasn't been run against it yet; that's part of the M3 manual check.
+As built: `editors/kate/lspclient-settings.json` (plus `rootIndicationFileNames`: `d3dx.ini`, `xxmi.toml`) and `editors/kate/README.md`. A user has set it up by hand on Linux (CachyOS). On Linux and macOS, `command` needs the full path to `xxmi-lsp`, as the README explains. The Windows and macOS paths are derived from Qt's standard locations and aren't tested on those systems.
 
 Verify the exact key names against current Kate docs when implementing; the shape above follows Kate's documented `servers` / `command` / `highlightingModeRegex` config. Also verify that `.ini` files in mod folders open in `Migoto` mode rather than generic `INI Files`. If they don't, document a per-folder `.kateconfig` or mode override.
 
@@ -79,12 +83,16 @@ Highlighting fixes are filed as an issue in `lupomikti/migoto-vscode` (their CON
 
 Their `migoto.xml` needs to keep up with the XXMI dialect (the same constructs as the tree-sitter gaps: bitwise and shift operators, `store`, pools and `[*]` wildcards, `local`, `->` member access, `Region(...)`, plus anything new the spec extractor finds).
 
-- Source of the keyword and operator lists: `spec/generated/*.json`. Add a small script (`clients/kate/scripts/diff-kate-keywords.ts`) that compares their XML's keyword lists against the spec and prints what's missing. It's reused for every future update.
+- Source of the keyword and operator lists: `spec/generated/*.json`. Add a small script (`editors/kate/scripts/diff-kate-keywords.ts`) that compares their XML's keyword lists against the spec and prints what's missing. It's reused for every future update.
 - Follow their repo's conventions: edit `kate-plugin/syntaxes/migoto.xml` (it's hand-written XML, not generated from their TOML), bump its `version` attribute, and test in Kate with their README's install steps plus a sample file covering every new construct (include that sample in the PR).
 - One PR per logical change (e.g. "XXMI operators", "Pool syntax"), small and easy to review, with before/after screenshots.
-- Until a PR is merged, `clients/kate/README.md` tells users where to get the patched XML (the PR branch), so they aren't blocked on review.
+- Until a PR is merged, `editors/kate/README.md` tells users where to get the patched XML (the PR branch), so they aren't blocked on review.
 
-## HLSL syntax for Kate (`clients/kate/hlsl.xml`)
+## Neovim
+
+Neovim 0.11+ config ships under `editors/neovim/`. `lsp/xxmi.lua` starts `xxmi-lsp --stdio` for `dosini` and `ini` files, with `d3dx.ini` and `xxmi.toml` as root markers. `plugin/xxmi.lua` calls `vim.lsp.enable("xxmi")`. Install steps are in [INSTALL.md](../INSTALL.md#neovim). It's untested so far.
+
+## HLSL syntax for Kate (`editors/kate/hlsl.xml`)
 
 Kate currently falls back to the wrong highlighter for HLSL files. Deliverable: a KSyntaxHighlighting definition.
 

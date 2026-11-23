@@ -47,7 +47,7 @@ with `d3dx.ini`), so library references resolve against your installed package.
 
 ### Kate
 
-See [clients/kate/README.md](clients/kate/README.md): lupomikti's `Migoto` syntax for
+See [editors/kate/README.md](editors/kate/README.md): lupomikti's `Migoto` syntax for
 highlighting, plus a one-time LSP client setting.
 
 ### Claude Code
