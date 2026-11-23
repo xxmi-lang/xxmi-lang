@@ -6,8 +6,8 @@ use std::process::{Command, Stdio};
 
 use xxmi_mcp::spec_build::{BuildInput, BuiltSpec, SourceInput, build_version_spec};
 
-const TAGS: [&str; 7] = [
-    "v1.2.0", "v1.2.1", "v1.2.2", "v1.2.3", "v1.3.0", "v1.3.1", "v1.3.2",
+const TAGS: [&str; 8] = [
+    "v1.2.0", "v1.2.1", "v1.2.2", "v1.2.3", "v1.3.0", "v1.3.1", "v1.3.2", "v1.3.3",
 ];
 
 fn sources() -> Option<(PathBuf, PathBuf)> {
@@ -91,12 +91,12 @@ fn every_tag_builds_and_missing_overlay_entries_are_warnings() {
 }
 
 #[test]
-fn every_overlay_entry_merges_into_v1_3_2() {
+fn every_overlay_entry_merges_into_v1_3_3() {
     let Some((dll, migoto)) = sources() else {
         return;
     };
 
-    let built = build(&dll, &migoto, "v1.3.2");
+    let built = build(&dll, &migoto, "v1.3.3");
 
     assert!(overlay_warnings(&built).is_empty(), "{:?}", built.warnings);
 }

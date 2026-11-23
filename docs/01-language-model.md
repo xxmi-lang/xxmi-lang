@@ -85,7 +85,7 @@ An overlay entry for a name the generated spec doesn't have is an error, unless 
 
 `meta.json` records the DLL commit. Profiles may pin a minimum DLL version. Anything from the XXMI fork and not in vanilla 3DMigoto gets `"xxmi": true`, so hover can say "XXMI-only".
 
-DLL 1.3.2 renamed `snapshotoriginaltextures` / `restoreoriginaltextures` to `snapshotinitialtextures` / `restoreinitialtextures`, and replaced `->MatchTextures(...)`, `->GetMatchFormat` and the `match_*` keys of `[Resource]` with `[Filter…]` sections (`match_format`, `match_dhash`, `match_confidence`), `ps-t[FilterX] = ResourceY` slot filters and `->HammingDistance(FilterX)`. The bundled spec is the 1.3.2 one. Overlay entries for names a DLL version lacks are skipped with a warning when the MCP server builds that version's spec, so the older names keep their generated entries and lose only their overlay docs; the bundled load stays strict.
+DLL 1.3.2 renamed `snapshotoriginaltextures` / `restoreoriginaltextures` to `snapshotinitialtextures` / `restoreinitialtextures`, and replaced `->MatchTextures(...)`, `->GetMatchFormat` and the `match_*` keys of `[Resource]` with `[Filter…]` sections (`match_format`, `match_dhash`, `match_confidence`), `ps-t[FilterX] = ResourceY` slot filters and `->HammingDistance(FilterX)`. The bundled spec is v1.3.3 (stable, 2026-11-19); its only language change is that `run = RestoreInitialTextures` runs in the pre list instead of post (CommandList.cpp:1343). Overlay entries for names a DLL version lacks are skipped with a warning when the MCP server builds that version's spec, so the older names keep their generated entries and lose only their overlay docs; the bundled load stays strict.
 
 ## 2. Parser: tree-sitter-migoto
 

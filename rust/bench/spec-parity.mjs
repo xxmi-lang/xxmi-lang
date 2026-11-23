@@ -19,7 +19,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const rustBinary = process.env.XXMI_RS_EXTRACT ?? join(root, 'rust/target/release/xxmi-spec-extract');
 const dllRepo = resolve(root, process.env.XXMI_DLL_SRC ?? '../xxmi-refs/XXMI-Libs-Package');
 const baselineRepo = resolve(root, process.env.MIGOTO_DLL_SRC ?? '../xxmi-refs/3Dmigoto');
-const refs = ['master', 'v1.3.2', 'v1.3.1', 'v1.2.3', 'v1.2.2', 'v1.2.0'];
+const refs = ['master', 'v1.3.3', 'v1.3.2', 'v1.3.1', 'v1.2.3', 'v1.2.2', 'v1.2.0'];
 
 const scratch = mkdtempSync(join(tmpdir(), 'spec-parity-'));
 let failures = 0;
