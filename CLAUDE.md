@@ -1,6 +1,6 @@
 # xxmi-lang — working notes for Claude Code
 
-Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP server, a CLI (`xxmi`), a hosted MCP server, and agent skills. ZZZ (ZZMI) is the first-class target; GIMI/SRMI/WWMI/HIMI follow through the same "game profile" mechanism.
+Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared Rust core (`xxmi-core`), an LSP server, a CLI (`xxmi`), a hosted MCP server, and agent skills. ZZZ (ZZMI) is the first-class target; GIMI/SRMI/WWMI/HIMI follow through the same "game profile" mechanism.
 
 `xxmi-lang` and `xxmi` are working names. Rename freely, but keep them consistent across packages.
 
@@ -31,7 +31,7 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 ## Hard rules
 
 - **Never guess the language.** Every keyword, section prefix, command and operator in `spec/` must trace to a DLL source location or be marked `"source": "manual"` with a reason.
-- **One core, many frontends.** LSP, CLI and MCP call `@xxmi-lang/core`. No parsing, resolution or rule logic lives in a frontend.
+- **One core, many frontends.** LSP, CLI and MCP call `xxmi-core`. No parsing, resolution or rule logic lives in a frontend.
 - **Tolerant by default.** Real mods are messy. A parse error in one section must not hide diagnostics in others, and must never crash the server.
 - **Transforms are lossless unless told otherwise.** `fmt`, `normalize` and `migrate` preserve comments and unknown content, and must round-trip: formatting already-formatted output is a no-op.
 - **Golden tests for every transform and rule.** Fixture in, expected out, checked in. No rule merges without a positive and a negative fixture.
@@ -43,26 +43,26 @@ Language tooling for 3DMigoto / XXMI mod `.ini` files: a shared core, an LSP ser
 
 ```bash
 pnpm install
-pnpm build               # all packages
-pnpm test                # unit + golden tests
-pnpm test:corpus         # parses corpus/ (local only) + $XXMI_PACKAGE_SRC; failure rate, first error per file, baseline diff (lint from M2)
-pnpm grammar:update      # rebuilds packages/core/grammar/*.wasm from a tree-sitter-migoto fork checkout (XXMI_GRAMMAR_SRC env var)
-pnpm spec:extract        # regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags); --check to verify
+pnpm test                # vitest: VS Code extension unit tests
+pnpm test:corpus         # parses corpus/ (local only) + $XXMI_PACKAGE_SRC; failure rate, first error per file, baseline diff
+pnpm test:lsp            # JSON-RPC protocol suite; XXMI_LSP_COMMAND points it at the server binary
+pnpm check:version       # rust/Cargo.toml version must match the VS Code and plugin manifests
+pnpm grammar:update      # vendors the tree-sitter-migoto C sources from a fork checkout (XXMI_GRAMMAR_SRC env var)
+pnpm spec:extract        # runs xxmi-spec-extract: regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags)
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
 pnpm xxmi query symbol 'CommandList\ZZMI\SetTextures'      # read-only lookups (spec, library symbols)
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp   # the M6 questions against a running MCP server (docs/06)
-pnpm xxmi index ../ZZMI-Package/ZZMI --out packages/core/snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
+pnpm xxmi index ../ZZMI-Package/ZZMI --out snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
 pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Rust); no --target: every release target
-node rust/bench/parity.mjs                                 # Rust CLI vs TS CLI: lint, query, index
+XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node rust/bench/lsp-latency.mjs   # LSP edit latency (docs/03)
 cd rust && cargo test --release                            # Rust unit and integration tests
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx  # .NET library tests (docs/10-dotnet.md); node scripts/pack-dotnet.ts packs the NuGet packages
 pnpm --filter ./packages/vscode run package                # VS Code .vsix; test:vscode runs it in a real VS Code
-XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node --expose-gc --liftoff-only scripts/perf-lsp.ts   # LSP performance targets (docs/03)
 ```
 
 ## Definition of done for any task
 
-- Tests added and passing (`pnpm test`).
-- `pnpm lint && pnpm typecheck` clean.
+- Tests added and passing (`cargo test` in `rust/`, and `pnpm test`).
+- `cargo clippy` and `cargo fmt --check` clean in `rust/`; `pnpm lint && pnpm typecheck` clean.
 - If behavior visible to users changed, update the relevant `docs/` file in the same PR.
 - If a spec entry was added by hand, it has `"source": "manual"` and a `"note"`.

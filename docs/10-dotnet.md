@@ -19,7 +19,7 @@ Not included yet: a `XxmiQuery` wrapper. `xxmi query` exists now (`04-cli.md`, "
 | `XxmiLang` | The implementation, depending on `XxmiLang.Core`: `XxmiLinter`, `XxmiLanguageService`, the JSON-RPC client, `XxmiBinaryLocator`, `XxmiOptions` and the exceptions |
 | `XxmiLang.Native.win-x64`, `.win-arm64`, `.linux-x64`, `.linux-arm64`, `.osx-x64`, `.osx-arm64` | `runtimes/<rid>/native/xxmi[.exe]`: the self-contained single-file binary (about 2.6 MB; no Node needed). Each package is far below nuget.org's 250 MB limit |
 
-All target `net10.0` and have the repo's release version (`packages/core/src/version.ts`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later. Each package has its own README, description and tags, and release notes pointing at the GitHub release. `XxmiLang` and `XxmiLang.Core` also publish symbol packages (`.snupkg`, source-linked to GitHub) so you can step into them.
+All target `net10.0` and have the repo's release version (`rust/Cargo.toml`, `[workspace.package]`), so the library, the binary and the CLI always match. Licence: GPL-3.0-or-later. Each package has its own README, description and tags, and release notes pointing at the GitHub release. `XxmiLang` and `XxmiLang.Core` also publish symbol packages (`.snupkg`, source-linked to GitHub) so you can step into them.
 
 ## Install
 
@@ -44,7 +44,7 @@ folder as a local feed (`dotnet nuget add source ~/xxmi-nupkgs --name xxmi-local
 machine, or put a `nuget.config` next to your `.slnx`):
 
 ```bash
-pnpm build && pnpm build:binaries --target host      # needs Rust
+pnpm build:binaries --target host      # needs Rust
 node scripts/pack-dotnet.ts --host --out ~/xxmi-nupkgs  # XxmiLang.Core, XxmiLang + this machine's runtime package
 node scripts/smoke-dotnet.ts --feed ~/xxmi-nupkgs       # optional: installs them in a fresh app and lints a fixture
 ```
@@ -148,7 +148,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 
 ## Design choices
 
-- **A thin client, not a port.** All language logic stays in `packages/core`. The library only builds command lines, parses the stable JSON (`packages/cli/schema/lint-output.v1.json`; `XxmiLinter` refuses a `version` it doesn't know) and speaks LSP.
+- **A thin client, not a port.** All language logic stays in `xxmi-core`. The library only builds command lines, parses the stable JSON (`schema/lint-output.v1.json`; `XxmiLinter` refuses a `version` it doesn't know) and speaks LSP.
 - **A hand-written JSON-RPC client** (a few hundred lines: `Content-Length` framing, requests with cancellation, notifications, answering server requests) instead of StreamJsonRpc. The surface needed is tiny, and StreamJsonRpc pulls in Nerdbank.Streams, Newtonsoft.Json and more, which is heavy for a library whose job is to be easy to add. It is covered by in-memory pipe tests.
 - **The LSP over the CLI binary.** `xxmi lsp --stdio` (the CLI's subcommand; `xxmi-lsp` still exists for editors) means one binary per platform instead of two.
 - **No long-lived lint server for `XxmiLinter`.** One process per call costs a few hundred milliseconds of startup, and keeps the linter stateless. Use the language service when you lint repeatedly.
@@ -158,7 +158,7 @@ NuGet does the copying; there is no custom MSBuild targets file.
 `dotnet/` holds the solution `XxmiLang.slnx`: `XxmiLang.Core`, `XxmiLang`, the packaging projects, `XxmiLang.Core.Tests` (xUnit; JSON round-trips through the source-generated context, text edits, interface contracts), `XxmiLang.Tests` (lint, every language service request, crash and restart, binary resolution, the JSON-RPC layer, and hang guards against a fake misbehaving server), `XxmiLang.FakeServer` (the fake `xxmi` those hang-guard tests run) and `samples/XxmiLang.Sample`.
 
 ```bash
-pnpm build && pnpm build:binaries --target host
+pnpm build:binaries --target host
 XXMI_PATH=$PWD/dist/bin/xxmi dotnet test dotnet/XxmiLang.slnx
 dotnet build dotnet/XxmiLang.slnx -warnaserror                                  # trim/AOT analyzers included
 
@@ -174,7 +174,7 @@ Without `XXMI_PATH`, the tests use `dist/bin/xxmi` if it exists. CI runs the tes
 
 ## Releasing
 
-To release, bump the version in the files the last release commit touched (`packages/core/src/version.ts`, the VS Code `package.json`, `plugin.json`, `rust/Cargo.toml` and `Cargo.lock`) and merge to `main`. `tag-release.yml` sees the change to `version.ts`, creates the annotated tag `v<VERSION>` unless it exists, and calls `release.yml` for it (a tag pushed with `GITHUB_TOKEN` triggers no workflow, so it cannot rely on the tag push). Pushing a `v*` tag by hand still runs `release.yml` directly, and running `tag-release.yml` manually retries a bump whose tag is missing. Both darwin binaries are built in one job on an arm64 macOS runner (Apple's SDK cross-compiles `x86_64-apple-darwin`); the x64 one is smoke-tested under Rosetta when the runner has it.
+To release, bump the version in the files the last release commit touched (the VS Code `package.json`, `plugin.json`, `rust/Cargo.toml` and `Cargo.lock`) and merge to `main`. `tag-release.yml` sees the change to `version.ts`, creates the annotated tag `v<VERSION>` unless it exists, and calls `release.yml` for it (a tag pushed with `GITHUB_TOKEN` triggers no workflow, so it cannot rely on the tag push). Pushing a `v*` tag by hand still runs `release.yml` directly, and running `tag-release.yml` manually retries a bump whose tag is missing. Both darwin binaries are built in one job on an arm64 macOS runner (Apple's SDK cross-compiles `x86_64-apple-darwin`); the x64 one is smoke-tested under Rosetta when the runner has it.
 
 `release.yml` runs `scripts/pack-dotnet.ts` after the binaries are built and smoke-tests the packages on all three OSes. The `.nupkg` files are not attached to the GitHub release (which carries the per-platform zips and the `.vsix`); they travel to the `nuget` job as a workflow artifact and go to nuget.org from there (`XxmiLang.Core`, the runtime packages and `XxmiLang`, in that order). The `nuget` job is separate, so a failed push can be re-run on its own. The `github-packages` job (the reusable `github-packages.yml`) pushes the same artifact, in the same order, to GitHub Packages; it is independent of the `nuget` job, so neither blocks the other.
 

@@ -38,14 +38,14 @@ xxmi --help | -h              Print the usage; each command also takes --help
 - `xxmi index <package dir> --out FILE [--name NAME]`.
 - `fmt`, `normalize` and `migrate` are not part of this CLI. They moved to the maintainer's C# app (`05-transforms.md`).
 - `xxmi lsp [--stdio]`: starts the same language server as `xxmi-lsp` (`03-lsp.md`) on stdin/stdout, so one binary can serve both; the server code is loaded only for this command. `xxmi-lsp` keeps working. The .NET library (`10-dotnet.md`) uses it. CI runs the LSP protocol tests against `xxmi lsp` of the compiled binary (`XXMI_LSP_COMMAND`).
-- `xxmi query <kind> [name] [--package DIR] [--json]` (M6): `section-kinds`, `keys <section>`, `command <name>` (also finds `->members` and functions), `operator <op>`, `symbol <qualifiedName>` and `library [name]`. The first four read the bundled spec. `symbol` and `library` read the package around `--package` (default: the current folder), else the bundled ZZMI snapshot, which has locations but no doc comments. Exit 1 when nothing is found. Not implemented: `refs`, `outline`. The logic is in `packages/core/src/query/`, shared with the MCP server.
+- `xxmi query <kind> [name] [--package DIR] [--json]` (M6): `section-kinds`, `keys <section>`, `command <name>` (also finds `->members` and functions), `operator <op>`, `symbol <qualifiedName>` and `library [name]`. The first four read the bundled spec. `symbol` and `library` read the package around `--package` (default: the current folder), else the bundled ZZMI snapshot, which has locations but no doc comments. Exit 1 when nothing is found. Not implemented: `refs`, `outline`. The logic is in `rust/crates/xxmi-core/src/query/`, shared with the MCP server.
 - `xxmi capabilities [--json]`: the rules of this build (id, default severity, title, quick fix), the lint schema versions and the binary version. The contract is in `11-compatibility.md`.
-- `xxmi spec extract` is still `pnpm spec:extract`. From the repo: `pnpm xxmi …` runs the CLI from source.
+- `pnpm spec:extract` runs the separate `xxmi-spec-extract` binary, not `xxmi`. From the repo: `pnpm xxmi …` runs the CLI from source.
 
 ## Output
 
 - **Text:** `path:line:col  severity  XM201  message  [fix available]`, with 1-based line and column. Paths are relative to the cwd. The last line is a summary such as `2 files: 1 error, 0 warnings, 0 info, 0 hints`. This is concise on purpose so agents can read it cheaply.
-- **JSON:** `xxmi lint --format json` prints `{ "version": 1, "files": [{ "path", "encoding", "diagnostics": [{ "id","severity","message","range","fix"? }] }], "summary": {…} }`. The schema is `packages/cli/schema/lint-output.v1.json`; units, order and the freeze are in `11-compatibility.md`. `query --json` prints JSON too, but it is not part of that contract.
+- **JSON:** `xxmi lint --format json` prints `{ "version": 1, "files": [{ "path", "encoding", "diagnostics": [{ "id","severity","message","range","fix"? }] }], "summary": {…} }`. The schema is `schema/lint-output.v1.json`; units, order and the freeze are in `11-compatibility.md`. `query --json` prints JSON too, but it is not part of that contract.
 
 ## Exit codes
 

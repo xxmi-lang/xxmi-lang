@@ -5,7 +5,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 ## M0: Bootstrap and parser validation
 
 - Scaffold the monorepo per `00-overview.md` (pnpm workspaces, TS strict, vitest, eslint, prettier, GPL-3.0 LICENSE, CI on GitHub Actions for Windows, Linux and macOS; macOS legs are opt-in through "Run workflow").
-- `packages/core/parser`: load `tree-sitter-migoto` WASM through `web-tree-sitter`. Write a `parseFile` helper that reports ERROR/MISSING nodes.
+- `rust/crates/xxmi-core/src/parse.rs`: load `tree-sitter-migoto` and report ERROR/MISSING nodes.
 - `pnpm test:corpus`: parse every `.ini` under `corpus/` and under a configured ZZMI-Package checkout, then print the failure rate and the first error per file.
 - Fork `lupomikti/tree-sitter-migoto` per the fork policy in `01-language-model.md` §2, with the monthly upstream-merge job.
 - Reproduce the 4 known dialect gaps (`01-language-model.md`). For each: minimal corpus test and grammar fix in the fork, logged in `XXMI-CHANGES.md`.
@@ -16,13 +16,13 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 
 - ZZMI-Package @ `1ecd24d`: 19/19 files parse without ERROR or MISSING nodes (`pnpm test:corpus --strict`, also run in CI on all three OSes; weekly against ZZMI `main`).
 - Local corpus baseline (`corpus/.baseline.json`): 3/3 files clean (0.0% parse-failure rate), 1 not UTF-8. The corpus is still tiny; grow it with the CN mods requested for M4.
-- Grammar fork: `xxmi` branch on top of upstream v0.9.3, 4 fixes in `XXMI-CHANGES.md` (root causes in `01-language-model.md` §2). Vendored WASM provenance is in `packages/core/grammar/SOURCE.json`.
+- Grammar fork: `xxmi` branch on top of upstream v0.9.3, 4 fixes in `XXMI-CHANGES.md` (root causes in `01-language-model.md` §2). Vendored provenance is in `rust/crates/tree-sitter-migoto/SOURCE.md`.
 - Open: the org setting "Allow GitHub Actions to create and approve pull requests" is off, so the fork's `upstream-sync` job can push its branch but can't open the PR until an org owner enables it.
 - Carried into M2: error recovery can swallow later sections after an unclosed `(` (`01-language-model.md` §2 "Error recovery").
 
 ## M1: Spec extractor
 
-- `packages/spec-extractor`: given `XXMI_DLL_SRC`, produce `spec/generated/{sections,commands,operators,meta}.json` per `01-language-model.md` §1. Tolerate source drift: find arrays and functions by name, and fail loudly if not found.
+- `rust/crates/xxmi-spec-extractor`: given `XXMI_DLL_SRC`, produce `spec/generated/{sections,commands,operators,meta}.json` per `01-language-model.md` §1. Tolerate source drift: find arrays and functions by name, and fail loudly if not found.
 - Overlay loader and merger; initial overlay docs for the 20 most used keys and commands.
 - CI job: daily, plus manual dispatch. Clone the DLL, run extraction, open a PR on diff.
 
@@ -55,17 +55,17 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
   - Keys read by the Injector and `DLLMainHook.cpp` through `find_ini_*_lite`, and by the D3DCompiler wrapper, were missing and caused false XM102s on `[Loader]` and `[Rendering]`; they're now extracted.
   - Missing `include_recursive` folders are no longer XM207: the DLL only logs them.
 - **Fixtures:** every rule has good/bad fixtures (`fixtures/rules/`), and namespace rules 1–7 each have one with hand-written expectations (`fixtures/namespaces/`).
-- **Corpus and schema:** the corpus lints with no crashes (per-rule counts are in `corpus/.baseline.json`), and CLI JSON output validates against `packages/cli/schema/lint-output.v1.json` in tests.
+- **Corpus and schema:** the corpus lints with no crashes (per-rule counts are in `corpus/.baseline.json`), and CLI JSON output validates against `schema/lint-output.v1.json` in tests.
 - **Error recovery:** the M0 gap is closed. Sections are parsed independently, so a syntax error can't hide later sections.
 - **Performance:** the whole ZZMI package (19 files) lints in about 110 ms.
-- **Snapshot:** the bundled ZZMI library snapshot (`packages/core/snapshots/zzmi.json`) is checked in CI against the pinned package commit.
+- **Snapshot:** the bundled ZZMI library snapshot (`snapshots/zzmi.json`) is checked in CI against the pinned package commit.
 - **Not done yet:** `xxmi.toml` `package =`, SARIF output, `--fix`, and loading other mods under `include_recursive` for cross-mod references.
 
 ## M3: LSP MVP and first release (v0.1)
 
 - `xxmi-lsp` with the phase 1 capabilities in `03-lsp.md`.
 - VS Code client extension; Kate config snippet; Claude Code plugin with `.lsp.json` and the `xxmi-ini-authoring` skill.
-- Single-file binaries for every target listed in `00-overview.md` (built with cargo, `rust-port.md`), attached to GitHub releases as one zip per platform (`scripts/bundle-release.ts`). The grammar `.wasm` must be embedded in the binary (not loaded from a path next to it); test the compiled binary, not just `node dist/`.
+- Single-file binaries for every target listed in `00-overview.md` (built with cargo), attached to GitHub releases as one zip per platform (`scripts/bundle-release.ts`). The grammar is compiled into the binary; test the compiled binary, not just `cargo run`.
 - README: install steps for each editor, credits to lupomikti and the XXMI/AGMG maintainers.
 
 **Accept:** in VS Code and Kate on a real ZZZ mod: diagnostics appear, go-to-definition into ZZMI libraries works, and renaming a CommandList updates all references across files. In Claude Code, an edit that introduces an unresolved `run =` produces an XM201 diagnostic in the agent's context. `claude plugin validate ./plugin` passes. The performance targets in `03-lsp.md` hold.
@@ -77,7 +77,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 - **Claude Code:** with the plugin and `xxmi-lsp` on PATH, an agent that typed `run = CommandListLocl` was shown the XM201 diagnostic. See 07-agent-integration.md for the first-edit timing caveat.
 - **Plugin:** `claude plugin validate` passes for `./plugin` and the repo marketplace, and CI runs it.
 - **Performance targets:** all pass: 89 ms cold index, 44 ms per edit on 5,048 lines, 177 MB for the package plus 50 mods. Getting there meant working around a web-tree-sitter native-memory leak under Node with `--liftoff-only` (03-lsp.md).
-- **Binaries:** `pnpm build:binaries` builds every target, now including win-arm64. The WASM, spec and snapshot are embedded, and the protocol suite runs against the compiled binary in CI on all three OSes and against the release binaries in `release.yml`.
+- **Binaries:** `pnpm build:binaries` builds every target, now including win-arm64. The grammar, spec and snapshot are embedded, and the protocol suite runs against the compiled binary in CI on all three OSes and against the release binaries in `release.yml`.
 - **Still to do:**
   - **Kate:** tested by hand on CachyOS (the config and guide are in `editors/kate/`).
   - **Publishing:** the Marketplace and Open VSX need publisher accounts.
@@ -113,19 +113,19 @@ Moved to the maintainer's C# app, together with M4 (see above). Old plan, for hi
 
 ## M6: Hosted MCP on Railway
 
-- `packages/mcp-server` per `06-mcp-server.md`; Dockerfile; Railway service settings; volume; polling indexer.
+- `rust/crates/xxmi-mcp` per `06-mcp-server.md`; Dockerfile; Railway service settings; volume; polling indexer.
 - `.mcp.json` added to the plugin; `AGENTS.md`.
 
 **Accept:** a fresh Claude Code session with only the MCP configured (no local clone) can answer "what inputs does `CommandList\ZZMI\SetTextures` need", "where is `store` implemented in the DLL" and "lint this ini" correctly. A new ZZMI-Package commit is indexed within 20 minutes. Rate limiting and input caps are verified by tests.
 
 **Status (2026-10-20):** deployed to Railway (service `xxmi-mcp`, default domain `https://xxmi-mcp-production.up.railway.app/mcp`; a custom domain later). `scripts/mcp-acceptance.ts` passes against it, and the live rate limit, body cap and admin-token checks behave as designed (`TRUSTED_PROXY_HOPS=2` on Railway, see `06-mcp-server.md`).
 
-- `packages/mcp-server` (now `rust/crates/xxmi-mcp`) serves nine tools and the spec resources over stateless Streamable HTTP; tools, env vars and design choices are in `06-mcp-server.md`, "As built".
+- `rust/crates/xxmi-mcp` serves nine tools and the spec resources over stateless Streamable HTTP; tools, env vars and design choices are in `06-mcp-server.md`, "As built".
 - The three questions are answered by `scripts/mcp-acceptance.ts` against the Docker image running locally; CI builds the image, starts it, and runs the same script weekly.
 - The indexer polls every 15 minutes (`POLL_INTERVAL_MIN`), so a new ZZMI-Package commit is served within about 16 minutes: the check, a tarball download and the index build take under half a minute.
 - Rate limiting, input caps, the path sandbox and the indexer swap are covered by tests in `rust/crates/xxmi-mcp/tests`.
 - Not in this milestone: the `migration_guide` tool and `xxmi://eras/…` resources (they belong to M5, which moved), spec re-extraction on the server, `XXMI_MCP_KEYS`.
-- Also delivered: `xxmi query` (`section-kinds`, `keys`, `command`, `operator`, `symbol`, `library`), which the MCP tools share their logic with (`packages/core/src/query/`). `refs` and `outline` are still open.
+- Also delivered: `xxmi query` (`section-kinds`, `keys`, `command`, `operator`, `symbol`, `library`), which the MCP tools share their logic with (`rust/crates/xxmi-core/src/query/`). `refs` and `outline` are still open.
 - `plugin/.mcp.json` reads the server URL from `XXMI_MCP_URL`; the default is the public instance.
 
 ## M7: Polish and ecosystem
@@ -140,12 +140,12 @@ Moved to the maintainer's C# app, together with M4 (see above). Old plan, for hi
 
 ## Delivered outside the milestones
 
-- **Rust port** (`rust/`, `rust-port.md`): `xxmi-core`, the `xxmi` CLI (`lint`, `query`, `index`, `lsp`) and the language server are ported, and the release binaries are built from it. The TypeScript core, CLI and LSP stay as parity references. Next: the MCP server and the spec extractor.
+- **Rust port** (`rust/`): complete. `xxmi-core`, the `xxmi` CLI and LSP, `xxmi-mcp` and `xxmi-spec-extractor` are ported, the TypeScript implementation (core, CLI, LSP, MCP server, spec extractor) is removed, and the release binaries are built from Rust.
 - **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper can now be added: `xxmi query` exists (M6).
 
 ## Open questions (resolve with maintainers as they come up)
 
-1. Official names: `xxmi-lang` / `xxmi` OK? npm scope? Domain for the MCP server?
+1. Official names: `xxmi-lang` / `xxmi` OK? Domain for the MCP server?
 2. Which DLL version is the minimum supported? Do we warn on features newer than the user's installed DLL?
 3. Component hash mapping source for ZZZ: XXMITools `hash_json.py` data, a community DB, or something new?
 4. Should `normalize` ever touch a mod's `[Key*]` bindings, or leave user-facing toggles strictly alone?

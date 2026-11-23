@@ -1,6 +1,6 @@
 # 02 — Diagnostics
 
-Every rule has a stable ID, a default severity, a description, fixtures, and optionally a quick fix. The LSP, CLI and MCP `lint_ini` all run the same rule engine from `@xxmi-lang/core`.
+Every rule has a stable ID, a default severity, a description, fixtures, and optionally a quick fix. The LSP, CLI and MCP `lint_ini` all run the same rule engine from `xxmi-core`.
 
 ## ID ranges
 
@@ -65,7 +65,7 @@ Messages quote the DLL's own warning text where one exists, so users can match l
 
 ### As implemented (M2)
 
-All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/lint/rules/`, each with `fixtures/rules/<id>/{bad,good}` and an `expected.json`. Where the DLL source settled a question, the rule follows it:
+All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-core/src/rules/`, each with `fixtures/rules/<id>/{bad,good}` and an `expected.json`. Where the DLL source settled a question, the rule follows it:
 
 - **XM001:** leaves the lines that XM003, XM005, XM006, XM103, XM110 and XM111 name more precisely to those rules, so a line is never reported twice.
 - **XM003:** the DLL's `ParseIniPreamble` reads only `namespace` and `condition` (any case) before the first section and warns "Entry outside of section" for every other line, bare lines included. Flow keywords go to XM111.
