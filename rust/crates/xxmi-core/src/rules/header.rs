@@ -56,6 +56,7 @@ pub fn check_suffix(context: &RuleContext) -> Vec<Finding> {
                 title: "Remove the text after `]`".to_string(),
                 span: after,
                 new_text: String::new(),
+                also: Vec::new(),
             }),
             severity: None,
         });
@@ -83,6 +84,7 @@ pub fn check_unclosed(context: &RuleContext) -> Vec<Finding> {
                     end: header.end,
                 },
                 new_text: "]".to_string(),
+                also: Vec::new(),
             }),
             severity: None,
         });

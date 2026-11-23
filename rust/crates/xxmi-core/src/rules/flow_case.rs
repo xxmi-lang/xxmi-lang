@@ -46,6 +46,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                     title: format!("Change to `{lower}`"),
                     span,
                     new_text: lower.to_string(),
+                    also: Vec::new(),
                 }),
                 severity: None,
             });

@@ -1,0 +1,34 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM209",
+    "severity": "warning",
+    "message": "Global $Mode is already declared on line 2; the DLL keeps the first and ignores this one.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 15
+      },
+      "end": {
+        "line": 2,
+        "character": 20
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM209",
+    "severity": "warning",
+    "message": "Global $other is already declared on line 6; the DLL keeps the first and ignores this one.",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 7
+      },
+      "end": {
+        "line": 6,
+        "character": 13
+      }
+    }
+  }
+]

@@ -138,9 +138,9 @@ rule_tests! {
     xm001 => "XM001", xm002 => "XM002", xm003 => "XM003", xm005 => "XM005", xm006 => "XM006",
     xm101 => "XM101", xm102 => "XM102", xm103 => "XM103", xm104 => "XM104", xm105 => "XM105",
     xm106 => "XM106", xm107 => "XM107", xm108 => "XM108", xm109 => "XM109",
-    xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm115 => "XM115",
+    xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm114 => "XM114", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
-    xm206 => "XM206", xm207 => "XM207", xm208 => "XM208",
+    xm206 => "XM206", xm207 => "XM207", xm208 => "XM208", xm209 => "XM209", xm210 => "XM210",
     xm403 => "XM403",
 }
 
@@ -229,7 +229,7 @@ fn xxmi_1_3_1_fixtures_match_the_golden_output() {
 }
 
 /// fixtures/ownership: every line a dedicated rule names is reported by that rule alone, not also
-/// as XM001, XM102, XM103, XM109 or XM110.
+/// as XM001, XM102, XM103, XM109, XM110 or XM204.
 #[test]
 fn stray_lines_are_reported_once_under_their_own_rule() {
     let dir = fixtures().join("ownership");
@@ -239,7 +239,10 @@ fn stray_lines_are_reported_once_under_their_own_rule() {
             let id = d["id"].as_str().unwrap();
             id.starts_with("XM0")
                 || id == "XM403"
-                || matches!(id, "XM102" | "XM103" | "XM109" | "XM110" | "XM111")
+                || matches!(
+                    id,
+                    "XM102" | "XM103" | "XM109" | "XM110" | "XM111" | "XM204" | "XM209" | "XM210"
+                )
         })
         .map(|d| {
             format!(

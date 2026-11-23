@@ -86,10 +86,13 @@ fn diagnostic(
 ) -> Diagnostic {
     let fix = finding.fix.map(|fix| Fix {
         title: fix.title,
-        edits: vec![TextEdit {
-            range: file.range_of(fix.span),
-            new_text: fix.new_text,
-        }],
+        edits: std::iter::once((fix.span, fix.new_text))
+            .chain(fix.also)
+            .map(|(span, new_text)| TextEdit {
+                range: file.range_of(span),
+                new_text,
+            })
+            .collect(),
     });
     Diagnostic {
         id: rule.id,

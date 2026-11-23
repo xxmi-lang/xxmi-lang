@@ -81,5 +81,6 @@ fn insert_endif(text: &str, section: &SectionModel, opening: Span) -> FixSpec {
         title: "Add the missing `endif`".to_string(),
         span: Span { start: end, end },
         new_text: format!("\n{indent}endif"),
+        also: Vec::new(),
     }
 }

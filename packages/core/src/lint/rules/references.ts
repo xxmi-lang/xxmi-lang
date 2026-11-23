@@ -8,6 +8,8 @@ import { didYouMean, replaceFix } from '../suggest.ts';
 import { explicitNamespace, globalVariableKey, type SymbolTable } from '../../workspace/symbols.ts';
 import type { Workspace } from '../../workspace/workspace.ts';
 import type { Rule, RuleContext } from '../types.ts';
+import { redeclaredGlobals } from './global-redeclared.ts';
+import { redeclaredLocals } from './local-redeclared.ts';
 
 interface Usage {
   /** Lower-cased qualified names of sections some reference resolved to. */
@@ -129,7 +131,12 @@ export const XM204: Rule = {
     // Globals in files pulled in by includes are usually a library's API for other mods.
     const checkGlobals = workspace.targets.has(file.path) && !isLibrary(file, workspace);
     const used = usage(workspace);
-    for (const v of file.variables) {
+    // XM209 and XM210 own the declarations the DLL drops.
+    const dropped = new Set(
+      [...redeclaredGlobals(file), ...redeclaredLocals(file)].map((r) => r.index),
+    );
+    for (const [index, v] of file.variables.entries()) {
+      if (dropped.has(index)) continue;
       const isUsed =
         v.scope === 'local'
           ? used.locals.has(`${file.path}#${v.span.start}`)

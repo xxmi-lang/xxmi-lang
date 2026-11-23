@@ -54,6 +54,7 @@ fn move_above(text: &str, content: Span, comment: Span) -> Option<FixSpec> {
         span: content,
         // A plain \n keeps the edit identical for LF and CRLF files; editors normalise it on insert.
         new_text: format!("{}\n{indent}{code}", comment.slice(text)),
+        also: Vec::new(),
     })
 }
 

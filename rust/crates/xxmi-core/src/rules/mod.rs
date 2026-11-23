@@ -9,14 +9,17 @@ mod enum_value;
 mod flow_balance;
 mod flow_case;
 mod flow_outside;
+mod global_redeclared;
 mod hash_format;
 mod header;
 mod inline_comment;
 mod keywords;
+mod local_redeclared;
 mod missing_file;
 mod missing_include;
 mod no_hash;
 mod outside_section;
+mod setting_inside_if;
 mod syntax;
 mod unknown_key;
 mod unknown_namespace;
@@ -90,6 +93,8 @@ pub struct FixSpec {
     pub title: String,
     pub span: Span,
     pub new_text: String,
+    /// More edits applied together with the main one, as (span, new text).
+    pub also: Vec<(Span, String)>,
 }
 
 /// A "replace with the suggestion" quick fix, if there is a suggestion.
@@ -99,6 +104,7 @@ fn replace_fix(span: Span, word: &str, candidates: &[&str], prefix: &str) -> Opt
         title: format!("Change to `{prefix}{found}`"),
         span,
         new_text: format!("{prefix}{found}"),
+        also: Vec::new(),
     })
 }
 
@@ -111,6 +117,7 @@ fn comment_out_fix(content: Span) -> FixSpec {
             end: content.start,
         },
         new_text: "; ".to_string(),
+        also: Vec::new(),
     }
 }
 
@@ -146,7 +153,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 28] = [
+pub const RULES: [Rule; 31] = [
     rule(
         "XM001",
         Severity::Error,
@@ -264,6 +271,13 @@ pub const RULES: [Rule; 28] = [
         hash_format::check,
     ),
     rule(
+        "XM114",
+        Severity::Info,
+        "TextureOverride / ShaderOverride setting written inside an `if` (the DLL reads it unconditionally)",
+        setting_inside_if::check,
+    )
+    .with_fix(),
+    rule(
         "XM115",
         Severity::Warning,
         "`;` comment after a value (the DLL keeps it in the value)",
@@ -319,6 +333,18 @@ pub const RULES: [Rule; 28] = [
         Severity::Warning,
         "`filename =` points to a missing file",
         missing_file::check,
+    ),
+    rule(
+        "XM209",
+        Severity::Warning,
+        "Global declared twice in [Constants] (the DLL keeps the first)",
+        global_redeclared::check,
+    ),
+    rule(
+        "XM210",
+        Severity::Error,
+        "Local redeclared where an earlier local of the same name is visible (the DLL drops the line)",
+        local_redeclared::check,
     ),
     rule(
         "XM403",
