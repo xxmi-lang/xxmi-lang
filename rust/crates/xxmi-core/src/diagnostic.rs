@@ -1,4 +1,4 @@
-//! Diagnostics in the shape of `xxmi lint --format json` (packages/cli/schema/lint-output.v1.json).
+//! Diagnostics in the shape of `xxmi lint --format json` (schema/lint-output.v1.json).
 
 use serde::Serialize;
 

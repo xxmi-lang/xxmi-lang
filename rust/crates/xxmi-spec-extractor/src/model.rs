@@ -2,8 +2,9 @@
 //! Field order is the key order of the TypeScript extractor's objects,
 //! so serialized output matches it byte for byte.
 
+use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeMap;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Documentation fields only overlays provide, in the order they were first set.
 #[derive(Debug, Clone, Default)]
@@ -28,14 +29,38 @@ impl Serialize for Docs {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+impl<'de> Deserialize<'de> for Docs {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct DocsVisitor;
+
+        impl<'de> Visitor<'de> for DocsVisitor {
+            type Value = Docs;
+
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("a map of documentation strings")
+            }
+
+            fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Docs, A::Error> {
+                let mut docs = Docs::default();
+                while let Some((field, value)) = map.next_entry::<String, String>()? {
+                    docs.set(&field, value);
+                }
+                Ok(docs)
+            }
+        }
+
+        deserializer.deserialize_map(DocsVisitor)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MatchKind {
     Exact,
     Prefix,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpecKey {
     pub name: String,
@@ -48,20 +73,20 @@ pub struct SpecKey {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecDynamicKeys {
     pub kind: String,
     pub source: String,
     pub xxmi: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecRemovedKey {
     pub name: String,
     pub source: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpecSection {
     pub name: String,
@@ -78,14 +103,14 @@ pub struct SpecSection {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecBuiltinSection {
     pub name: String,
     pub source: String,
     pub xxmi: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecCommandValue {
     pub name: String,
     #[serde(rename = "match")]
@@ -94,7 +119,7 @@ pub struct SpecCommandValue {
     pub xxmi: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpecCommand {
     pub name: String,
@@ -109,12 +134,12 @@ pub struct SpecCommand {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub indirect: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub form: Option<&'static str>,
+    pub form: Option<String>,
     #[serde(flatten)]
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecResourceMember {
     pub name: String,
     pub target: String,
@@ -125,7 +150,7 @@ pub struct SpecResourceMember {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecFunction {
     pub name: String,
     pub source: String,
@@ -134,7 +159,7 @@ pub struct SpecFunction {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecOperatorToken {
     pub token: String,
     pub source: String,
@@ -143,31 +168,31 @@ pub struct SpecOperatorToken {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecPrecedenceLevel {
     pub level: usize,
     pub group: String,
-    pub associativity: &'static str,
+    pub associativity: String,
     pub unary: bool,
     pub operators: Vec<String>,
     pub source: String,
     pub xxmi: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecOperators {
     pub tokens: Vec<SpecOperatorToken>,
     pub precedence: Vec<SpecPrecedenceLevel>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecEnumValue {
     pub name: String,
     pub source: String,
     pub xxmi: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecEnum {
     pub name: String,
     pub values: Vec<SpecEnumValue>,
@@ -177,7 +202,7 @@ pub struct SpecEnum {
     pub docs: Docs,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitInfo {
     pub repository: String,
     pub commit: String,
@@ -185,7 +210,7 @@ pub struct GitInfo {
     pub commit_date: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpecMeta {
     pub extractor_version: u32,
@@ -195,7 +220,7 @@ pub struct SpecMeta {
 }
 
 /// A spec without its `meta`: what one DLL checkout yields.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpecBody {
     pub sections: Vec<SpecSection>,
@@ -207,7 +232,7 @@ pub struct SpecBody {
     pub enums: Vec<SpecEnum>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Spec {
     pub meta: SpecMeta,
     #[serde(flatten)]

@@ -3,7 +3,7 @@
  *
  * - values set with `configureDefaults` (single-file binaries embed the spec and snapshots and
  *   set them at startup);
- * - in the repository, spec/ (generated + overlays) and packages/core/snapshots/;
+ * - in the repository, spec/ (generated + overlays) and snapshots/;
  * - in a published package, dist/spec.json (written by the build) and snapshots/.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -17,7 +17,7 @@ const BUNDLED_SPEC = fileURLToPath(new URL('../dist/spec.json', import.meta.url)
 const BUNDLED_SPEC_FROM_DIST = fileURLToPath(new URL('./spec.json', import.meta.url));
 const BUNDLED_OVERLAY = fileURLToPath(new URL('../dist/overlay.json', import.meta.url));
 const BUNDLED_OVERLAY_FROM_DIST = fileURLToPath(new URL('./overlay.json', import.meta.url));
-const SNAPSHOT_DIR = fileURLToPath(new URL('../snapshots/', import.meta.url));
+const SNAPSHOT_DIR = fileURLToPath(new URL('../../../snapshots/', import.meta.url));
 
 let configuredSpec: Spec | undefined;
 let configuredSnapshots: SymbolSnapshot[] | undefined;

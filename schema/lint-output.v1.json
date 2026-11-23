@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/xxmi-lang/xxmi-lang/blob/main/packages/cli/schema/lint-output.v1.json",
+  "$id": "https://github.com/xxmi-lang/xxmi-lang/blob/main/schema/lint-output.v1.json",
   "title": "xxmi lint --format json (version 1)",
   "description": "Changes only with a version bump (docs/04-cli.md).",
   "type": "object",

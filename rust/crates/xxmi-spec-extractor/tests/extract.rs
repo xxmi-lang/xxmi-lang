@@ -219,10 +219,10 @@ fn extracts_keywords_that_only_test_the_value() {
     assert_eq!(snapshot.kind, "general");
     assert_eq!(snapshot.match_kind, xxmi_spec_extractor::MatchKind::Exact);
     assert!(snapshot.xxmi);
-    assert_eq!(snapshot.form, Some("value"));
+    assert_eq!(snapshot.form.as_deref(), Some("value"));
 
     assert_eq!(
-        command(&spec, "restoreoriginaltextures").form,
+        command(&spec, "restoreoriginaltextures").form.as_deref(),
         Some("value")
     );
 

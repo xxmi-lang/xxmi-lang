@@ -7,8 +7,7 @@
  * `--target host` builds for this machine and writes dist/bin/xxmi[.exe], dist/bin/xxmi-lsp[.exe]
  * and dist/bin/xxmi-<os>-<arch>[.exe], the name the VS Code packaging reads.
  * `--target <os>-<arch>` writes dist/bin/xxmi-<os>-<arch>[.exe], the names the release reads.
- * Run `--help` for the full list. The rust/ build embeds packages/core/dist/spec.json, so run
- * `pnpm build` first.
+ * Run `--help` for the full list.
  */
 import { execFileSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, rmSync } from 'node:fs';
@@ -107,10 +106,6 @@ function build(target: string): void {
 // Checks every name before the slow part starts.
 targets.forEach(tripleOf);
 
-// The embedded spec is the merged spec/ (generated + overlays).
-execFileSync(process.execPath, [join(REPO, 'packages/core/scripts/bundle-spec.ts')], {
-  stdio: 'inherit',
-});
 mkdirSync(out, { recursive: true });
 
 for (const target of targets) build(target);

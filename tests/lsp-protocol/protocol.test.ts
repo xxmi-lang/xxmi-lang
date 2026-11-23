@@ -1,7 +1,6 @@
 /**
- * Drives xxmi-lsp over real JSON-RPC (docs/03-lsp.md "Testing"). By default it runs the server
- * from source; set XXMI_LSP_COMMAND to a JSON array (e.g. `["./xxmi-lsp", "--stdio"]`) to test a
- * compiled binary the same way.
+ * Drives the Rust language server over real JSON-RPC (docs/03-lsp.md "Testing"). Set
+ * XXMI_LSP_COMMAND to a JSON array, e.g. `["dist/bin/xxmi-lsp", "--stdio"]`.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -17,22 +16,18 @@ import {
   type PublishDiagnosticsParams,
 } from 'vscode-languageserver-protocol/node';
 
-const PACKAGE = resolve(import.meta.dirname, '../../../fixtures/lsp/package');
+const PACKAGE = resolve(import.meta.dirname, '../../fixtures/lsp/package');
 const MOD = join(PACKAGE, 'Mods/MyMod');
 const uri = (path: string): string => pathToFileURL(path).href;
 const MOD_INI = uri(join(MOD, 'mod.ini'));
 const EXTRA_INI = uri(join(MOD, 'extra.ini'));
 const LIB_INI = uri(join(PACKAGE, 'Core/Lib/lib.ini'));
 
-const command = JSON.parse(
-  process.env.XXMI_LSP_COMMAND ??
-    JSON.stringify([
-      process.execPath,
-      '--conditions=source',
-      resolve(import.meta.dirname, '../src/main.ts'),
-      '--stdio',
-    ]),
-) as string[];
+const commandJson = process.env.XXMI_LSP_COMMAND;
+if (!commandJson) {
+  throw new Error('Set XXMI_LSP_COMMAND to a JSON array, e.g. ["dist/bin/xxmi-lsp","--stdio"]');
+}
+const command = JSON.parse(commandJson) as string[];
 
 let child: ChildProcessWithoutNullStreams;
 let connection: ProtocolConnection;

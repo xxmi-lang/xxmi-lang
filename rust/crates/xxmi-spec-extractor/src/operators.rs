@@ -82,9 +82,9 @@ fn precedence(
             level: levels.len(),
             group: group.to_string(),
             associativity: if call.arg(3) == "true" {
-                "right"
+                "right".to_string()
             } else {
-                "left"
+                "left".to_string()
             },
             unary: call.arg(4) == "true",
             operators,

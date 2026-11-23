@@ -187,6 +187,9 @@ importers:
       vitest:
         specifier: ^5.0.3
         version: 5.0.3(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2))
+      vscode-languageserver-protocol:
+        specifier: ^3.18.4
+        version: 3.18.4
 
   packages/cli:
     dependencies:

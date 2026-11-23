@@ -5,6 +5,7 @@ mod commands;
 mod cpp;
 mod dll;
 mod flags;
+pub mod load;
 mod model;
 mod operators;
 mod output;

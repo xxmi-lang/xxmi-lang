@@ -1,4 +1,4 @@
-//! Lint results as text and as the versioned JSON document (packages/cli/schema/lint-output.v1.json).
+//! Lint results as text and as the versioned JSON document (schema/lint-output.v1.json).
 
 use std::path::Path;
 

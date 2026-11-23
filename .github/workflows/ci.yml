@@ -20,7 +20,7 @@ permissions:
 
 env:
   # Pinned so PR CI doesn't break when the package changes; the weekly run uses main. Must match
-  # the commit in packages/core/snapshots/zzmi.json (rebuild it with `pnpm xxmi index`).
+  # the commit in snapshots/zzmi.json (rebuild it with `pnpm xxmi index`).
   ZZMI_PACKAGE_REF: 1ecd24dbc85f96239eaadeb7c4e0788aef7fae4f
 
 jobs:
@@ -42,8 +42,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Build first: the Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
-      - run: pnpm build
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.rust-version.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Every manifest has the version of rust/Cargo.toml
+        run: pnpm check:version
 
       - run: pnpm lint
 
@@ -132,31 +144,18 @@ jobs:
         shell: bash
         run: |
           pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
-          diff packages/core/snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
-
-      - id: rust-version
-        shell: bash
-        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: ${{ steps.rust-version.outputs.version }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
+          diff snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
 
       # docs/09-roadmap.md M3: test the compiled binaries, not just the Node build.
       - name: Build single-file binaries for this machine
         run: pnpm build:binaries --target host
 
-      - name: Protocol tests against the compiled xxmi-lsp, xxmi lsp and the TypeScript server
+      - name: Protocol tests against the compiled xxmi-lsp and xxmi lsp
         shell: bash
         run: |
           exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
-          XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm vitest run packages/lsp
-          XXMI_LSP_COMMAND="[\"node\",\"--liftoff-only\",\"packages/lsp/dist/main.js\",\"--stdio\"]" pnpm vitest run packages/lsp
+          XXMI_LSP_COMMAND="[\"dist/bin/xxmi-lsp$exe\",\"--stdio\"]" pnpm test:lsp
+          XXMI_LSP_COMMAND="[\"dist/bin/xxmi$exe\",\"lsp\",\"--stdio\"]" pnpm test:lsp
           "dist/bin/xxmi$exe" --version
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
@@ -204,10 +203,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ripgrep
 
+      # Only the parity step below needs the TypeScript build.
       - run: pnpm install --frozen-lockfile
+        if: matrix.os == 'ubuntu-latest'
 
-      # build.rs embeds packages/core/dist/spec.json.
       - run: pnpm build
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Check out ZZMI-Package
         if: matrix.os == 'ubuntu-latest'
@@ -257,11 +258,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # The Rust binary embeds packages/core/dist/spec.json (rust/crates/xxmi-core/build.rs).
-      - run: pnpm build
 
       - id: rust-version
         shell: bash

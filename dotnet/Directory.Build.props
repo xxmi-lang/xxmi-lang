@@ -1,10 +1,10 @@
 <Project>
 
-  <!-- The version of every package is the repo's release version (packages/core/src/version.ts).
+  <!-- The version of every package is the repo's release version (rust/Cargo.toml).
        Override with -p:Version=... (e.g. for a prerelease build). -->
   <PropertyGroup>
-    <XxmiVersionFile>$(MSBuildThisFileDirectory)../packages/core/src/version.ts</XxmiVersionFile>
-    <Version Condition="'$(Version)' == '' And Exists('$(XxmiVersionFile)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(XxmiVersionFile)')), "VERSION = '([^']+)'").Groups[1].Value)</Version>
+    <XxmiVersionFile>$(MSBuildThisFileDirectory)../rust/Cargo.toml</XxmiVersionFile>
+    <Version Condition="'$(Version)' == '' And Exists('$(XxmiVersionFile)')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(XxmiVersionFile)')), '(?m)^version = \x22([^\x22]+)\x22').Groups[1].Value)</Version>
   </PropertyGroup>
 
   <PropertyGroup>

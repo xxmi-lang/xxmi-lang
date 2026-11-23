@@ -8,7 +8,7 @@ import { main } from '../src/cli.ts';
 const RULES = resolve(import.meta.dirname, '../../../fixtures/rules');
 const NAMESPACES = resolve(import.meta.dirname, '../../../fixtures/namespaces');
 const schema = JSON.parse(
-  readFileSync(resolve(import.meta.dirname, '../schema/lint-output.v1.json'), 'utf8'),
+  readFileSync(resolve(import.meta.dirname, '../../../schema/lint-output.v1.json'), 'utf8'),
 ) as object;
 
 async function run(...argv: string[]): Promise<{ code: number; out: string; err: string }> {

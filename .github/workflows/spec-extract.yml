@@ -22,14 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - id: rust-version
+        shell: bash
+        run: echo "version=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-node@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          node-version: 22
-          cache: pnpm
+          toolchain: ${{ steps.rust-version.outputs.version }}
 
-      - run: pnpm install --frozen-lockfile
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
 
       - name: Check out XXMI-Libs-Package master
         uses: actions/checkout@v4
@@ -38,7 +41,7 @@ jobs:
           ref: master
           path: .dll/xxmi
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
@@ -53,7 +56,7 @@ jobs:
           ref: master
           path: .dll/vanilla
           persist-credentials: false
-          # Keep in sync with DllSource.load (packages/spec-extractor/src/dll.ts).
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
             /D3DCompiler/
@@ -63,7 +66,7 @@ jobs:
 
       # Fails (exit 3) when the DLL moved a table or parser the extractor anchors on.
       - name: Extract
-        run: pnpm spec:extract
+        run: cargo run --release --manifest-path rust/Cargo.toml -p xxmi-spec-extractor
         env:
           XXMI_DLL_SRC: .dll/xxmi
           MIGOTO_DLL_SRC: .dll/vanilla
@@ -86,10 +89,7 @@ jobs:
         id: test
         if: steps.diff.outputs.changed == 'true'
         continue-on-error: true
-        run: pnpm test
-        env:
-          XXMI_DLL_SRC: .dll/xxmi
-          MIGOTO_DLL_SRC: .dll/vanilla
+        run: cargo test --release --manifest-path rust/Cargo.toml -p xxmi-core --no-fail-fast
 
       - name: Open PR
         id: pr
