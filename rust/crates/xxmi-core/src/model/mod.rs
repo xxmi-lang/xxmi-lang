@@ -1,4 +1,4 @@
-//! The typed model of an ini file and the lowering that builds it (packages/core/src/model).
+//! The typed model of an ini file and the lowering that builds it.
 
 mod collect;
 mod lower;

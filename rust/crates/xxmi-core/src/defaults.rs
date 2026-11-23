@@ -1,5 +1,5 @@
-//! The data core ships with (port of packages/core/src/defaults.ts): the merged spec and the
-//! library snapshots, both embedded at build time by build.rs.
+//! The data core ships with: the merged spec and the library snapshots,
+//! both embedded at build time by build.rs.
 
 use std::sync::OnceLock;
 

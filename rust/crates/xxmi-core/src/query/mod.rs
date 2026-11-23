@@ -1,7 +1,4 @@
-//! Read-only lookups behind `xxmi query` (port of packages/core/src/query).
-//!
-//! Everything serialises with the field order of the TypeScript objects,
-//! so `--json` output is byte-identical.
+//! Read-only lookups behind `xxmi query`.
 
 pub mod docs;
 pub mod library;

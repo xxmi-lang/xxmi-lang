@@ -1,5 +1,5 @@
-//! The typed model of one ini file (port of packages/core/src/model/types.ts, docs/01-language-model.md
-//! §3). Plain data: no tree-sitter nodes survive lowering.
+//! The typed model of one ini file (docs/01-language-model.md §3).
+//! Plain data: no tree-sitter nodes survive lowering.
 
 use std::path::PathBuf;
 

@@ -1,5 +1,4 @@
-//! Walks one chunk's tree for statements, references and variable declarations (the `collect`
-//! half of packages/core/src/model/lower.ts).
+//! Walks one chunk's tree for statements, references and variable declarations.
 
 use tree_sitter::Node;
 

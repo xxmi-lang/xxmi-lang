@@ -1,5 +1,4 @@
-//! Validates tool arguments against the `inputSchema` the server advertises,
-//! with the messages of the zod schemas the TypeScript server builds that schema from.
+//! Validates tool arguments against the `inputSchema` the server advertises.
 
 use serde_json::{Map, Value};
 

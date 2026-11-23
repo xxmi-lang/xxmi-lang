@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn defaults_match_the_typescript_server() {
+    fn defaults_match_the_server() {
         let config = from(&[]).unwrap();
         assert_eq!(config.port, 3000);
         assert_eq!(config.max_body_bytes, 3_000_000);

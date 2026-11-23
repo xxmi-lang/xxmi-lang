@@ -1,6 +1,6 @@
 # Documentation for command-list commands, merged over spec/generated/commands.json.
 # Every statement here is checked against the XXMI DLL source (XXMI-Libs-Package, DirectX11/).
-# Entries are addressed by name, case-insensitively; see packages/core/src/spec/load.ts.
+# Entries are addressed by name, case-insensitively.
 
 [commands.run]
 doc = """

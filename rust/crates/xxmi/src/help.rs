@@ -1,4 +1,4 @@
-//! Usage and help texts, verbatim from the TypeScript CLI (packages/cli/src/cli.ts).
+//! Usage and help texts.
 
 use xxmi_core::rules::RULES;
 

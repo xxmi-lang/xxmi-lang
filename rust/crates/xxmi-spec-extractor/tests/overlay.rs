@@ -1,4 +1,4 @@
-//! The overlay merge of packages/core/src/spec/load.ts, on the synthetic DLL pair.
+//! The overlay merge on the synthetic DLL pair.
 
 use std::path::Path;
 

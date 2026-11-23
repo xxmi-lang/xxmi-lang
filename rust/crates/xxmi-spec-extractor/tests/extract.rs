@@ -1,4 +1,4 @@
-//! Ports of packages/spec-extractor/test/extract.test.ts:
+//! Extractor tests:
 //! the synthetic DLL pair in fixtures/spec-extractor, source-drift failures,
 //! and the real DLL when its checkouts are given.
 

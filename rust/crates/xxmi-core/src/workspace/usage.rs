@@ -1,5 +1,5 @@
 //! What the references of a workspace resolve to, computed once per symbol table (the `usage`
-//! cache of packages/core/src/lint/rules/references.ts): XM204 and XM205 read it.
+//! cache): XM204 and XM205 read it.
 
 use std::collections::HashSet;
 

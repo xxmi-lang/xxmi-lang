@@ -1,7 +1,7 @@
-//! Splits an ini into preamble, sections and lines the way the DLL's `ParseIniStream` does
-//! (port of packages/core/src/model/scan.ts): lines are trimmed of spaces and tabs, blank lines are
-//! skipped, a `;` as the first character makes a comment, any line starting with `[` is a section
-//! header, and key/value lines split at the first `=`.
+//! Splits an ini into preamble, sections and lines the way the DLL's `ParseIniStream` does:
+//! lines are trimmed of spaces and tabs, blank lines are skipped, a `;` as the first
+//! character makes a comment, any line starting with `[` is a section header, and key/value
+//! lines split at the first `=`.
 //!
 //! Spans are UTF-8 byte offsets, so every cut falls on an ASCII byte and stays on a char boundary.
 

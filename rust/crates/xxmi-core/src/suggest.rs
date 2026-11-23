@@ -1,6 +1,6 @@
-//! "Did you mean ..." suggestions by edit distance (port of packages/core/src/lint/suggest.ts).
+//! "Did you mean ..." suggestions by edit distance.
 //!
-//! Distances count UTF-16 code units, like the JavaScript original.
+//! Distances count UTF-16 code units.
 
 fn utf16_lower(text: &str) -> Vec<u16> {
     text.to_lowercase().encode_utf16().collect()
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn suggestion_text_matches_the_typescript_message() {
+    fn suggestion_text_matches_the_message() {
         assert_eq!(did_you_mean("strid", ["stride"]), " Did you mean `stride`?");
         assert_eq!(did_you_mean("zzzzzz", ["stride"]), "");
     }

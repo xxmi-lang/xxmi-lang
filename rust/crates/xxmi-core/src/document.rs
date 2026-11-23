@@ -1,6 +1,6 @@
 //! An open document: its text, line index, line scan and one tree per section.
 //!
-//! Sections are parsed on their own (as the TypeScript model does) so a syntax error can't spill
+//! Sections are parsed on their own so a syntax error can't spill
 //! into the next section. An edit re-scans the text, then re-parses only the sections whose text
 //! changed, handing tree-sitter the previous tree of the same section as the incremental base.
 

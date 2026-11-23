@@ -160,7 +160,7 @@ jobs:
           "dist/bin/xxmi$exe" lint fixtures/rules/XM201/good.ini
 
   rust:
-    # The Rust binary (docs/rust-port.md): format, clippy and the test suites on each OS.
+    # The Rust binary: format, clippy and the test suites on each OS.
     strategy:
       fail-fast: false
       matrix:

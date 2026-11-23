@@ -1,4 +1,4 @@
-//! Core types to LSP JSON, with the same shapes the TypeScript server sends.
+//! Core types to LSP JSON.
 
 use gen_lsp_types::{
     Code, Diagnostic as LspDiagnostic, DiagnosticSeverity, Message, Position as LspPosition,
@@ -113,7 +113,6 @@ pub fn completion_json(item: CompletionItem) -> Value {
         "textEdit": { "range": range_json(item.range), "newText": new_text },
     });
 
-    // Empty strings are left out, like the TypeScript server's truthiness checks do.
     if let Some(detail) = item.detail.filter(|d| !d.is_empty()) {
         json["detail"] = json!(detail);
     }

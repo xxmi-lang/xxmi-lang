@@ -1,4 +1,4 @@
-//! Regenerates spec/generated/*.json from DLL source checkouts, like packages/spec-extractor.
+//! Regenerates spec/generated/*.json from DLL source checkouts.
 //!
 //!   XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> xxmi-spec-extract [--check]
 //!

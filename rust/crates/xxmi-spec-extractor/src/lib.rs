@@ -1,5 +1,4 @@
-//! Extracts the 3DMigoto / XXMI language spec from DLL source checkouts:
-//! a port of packages/spec-extractor whose output is byte-identical to the TypeScript extractor's.
+//! Extracts the 3DMigoto / XXMI language spec from DLL source checkouts.
 
 mod commands;
 mod cpp;

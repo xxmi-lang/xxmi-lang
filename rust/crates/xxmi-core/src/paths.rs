@@ -1,5 +1,5 @@
 //! Paths inside inis follow Windows rules whatever OS the tooling runs on: `\` and `/` are both
-//! separators and lookup is case-insensitive (port of packages/core/src/paths.ts).
+//! separators and lookup is case-insensitive.
 //! Never hand an ini path straight to the file system.
 
 use std::cell::RefCell;

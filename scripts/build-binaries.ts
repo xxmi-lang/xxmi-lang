@@ -1,5 +1,5 @@
 /**
- * Builds the single-file `xxmi` binary with cargo (docs/rust-port.md). The language server is the
+ * Builds the single-file `xxmi` binary with cargo. The language server is the
  * same binary: a copy named `xxmi-lsp` serves LSP (rust/crates/xxmi/src/main.rs).
  *
  *   pnpm build:binaries [--target host | <os>-<arch>[,…]] [--out dist/bin]

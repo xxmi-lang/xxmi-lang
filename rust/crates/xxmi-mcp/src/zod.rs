@@ -1,5 +1,3 @@
-//! The validation messages the TypeScript server's zod schemas produce, so error text matches.
-
 use serde::Serialize;
 use serde_json::Value;
 

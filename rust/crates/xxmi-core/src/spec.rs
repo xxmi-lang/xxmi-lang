@@ -1,4 +1,4 @@
-//! The parts of the merged spec the lint rules read (shape of packages/core/src/spec/types.ts).
+//! The parts of the merged spec the lint rules read.
 //!
 use serde::Deserialize;
 

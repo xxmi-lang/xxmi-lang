@@ -1,4 +1,4 @@
-//! `xxmi lint`: flags, validation order, output and exit codes match the TypeScript CLI.
+//! `xxmi lint`: flags, validation order, output and exit codes.
 
 use std::env;
 use std::io::Read;

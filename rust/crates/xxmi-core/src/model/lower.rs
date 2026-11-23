@@ -1,4 +1,4 @@
-//! CST to model lowering (port of packages/core/src/model/lower.ts). Structure comes from the
+//! CST to model lowering. Structure comes from the
 //! DLL-faithful line scanner; meaning within lines (references, declarations, statement kinds)
 //! comes from tree-sitter, run on each section separately. Never fails on file content.
 

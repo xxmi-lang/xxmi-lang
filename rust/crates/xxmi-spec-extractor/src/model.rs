@@ -1,6 +1,4 @@
-//! The spec's JSON shape (packages/core/src/spec/types.ts).
-//! Field order is the key order of the TypeScript extractor's objects,
-//! so serialized output matches it byte for byte.
+//! The spec's JSON shape.
 
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeMap;

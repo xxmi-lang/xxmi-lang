@@ -1,5 +1,5 @@
 //! Reads spec/generated/*.json back into the model and merges spec/overlay/*.toml over it:
-//! the bundled spec the other crates embed, built without the TypeScript toolchain.
+//! the bundled spec the other crates embed.
 
 use std::fs;
 use std::path::Path;

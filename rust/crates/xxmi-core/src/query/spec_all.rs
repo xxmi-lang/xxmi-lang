@@ -1,6 +1,5 @@
 //! Lookups across every spec kind (`lookup_spec`, `list_spec`):
 //! the MCP `spec_lookup` and `spec_list` tools.
-//! Port of `lookupSpec` and `listSpec` in packages/core/src/query/spec.ts.
 
 use crate::lookup::Lookup;
 use crate::spec::{MemberTarget, SectionKind, SpecSection};
