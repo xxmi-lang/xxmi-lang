@@ -57,7 +57,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/l
 - **XM102:** unknown keys in regular sections are checked against the extracted spec. Keys vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, …) get a message saying so. `[Profile]` is free-form. In command-list sections, only lines the grammar can't read as a command, resource copy or assignment are flagged (the DLL's "Unrecognised entry"); a misspelt keyword such as `runn` surfaces as XM001 instead.
 - **XM103:** reports lines without `=` in sections that don't allow them.
 - **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini.
-- **XM107:** follows DLL load order, reporting the later duplicate.
+- **XM107:** follows DLL load order, reporting the later duplicate. Duplicates are only compared within one package.
 - **XM108:** uses extracted argument counts (draw commands, `store`) and skips lines that already have a syntax error.
 - **XM109:** takes over from XM001 for parse errors on expression lines (`if …`, `$x = …`, `local …`).
 - **XM202:** covers resource and pool references on both sides of `=`. `ParseTargetCustomResource` fails for an undeclared destination too.
@@ -70,11 +70,11 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `packages/core/src/l
 
 ## Configuration
 
-`xxmi.toml` at the workspace or mod root. The nearest one up the tree wins, and settings merge with defaults.
+`xxmi.toml` at the workspace or mod root. The nearest one up the tree wins, and settings merge with defaults. Only `[rules]` is read today.
 
 ```toml
-profile = "zzmi"
-package = "../.."             # optional; auto-detected otherwise
+profile = "zzmi"              # planned; not read yet
+package = "../.."             # planned; not read yet (packages are auto-detected today)
 
 [rules]
 XM204 = "off"
@@ -91,3 +91,83 @@ Inline suppression: `; xxmi-disable-next-line XM204` and `; xxmi-disable XM401` 
 `fixtures/rules/XM201/{bad.ini, good.ini, expected.json}`. The test runner asserts exact diagnostic IDs and ranges. Every rule needs at least one `bad` and one `good` fixture. Rules with quick fixes also need `fixed.ini`, and applying the fix to `bad.ini` must equal `fixed.ini`.
 
 Corpus regression: `pnpm test:corpus` runs every rule over `corpus/` and diffs counts per rule against `corpus/.baseline.json`. A big jump in any rule means a false-positive regression.
+
+## Rule reference
+
+One heading per implemented rule. The headings are the `docUrl` anchors that `xxmi capabilities --json` returns. Severities are the defaults; `xxmi.toml` can change them.
+
+### XM001
+
+Default severity: error. Parse error (tree-sitter ERROR/MISSING node). Quick fix: no.
+
+### XM002
+
+Default severity: warning. File isn't valid UTF-8 (likely GBK/Shift-JIS). Quick fix: no.
+
+### XM101
+
+Default severity: error. Unknown section prefix (not in the command-list or regular section tables). Quick fix: no.
+
+### XM102
+
+Default severity: warning. Unknown key for this section kind. Quick fix: yes.
+
+### XM103
+
+Default severity: error. Bare line (no `=`) in a section that doesn't allow it. Quick fix: no.
+
+### XM104
+
+Default severity: warning. Duplicate key not in the DLL's duplicate whitelist. Quick fix: no.
+
+### XM105
+
+Default severity: error. Invalid enum value (resource `type`, `format`, key `type`, …). Quick fix: yes.
+
+### XM106
+
+Default severity: error. Unbalanced `if`/`elif`/`else`/`endif`. Quick fix: no.
+
+### XM107
+
+Default severity: warning. Duplicate section name within the same namespace, per package. Quick fix: no.
+
+### XM108
+
+Default severity: error. Wrong argument count for a command (`store`, draw commands, …). Quick fix: no.
+
+### XM109
+
+Default severity: error. Unknown operator or malformed expression. Quick fix: no.
+
+### XM201
+
+Default severity: error. Unresolved `run = CommandList…` / `CustomShader…` target. Quick fix: yes.
+
+### XM202
+
+Default severity: error. Unresolved resource reference (`ref`, `copy`, `Resource\N\X`, pools). Quick fix: yes.
+
+### XM203
+
+Default severity: warning. Variable used but never declared. Quick fix: no.
+
+### XM204
+
+Default severity: warning. Variable declared but never used. Quick fix: no.
+
+### XM205
+
+Default severity: info. Section defined but never referenced (CommandList, Resource, CustomShader). Quick fix: no.
+
+### XM206
+
+Default severity: error. Unresolved namespace in `\N\name`. Quick fix: no.
+
+### XM207
+
+Default severity: error. Include target file not found (`include =`). Quick fix: no.
+
+### XM208
+
+Default severity: warning. `filename =` points to a missing file. Quick fix: no.
