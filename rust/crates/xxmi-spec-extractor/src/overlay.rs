@@ -288,34 +288,41 @@ fn merge_operator(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems
     }
 }
 
+/// The index of the section `name`, added from the overlay when the spec has none.
+fn section_index(
+    spec: &mut Spec,
+    name: &str,
+    fields: &Table,
+    path: &str,
+    problems: &mut Problems,
+) -> Option<usize> {
+    if let Some(at) = spec.body.sections.iter().position(|s| same(&s.name, name)) {
+        assign(&mut spec.body.sections[at], fields, path, problems, &[]);
+        return Some(at);
+    }
+
+    let (xxmi, docs) = manual_entry(fields, path, problems, &["kind"])?;
+    spec.body.sections.push(SpecSection {
+        name: name.to_string(),
+        prefix: fields.get("prefix") == Some(&Value::Boolean(true)),
+        kind: text_of(fields, "kind"),
+        allows_bare_lines: fields.get("allowsBareLines") == Some(&Value::Boolean(true)),
+        allows_duplicate_keys: fields.get("allowsDuplicateKeys") == Some(&Value::Boolean(true)),
+        keys: Vec::new(),
+        removed_keys: Vec::new(),
+        dynamic_keys: Vec::new(),
+        source: "manual".to_string(),
+        xxmi,
+        docs,
+    });
+    Some(spec.body.sections.len() - 1)
+}
+
 fn merge_section(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems: &mut Problems) {
     let mut fields = raw.clone();
     let keys = fields.remove("keys");
-    let at = match spec.body.sections.iter().position(|s| same(&s.name, name)) {
-        Some(at) => {
-            assign(&mut spec.body.sections[at], &fields, path, problems, &[]);
-            at
-        }
-        None => {
-            let Some((xxmi, docs)) = manual_entry(&fields, path, problems, &["kind"]) else {
-                return;
-            };
-            spec.body.sections.push(SpecSection {
-                name: name.to_string(),
-                prefix: fields.get("prefix") == Some(&Value::Boolean(true)),
-                kind: text_of(&fields, "kind"),
-                allows_bare_lines: fields.get("allowsBareLines") == Some(&Value::Boolean(true)),
-                allows_duplicate_keys: fields.get("allowsDuplicateKeys")
-                    == Some(&Value::Boolean(true)),
-                keys: Vec::new(),
-                removed_keys: Vec::new(),
-                dynamic_keys: Vec::new(),
-                source: "manual".to_string(),
-                xxmi,
-                docs,
-            });
-            spec.body.sections.len() - 1
-        }
+    let Some(at) = section_index(spec, name, &fields, path, problems) else {
+        return;
     };
 
     let Some(keys) = keys else { return };
@@ -377,31 +384,40 @@ fn assign<T: Documented>(
 ) {
     for (field, value) in raw {
         let is_extra = extra_fields.contains(&field.as_str());
-        let is_args = field == "args";
-        if field == "source" {
-            problems.add(
-                path,
-                "`source` can only be set on new (`source = \"manual\"`) entries",
-            );
-        } else if !is_extra && !DOC_FIELDS.contains(&field.as_str()) {
-            problems.add(path, &format!("field `{field}` can't be set by an overlay"));
-        } else if if is_args {
-            !is_string_array(value)
-        } else {
-            !value.is_str()
-        } {
-            let expected = if is_args {
-                "an array of strings"
-            } else {
-                "a string"
-            };
-            problems.add(path, &format!("`{field}` must be {expected}"));
+        if let Some(message) = field_problem(field, value, is_extra) {
+            problems.add(path, &message);
         } else if is_extra {
             target.set_extra(field, value);
         } else if let Some(text) = value.as_str() {
             target.docs_mut().set(field, text.to_string());
         }
     }
+}
+
+/// Why an overlay field can't be applied, if it can't.
+fn field_problem(field: &str, value: &Value, is_extra: bool) -> Option<String> {
+    if field == "source" {
+        return Some("`source` can only be set on new (`source = \"manual\"`) entries".into());
+    }
+    if !is_extra && !DOC_FIELDS.contains(&field) {
+        return Some(format!("field `{field}` can't be set by an overlay"));
+    }
+
+    let is_args = field == "args";
+    let valid = if is_args {
+        is_string_array(value)
+    } else {
+        value.is_str()
+    };
+    if valid {
+        return None;
+    }
+    let expected = if is_args {
+        "an array of strings"
+    } else {
+        "a string"
+    };
+    Some(format!("`{field}` must be {expected}"))
 }
 
 /// The `xxmi` flag and documentation of an entry that only exists in the overlay; `None`
