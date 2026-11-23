@@ -2,7 +2,7 @@
 # Attach a volume mounted at /data to the service; see the doc for the other settings.
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "packages/mcp-server/Dockerfile"
+dockerfilePath = "packages/mcp-server/Dockerfile.rust"
 
 [deploy]
 healthcheckPath = "/healthz"
