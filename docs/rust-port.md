@@ -20,7 +20,7 @@ cd rust && cargo build --release && cargo clippy --release -- -D warnings && car
 node rust/bench/parity.mjs        # lint, query, index against the TS CLI
 node rust/bench/lsp-parity.mjs    # starts the TS and the Rust server on the same sessions
 node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakdown of an edit
-node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and five tags
+node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and six tags
 node rust/bench/mcp-parity.mjs    # MCP server: TS against Rust, fixture volume then local-ref indexing; ends with scripts/mcp-acceptance.ts
 node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 ```
@@ -32,7 +32,7 @@ node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 - `parity.mjs`: fixtures 85 files, 178 diagnostics, and ZZMI 19 files, 17 diagnostics; 0 mismatches, byte-identical output.
 - `lsp-parity.mjs`: 31,945 responses (documentSymbol, hover, definition, references, completion, rename, codeAction, published diagnostics after open, edit and close), 0 mismatches; it exits 1 on any difference.
 
-- `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.2, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
+- `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.3, v1.3.2, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
 - `mcp-parity.mjs`: 91 requests on a fixture volume (every tool with good and bad arguments, the HTTP edge cases) and 15 more after both servers index the local refs in `../xxmi-refs` (GitHub URLs rewritten to them with git `insteadOf`), 0 mismatches after dropping timestamps. `scripts/mcp-acceptance.ts` passes 6/6 against the Rust server. Rate limiting is switched off for the run (a token bucket is timing-dependent; both servers' HTTP tests cover it), and `search_source` is compared on one file because ripgrep lists files in a run-dependent order in both servers.
 
 ## Speed and size (Apple M3 Max; 5,048-line document next to ZZMI)

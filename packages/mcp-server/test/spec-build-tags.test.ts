@@ -8,7 +8,7 @@ import { tempDir } from './helpers.ts';
 const DLL = process.env['XXMI_DLL_SRC'];
 const MIGOTO = process.env['MIGOTO_DLL_SRC'];
 
-const TAGS = ['v1.2.0', 'v1.2.1', 'v1.2.2', 'v1.2.3', 'v1.3.0', 'v1.3.1', 'v1.3.2'];
+const TAGS = ['v1.2.0', 'v1.2.1', 'v1.2.2', 'v1.2.3', 'v1.3.0', 'v1.3.1', 'v1.3.2', 'v1.3.3'];
 
 function git(repo: string, args: string[]): Buffer {
   return execFileSync('git', ['-C', repo, ...args], { maxBuffer: 1 << 30 });
@@ -40,8 +40,8 @@ describe.skipIf(!DLL || !MIGOTO)('buildVersionSpec on real DLL tags', { timeout:
     });
   }
 
-  it('merges every overlay entry into v1.3.2', () => {
-    const { warnings } = buildVersionSpec({ dll: materialize(DLL ?? '', 'v1.3.2'), baseline });
+  it('merges every overlay entry into v1.3.3', () => {
+    const { warnings } = buildVersionSpec({ dll: materialize(DLL ?? '', 'v1.3.3'), baseline });
 
     expect(warnings.filter((w) => w.startsWith('overlay:'))).toEqual([]);
   });

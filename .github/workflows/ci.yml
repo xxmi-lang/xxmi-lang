@@ -83,7 +83,8 @@ jobs:
               refs/tags/v1.2.3:refs/tags/v1.2.3 \
               refs/tags/v1.3.0:refs/tags/v1.3.0 \
               refs/tags/v1.3.1:refs/tags/v1.3.1 \
-              refs/tags/v1.3.2:refs/tags/v1.3.2
+              refs/tags/v1.3.2:refs/tags/v1.3.2 \
+              refs/tags/v1.3.3:refs/tags/v1.3.3
 
       - name: Check out 3Dmigoto (vanilla baseline)
         uses: actions/checkout@v7
