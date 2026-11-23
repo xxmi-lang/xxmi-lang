@@ -100,7 +100,13 @@ fn check_bad(id: &str) {
     assert_eq!(actual, read_json(&dir.join("expected.json")), "{id} bad");
 
     let fixed = dir.join("fixed.ini");
-    if actual.iter().any(|d| d.get("fix").is_some()) {
+    let emits_fix = actual.iter().any(|d| d.get("fix").is_some());
+    let rule = xxmi_core::rules::RULES.iter().find(|r| r.id == id).unwrap();
+    assert!(
+        rule.has_fix || !emits_fix,
+        "{id}: emits a fix without has_fix"
+    );
+    if emits_fix {
         let before = fs::read_to_string(&bad).expect("bad.ini");
         assert_eq!(
             apply_fixes(&before, &actual),

@@ -17,11 +17,12 @@ use crate::error::CliError;
 use crate::help::lint_help;
 use crate::js_number::js_number;
 
-const OPTIONS: [OptionSpec; 7] = [
+const OPTIONS: [OptionSpec; 8] = [
     args::string("format"),
     args::string("rules"),
     args::string("max-warnings"),
     args::flag("stdin"),
+    args::flag("require-package"),
     args::string("stdin-path"),
     args::string("spec"),
     args::flag("help"),
@@ -47,6 +48,7 @@ pub fn run(raw_args: &[String]) -> Result<i32, CliError> {
 
     let mut options = LintOptions::bundled();
     options.rules = rules;
+    options.require_package = parsed.flag("require-package");
     if let Some(path) = parsed.string("spec") {
         options.lookup = load_spec(Path::new(path))?;
     }

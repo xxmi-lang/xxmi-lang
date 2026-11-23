@@ -10,7 +10,9 @@ use crate::workspace::{FileId, Workspace};
 
 use super::config::ConfigLoader;
 use super::file::lint_file;
-use super::{FileResult, LintError, LintOptions, LintResult, Summary, collect_ini_files};
+use super::{
+    FileResult, LintError, LintOptions, LintResult, Summary, collect_ini_files, skipped_for_package,
+};
 
 /// Lints files and folders.
 pub fn lint_paths(paths: &[PathBuf], options: &LintOptions) -> Result<LintResult, LintError> {
@@ -128,6 +130,9 @@ fn lint_targets_with(
             return Err(LintError::Cancelled);
         }
         let file = &workspace.files()[id];
+        if skipped_for_package(options, workspace.package_root(file)) {
+            continue;
+        }
         if !seen.insert(&file.path) {
             continue;
         }

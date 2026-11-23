@@ -11,7 +11,7 @@ mod suppress;
 use std::collections::HashMap;
 use std::fmt;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
@@ -33,6 +33,8 @@ pub struct LintOptions {
     pub overrides: HashMap<String, RuleSetting>,
     /// Only run rules whose id starts with one of these.
     pub rule_prefixes: Option<Vec<&'static str>>,
+    /// Skip files that sit in no package (no d3dx.ini in any ancestor folder).
+    pub require_package: bool,
     pub lookup: &'static Lookup,
     pub snapshots: Snapshots,
 }
@@ -44,6 +46,7 @@ impl LintOptions {
             rules: None,
             overrides: HashMap::new(),
             rule_prefixes: None,
+            require_package: false,
             lookup: bundled_lookup(),
             snapshots: bundled_snapshots().into(),
         }
@@ -102,6 +105,11 @@ impl From<io::Error> for LintError {
     fn from(error: io::Error) -> Self {
         Self::Io(error)
     }
+}
+
+/// Whether `--require-package` (or the editor's `xxmi.requirePackage`) excludes a file.
+pub fn skipped_for_package(options: &LintOptions, package_root: Option<&Path>) -> bool {
+    options.require_package && package_root.is_none()
 }
 
 /// `^XM\d{3}$`

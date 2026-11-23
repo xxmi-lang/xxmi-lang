@@ -4,11 +4,12 @@ use xxmi_core::rules::RULES;
 
 pub const USAGE: &str = concat!(
     "Usage:\n",
-    "  xxmi lint [paths…] [--format text|json] [--rules XM201,XM202] [--max-warnings N]\n",
+    "  xxmi lint [paths…] [--format text|json] [--rules XM201,XM202] [--max-warnings N] [--require-package]\n",
     "  xxmi lint --stdin --stdin-path <path> [--format text|json] [--rules …] [--max-warnings N]\n",
     "  xxmi query <kind> [name] [--package DIR] [--json]\n",
     "  xxmi index <package dir> --out FILE [--name NAME]\n",
     "  xxmi lsp [--stdio]\n",
+    "  xxmi capabilities [--json]\n",
     "\n",
     "Run `xxmi <command> --help` for details."
 );
@@ -27,6 +28,7 @@ pub fn lint_help() -> String {
             "  --format text|json   output format (default text)\n",
             "  --rules XM201,XM202  run only these rules\n",
             "  --max-warnings N     exit 1 if there are more than N warnings\n",
+            "  --require-package    skip files that are not inside a package (no d3dx.ini in any parent folder)\n",
             "  --stdin              read one file's text from stdin instead of from disk\n",
             "  --stdin-path <path>  with --stdin: the file the text stands for. Its namespace and package come\n",
             "                       from this path, which doesn't need to exist; paths in the output are this one\n",

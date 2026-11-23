@@ -2,6 +2,7 @@
 //! 2 usage error, 3 internal error. Run as `xxmi-lsp` (or with `--stdio`) it is the language server.
 
 mod args;
+mod capabilities_command;
 mod error;
 mod help;
 mod index_command;
@@ -59,6 +60,7 @@ fn dispatch(args: &[String]) -> Result<i32, CliError> {
         "query" => query_command::run(rest),
         "index" => index_command::run(rest),
         "lsp" => lsp_command::run(rest, false),
+        "capabilities" => capabilities_command::run(rest),
         "--stdio" => lsp_command::run(args, false),
         "--version" | "-v" => {
             println!("{}", env!("CARGO_PKG_VERSION"));

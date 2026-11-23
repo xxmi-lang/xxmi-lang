@@ -129,6 +129,7 @@ fn run_lint(
         rules: None,
         overrides: HashMap::new(),
         rule_prefixes: None,
+        require_package: false,
         lookup: spec.lookup,
         snapshots: choice.snapshots.clone(),
     };
