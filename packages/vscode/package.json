@@ -62,6 +62,16 @@
             ]
           }
         },
+        "xxmi.requirePackage": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only report diagnostics for .ini files inside a mod package (a folder tree with a d3dx.ini)."
+        },
+        "xxmi.lsp.preferPath": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use xxmi-lsp from PATH when found; otherwise use the bundled server."
+        },
         "xxmi.lsp.path": {
           "type": "string",
           "default": "",

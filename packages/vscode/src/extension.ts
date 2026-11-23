@@ -10,6 +10,7 @@ import {
   type LanguageClientOptions,
   type ServerOptions,
 } from 'vscode-languageclient/node';
+import { externalServer } from './external-server.ts';
 import { bundledBinaryPath } from './platform.ts';
 
 const HIGHLIGHTING_EXTENSION = 'AGMG.migoto-ini';
@@ -18,9 +19,12 @@ const HIGHLIGHTING_URL = 'https://github.com/lupomikti/migoto-vscode';
 let client: LanguageClient | undefined;
 
 function serverOptions(context: vscode.ExtensionContext): ServerOptions | undefined {
-  const custom = vscode.workspace.getConfiguration('xxmi').get<string>('lsp.path')?.trim();
-  // `--stdio` alone is understood by both `xxmi` and a standalone `xxmi-lsp`.
-  if (custom) return { command: custom, args: ['--stdio'], transport: TransportKind.stdio };
+  const config = vscode.workspace.getConfiguration('xxmi');
+  const external = externalServer(
+    config.get<string>('lsp.path')?.trim(),
+    config.get<boolean>('lsp.preferPath', false),
+  );
+  if (external) return { ...external, transport: TransportKind.stdio };
 
   const relative = bundledBinaryPath(process.platform, process.arch);
   if (!relative) {
@@ -79,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await start(context);
     }),
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('xxmi.lsp.path'))
+      if (e.affectsConfiguration('xxmi.lsp.path') || e.affectsConfiguration('xxmi.lsp.preferPath'))
         await vscode.commands.executeCommand('xxmi.restartServer');
     }),
   );
