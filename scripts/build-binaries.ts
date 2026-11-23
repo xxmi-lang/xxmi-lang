@@ -26,7 +26,7 @@ const USAGE = `Usage: pnpm build:binaries [--target <list>] [--out dir]
   --target host          this machine: dist/bin/xxmi, xxmi-lsp and xxmi-<os>-<arch>[.exe]
   --target <os>-<arch>   one release target: dist/bin/xxmi-<os>-<arch>[.exe]
   (no --target)          every release target. Needs a cross toolchain for each (rustup target add);
-                         CI builds one target per runner instead (.github/workflows/release.yml).
+                         CI builds one runner per target, except macOS: both darwin targets on one runner (release.yml).
 
 Targets: ${Object.keys(TARGETS).join(', ')}
 `;
