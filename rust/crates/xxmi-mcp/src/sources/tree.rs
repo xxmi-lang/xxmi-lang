@@ -63,6 +63,11 @@ impl CheckoutTree {
             texts: Mutex::new(HashMap::new()),
         }
     }
+
+    fn cached(&self, path: &str) -> Option<Option<String>> {
+        let texts = self.texts.lock().unwrap_or_else(|e| e.into_inner());
+        texts.get(path).cloned()
+    }
 }
 
 impl SourceTree for CheckoutTree {
@@ -76,14 +81,16 @@ impl SourceTree for CheckoutTree {
     }
 
     fn read(&self, path: &str) -> Option<String> {
-        let mut texts = self.texts.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(cached) = texts.get(path) {
-            return cached.clone();
+        if let Some(cached) = self.cached(path) {
+            return cached;
         }
 
         let text = safe_join(&self.root, path)
             .and_then(|full| fs::read(full).ok())
             .map(|bytes| decode_text(&bytes).0);
+
+        // Two readers may load the same file; the contents are equal, so either insert may win.
+        let mut texts = self.texts.lock().unwrap_or_else(|e| e.into_inner());
         if texts.len() < MAX_CACHED_TEXTS {
             texts.insert(path.to_string(), text.clone());
         }
