@@ -237,6 +237,13 @@ From source: `pnpm build && DATA_DIR=./data node --liftoff-only packages/mcp-ser
 `rust/crates/xxmi-mcp` is a drop-in port (same tools, endpoints, environment variables and volume layout; `docs/rust-port.md` has the parity and load numbers). Run it from source with `pnpm build` (the embedded spec) and `cd rust && cargo run --release -p xxmi-mcp`, or build the image with `docker build -f packages/mcp-server/Dockerfile.rust -t xxmi-mcp-rs .`. It needs `git` and `rg` on the path, like the TS server.
 Railway still uses the TypeScript image (`Dockerfile`) until the switch; CI builds both. `node rust/bench/mcp-parity.mjs` compares the two servers answer by answer.
 
+The Rust server also reads these (the TypeScript server does not have them):
+
+- `WORKER_THREADS`: async worker threads. Default: available parallelism, capped at 4.
+- `MAX_INFLIGHT`: requests beyond this many in flight get 503 with `Retry-After`. Default: 512.
+
+Tool calls run on blocking threads from a fixed pool of 8, which is not configurable.
+
 ### Deviations from the design above
 
 - **Git without clones or worktrees.** `git ls-remote` plus shallow fetches by sha into one bare repo per tracked repo, and `git archive` for the files, instead of full bare clones with worktrees. The volume holds one commit's objects plus its text files, a few MB per commit.

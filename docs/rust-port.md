@@ -20,7 +20,7 @@ cd rust && cargo build --release && cargo clippy --release -- -D warnings && car
 node rust/bench/parity.mjs        # lint, query, index against the TS CLI
 node rust/bench/lsp-parity.mjs    # starts the TS and the Rust server on the same sessions
 node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakdown of an edit
-node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and four tags
+node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and five tags
 node rust/bench/mcp-parity.mjs    # MCP server: TS against Rust, fixture volume then local-ref indexing; ends with scripts/mcp-acceptance.ts
 node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 ```
@@ -32,7 +32,7 @@ node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 - `parity.mjs`: fixtures 85 files, 178 diagnostics, and ZZMI 19 files, 17 diagnostics; 0 mismatches, byte-identical output.
 - `lsp-parity.mjs`: 31,945 responses (documentSymbol, hover, definition, references, completion, rename, codeAction, published diagnostics after open, edit and close), 0 mismatches; it exits 1 on any difference.
 
-- `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
+- `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.2, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
 - `mcp-parity.mjs`: 91 requests on a fixture volume (every tool with good and bad arguments, the HTTP edge cases) and 15 more after both servers index the local refs in `../xxmi-refs` (GitHub URLs rewritten to them with git `insteadOf`), 0 mismatches after dropping timestamps. `scripts/mcp-acceptance.ts` passes 6/6 against the Rust server. Rate limiting is switched off for the run (a token bucket is timing-dependent; both servers' HTTP tests cover it), and `search_source` is compared on one file because ripgrep lists files in a run-dependent order in both servers.
 
 ## Speed and size (Apple M3 Max; 5,048-line document next to ZZMI)
@@ -48,7 +48,7 @@ node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 | binary size with `panic = "unwind"` | 2,292,368 B | 2,573,536 B (+12%) | |
 | TS binary (stale v0.1.0 Bun) | 64,998,242 B | | |
 
-Spec extraction at `master` (both DLL and baseline, overlays merged; wall time and peak RSS from `/usr/bin/time`): TS 0.60 s, 287 MB; Rust 0.34 s, 13 MB.
+Spec extraction at `master` (both DLL and baseline, overlays merged; wall time and peak RSS from `/usr/bin/time`): TS 0.49 s, 274 MB; Rust 0.28 s, 13 MB.
 
 `lint` of ZZMI takes about 0.05 s against 0.15-0.2 s for the TS CLI.
 What is left of an edit is the workspace-wide symbol table and usage (2.8 ms) and the per-file rules, which run on every edit.
@@ -70,4 +70,4 @@ The image size is dominated by Debian, git and ripgrep, not by the 6 MB binary.
 
 None visible in results: the stderr text of `query keys <unknown>` (exit code 3 is the same); the `xxmi.toml` error text and ambiguous-option wording come from the `toml` and argument-parser crates (exit code 2 is the same); `localeCompare` ordering is approximated rather than ICU; `reload` ignores include errors; `didOpen` does one update where TS does two (same final state); a panic in the language server is caught per request (an `InternalError` reply) or per notification (the document is rebuilt from its last text), where TS lets the handler throw, and a panic in the CLI exits 3; JSON key order differs (compared sorted).
 
-MCP server: the `builder` id is `rust-<version>+extractor<N>+overlay<hash>`, so a volume shared with the TS server has its specs rebuilt once by the other; release tags are ordered with the same ICU approximation as above; a spec build that times out (120 s) leaves its thread running until it ends, and holds the single build permit meanwhile, where TS terminates its worker.
+MCP server: the `builder` id is `rust-<version>+extractor<N>+overlay<hash>`, so a volume shared with the TS server has its specs rebuilt once by the other; release tags are ordered with the same ICU approximation as above; a spec build that times out (120 s) leaves its thread running until it ends, and holds the single build permit meanwhile, where TS terminates its worker. Numeric settings are read as plain integers, so `1e3` and `0x10` are rejected where the TypeScript server's `Number()` accepts them.
