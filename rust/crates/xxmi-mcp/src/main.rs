@@ -6,7 +6,6 @@ use std::sync::Arc;
 use mimalloc::MiMalloc;
 use serde_json::json;
 use tokio::net::TcpListener;
-use tokio::signal::unix::{SignalKind, signal};
 use xxmi_mcp::app::{AppState, router};
 use xxmi_mcp::catalog::Catalog;
 use xxmi_mcp::config::Config;
@@ -33,17 +32,32 @@ fn startup_failed(error: &str) -> ExitCode {
     ExitCode::FAILURE
 }
 
-async fn shutdown_signal(logger: Logger) {
+#[cfg(unix)]
+async fn wait_for_signal() -> &'static str {
+    use tokio::signal::unix::{SignalKind, signal};
+
     let (Ok(mut term), Ok(mut int)) = (
         signal(SignalKind::terminate()),
         signal(SignalKind::interrupt()),
     ) else {
         return std::future::pending().await;
     };
-    let name = tokio::select! {
+    tokio::select! {
         _ = term.recv() => "SIGTERM",
         _ = int.recv() => "SIGINT",
-    };
+    }
+}
+
+#[cfg(not(unix))]
+async fn wait_for_signal() -> &'static str {
+    match tokio::signal::ctrl_c().await {
+        Ok(()) => "SIGINT",
+        Err(_) => std::future::pending().await,
+    }
+}
+
+async fn shutdown_signal(logger: Logger) {
+    let name = wait_for_signal().await;
     logger.info("shutting down", json!({ "signal": name }));
 }
 
