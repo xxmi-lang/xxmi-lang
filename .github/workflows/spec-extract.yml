@@ -71,8 +71,11 @@ jobs:
       - name: Check for changes
         id: diff
         run: |
-          if git diff --quiet -- spec/generated; then
+          # Intent-to-add so newly generated files show up in the diff below.
+          git add -N spec/generated
+          if git diff --quiet -- spec/generated ':(exclude)spec/generated/meta.json'; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No spec change; only spec/generated/meta.json (DLL pin) may differ"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             git diff --stat -- spec/generated
@@ -136,6 +139,18 @@ jobs:
             --jq '.[] | select(.headRefName | startswith("spec/update-")) | select(.headRefName != env.BRANCH) | .number' \
             | while read -r old; do
                 gh pr close "$old" --delete-branch --comment "Superseded by #${current}."
+              done
+
+      # Without a spec change, every open bot PR is stale; the Open PR step handles the other case.
+      - name: Close stale spec PRs
+        if: steps.diff.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr list --author "app/github-actions" --state open --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("spec/update-")) | .number' \
+            | while read -r old; do
+                gh pr close "$old" --delete-branch --comment "DLL changes since the baseline do not affect the spec."
               done
 
       # github.token events do not start workflows, so dispatch CI on the PR branch explicitly.
