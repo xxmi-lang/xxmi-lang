@@ -74,7 +74,7 @@ xxmi-lang/
 │   └── vscode/                   # thin LSP client extension
 ├── plugin/                       # Claude Code plugin (skills, .lsp.json, .mcp.json)
 ├── dotnet/                       # .NET client library + NuGet packaging (10-dotnet.md); no language logic
-├── clients/kate/                 # Kate LSP config snippet + HLSL syntax XML
+├── editors/                      # Neovim and Kate config, shipped in each release zip
 ├── fixtures/                     # golden tests (license-clean snippets only)
 └── corpus/                       # git-ignored; real mods for local testing
 ```

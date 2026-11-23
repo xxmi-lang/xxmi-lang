@@ -1,0 +1,57 @@
+{
+  "manifestVersion": 1,
+  "roots": {
+    "neovim": {
+      "linux": "~/.config/nvim",
+      "macos": "~/.config/nvim",
+      "windows": "%LOCALAPPDATA%\\nvim"
+    },
+    "kate-config": {
+      "linux": "~/.config/kate",
+      "linux-flatpak": "~/.var/app/org.kde.kate/config/kate",
+      "macos": "~/Library/Preferences/kate",
+      "windows": "%LOCALAPPDATA%\\kate"
+    },
+    "kate-syntax": {
+      "linux": "~/.local/share/org.kde.syntax-highlighting/syntax",
+      "linux-flatpak": "~/.var/app/org.kde.kate/data/org.kde.syntax-highlighting/syntax",
+      "macos": "~/Library/Application Support/org.kde.syntax-highlighting/syntax",
+      "windows": "%LOCALAPPDATA%\\org.kde.syntax-highlighting\\syntax"
+    }
+  },
+  "files": [
+    {
+      "editor": "neovim",
+      "root": "neovim",
+      "source": "editors/neovim/lsp/xxmi.lua",
+      "target": "lsp/xxmi.lua"
+    },
+    {
+      "editor": "neovim",
+      "root": "neovim",
+      "source": "editors/neovim/plugin/xxmi.lua",
+      "target": "plugin/xxmi.lua"
+    },
+    {
+      "editor": "kate",
+      "root": "kate-config",
+      "source": "editors/kate/lspclient-settings.json",
+      "target": "lspclient/settings.json",
+      "mode": "merge-json"
+    },
+    {
+      "editor": "kate",
+      "root": "kate-syntax",
+      "url": "https://raw.githubusercontent.com/lupomikti/3dmigoto-ini-extensions/7c66ffdbd8e49740e6f5301d1e1428b2f25aeb9e/kate-plugin/syntaxes/migoto.xml",
+      "sha256": "a556be8590ba2fcf6a82ab3f8e1b5aae77de0987368d67358c86cbb8b25c34c4",
+      "target": "migoto.xml"
+    },
+    {
+      "editor": "kate",
+      "root": "kate-syntax",
+      "url": "https://raw.githubusercontent.com/lupomikti/3dmigoto-ini-extensions/7c66ffdbd8e49740e6f5301d1e1428b2f25aeb9e/kate-plugin/syntaxes/pcre2.xml",
+      "sha256": "626fe87cbacd5f74e551b5798fa58c12c840ad54d76534152aeefacfd6156b83",
+      "target": "pcre2.xml"
+    }
+  ]
+}

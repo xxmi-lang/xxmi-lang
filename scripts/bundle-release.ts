@@ -8,6 +8,7 @@
  *
  * Reads the loose `xxmi-<os>-<arch>[.exe]` files that `pnpm build:binaries --target <os>-<arch>` writes,
  * one per target (release.yml downloads them into dist/bin).
+ * Each zip also carries `editors/` (the files the manifest ships, plus the versioned manifest).
  * Needs the `zip` command (preinstalled on Linux and macOS runners). The binaries are chmod +x
  * before zipping and `zip -X` keeps the Unix mode, so they stay executable after `unzip`.
  */
@@ -24,8 +25,14 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import {
+  MANIFEST_PATH,
+  loadManifest,
+  shippedSources,
+  versionedManifest,
+} from './editors-manifest.ts';
 import {
   OS_BY_NODE_PLATFORM,
   RELEASE_TARGETS,
@@ -59,12 +66,30 @@ Two programs, both single files with nothing else to install:
 Put both on your PATH. Step-by-step instructions for every system:
 https://github.com/xxmi-lang/xxmi-lang/blob/main/INSTALL.md
 
+editors/ holds editor config; editors/manifest.json lists where each file goes
+(see https://github.com/xxmi-lang/xxmi-lang/blob/main/editors/README.md).
+
 Licensed GPL-3.0-or-later, see LICENSE.
 `;
 
 mkdirSync(out, { recursive: true });
 const files: string[] = [];
 const tmp = mkdtempSync(join(tmpdir(), 'xxmi-bundle-'));
+
+function stageEditors(stage: string): string[] {
+  const manifest = loadManifest(REPO);
+  const sources = shippedSources(manifest);
+
+  for (const source of sources) {
+    const dest = join(stage, source);
+    mkdirSync(dirname(dest), { recursive: true });
+    copyFileSync(join(REPO, source), dest);
+  }
+
+  writeFileSync(join(stage, MANIFEST_PATH), versionedManifest(manifest, version));
+
+  return [...sources, MANIFEST_PATH];
+}
 
 function bundle(zipName: string, binary: string, exe: string): void {
   const stage = join(tmp, zipName);
@@ -77,11 +102,16 @@ function bundle(zipName: string, binary: string, exe: string): void {
   }
   copyFileSync(join(REPO, 'LICENSE'), join(stage, 'LICENSE'));
   writeFileSync(join(stage, 'README.txt'), README);
+  const editorFiles = stageEditors(stage);
   const zip = join(out, `xxmi-${version}-${zipName}.zip`);
   rmSync(zip, { force: true });
-  execFileSync('zip', ['-X', '-q', zip, `xxmi${exe}`, `xxmi-lsp${exe}`, 'LICENSE', 'README.txt'], {
-    cwd: stage,
-  });
+  execFileSync(
+    'zip',
+    ['-X', '-q', zip, `xxmi${exe}`, `xxmi-lsp${exe}`, 'LICENSE', 'README.txt', ...editorFiles],
+    {
+      cwd: stage,
+    },
+  );
   files.push(zip);
   console.log(`bundled ${zip}`);
 }

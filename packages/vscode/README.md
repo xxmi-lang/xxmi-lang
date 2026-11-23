@@ -21,6 +21,10 @@ one; both use the `migoto` language.
 - `xxmi.rules`: rule severities, e.g. `{ "XM204": "off" }`. A project's `xxmi.toml` works too;
   this setting wins.
 - `xxmi.lsp.path`: use an `xxmi` (or `xxmi-lsp`) binary instead of the bundled server.
+- `xxmi.lsp.preferPath`: when on (default off), use `xxmi-lsp` from PATH if it's found, otherwise
+  the bundled server. `xxmi.lsp.path` wins over both.
+- `xxmi.requirePackage`: when on (default off), report diagnostics only for `.ini` files inside a
+  mod package.
 
 Rule reference, CLI and other editors: https://github.com/xxmi-lang/xxmi-lang
 

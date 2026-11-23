@@ -79,7 +79,7 @@ Milestones are ordered by value. Linter and LSP come first, because they help hu
 - **Performance targets:** all pass: 89 ms cold index, 44 ms per edit on 5,048 lines, 177 MB for the package plus 50 mods. Getting there meant working around a web-tree-sitter native-memory leak under Node with `--liftoff-only` (03-lsp.md).
 - **Binaries:** `pnpm build:binaries` builds every target, now including win-arm64. The WASM, spec and snapshot are embedded, and the protocol suite runs against the compiled binary in CI on all three OSes and against the release binaries in `release.yml`.
 - **Still to do:**
-  - **Kate:** nobody has checked it in Kate yet (the config and guide are in `clients/kate/`).
+  - **Kate:** tested by hand on CachyOS (the config and guide are in `editors/kate/`).
   - **Publishing:** the Marketplace and Open VSX need publisher accounts.
   - **Formatting:** LSP formatting is not planned here any more; see M4.
 

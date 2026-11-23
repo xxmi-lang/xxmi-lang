@@ -18,8 +18,9 @@ Jump to: [Arch / CachyOS](#arch-linux-cachyos-manjaro-endeavouros) ·
 
 Every release has one zip per system at
 [github.com/xxmi-lang/xxmi-lang/releases/latest](https://github.com/xxmi-lang/xxmi-lang/releases/latest).
-Each zip holds both programs (`xxmi-lsp` and `xxmi`, `.exe` on Windows), a `LICENSE` and a
-`README.txt`. `<version>` below is the release number, e.g. `0.1.1`.
+Each zip holds both programs (`xxmi-lsp` and `xxmi`, `.exe` on Windows), a `LICENSE`, a
+`README.txt` and an `editors/` folder with editor config (see [Neovim](#neovim) and
+[Kate](#kate)). `<version>` below is the release number, e.g. `0.1.1`.
 
 | System                                      | Zip                                |
 | ------------------------------------------- | ---------------------------------- |
@@ -226,7 +227,7 @@ binary instead, set `xxmi.lsp.path` in the settings.
 
 ### Kate
 
-See [clients/kate/README.md](clients/kate/README.md) for the full steps. In short:
+See [editors/kate/README.md](editors/kate/README.md) for the full steps. In short:
 
 1. Install lupomikti's syntax file for colors:
 
@@ -266,6 +267,23 @@ See [clients/kate/README.md](clients/kate/README.md) for the full steps. In shor
 
 4. Restart Kate and open a mod `.ini`. If it opens as "INI Files", switch it to **Migoto** in
    Tools → Mode.
+
+### Neovim
+
+Neovim 0.11 or newer. The release zip has an `editors/neovim/` folder with two files. Unzip
+that folder from the zip you downloaded above (`/tmp/xxmi.zip` on Linux and macOS), then copy
+the files into your config folder:
+
+```bash
+unzip -o /tmp/xxmi.zip 'editors/*' -d /tmp/xxmi
+mkdir -p ~/.config/nvim/lsp ~/.config/nvim/plugin
+cp /tmp/xxmi/editors/neovim/lsp/xxmi.lua ~/.config/nvim/lsp/
+cp /tmp/xxmi/editors/neovim/plugin/xxmi.lua ~/.config/nvim/plugin/
+```
+
+On Windows, copy the same two files into `%LOCALAPPDATA%\nvim\lsp\` and
+`%LOCALAPPDATA%\nvim\plugin\`. The config starts plain `xxmi-lsp`, so the binary must be on
+your PATH. Open a mod `.ini` file to check that errors show up. This setup is untested so far.
 
 ### Claude Code
 
