@@ -2,11 +2,14 @@
  * Structure rules (XM1xx). Messages quote the DLL's own warning text where it has one
  * (IniHandler.cpp), so editor output matches the game log.
  */
-import type { LineModel, SectionModel } from '../../model/types.ts';
+import { dirname, relative, sep } from 'node:path';
+import type { IniFile, LineModel, SectionModel } from '../../model/types.ts';
 import { keyCommands } from '../../spec/lookup.ts';
 import type { SpecKey } from '../../spec/types.ts';
 import { commentOutFix, didYouMean, editDistance, replaceFix } from '../suggest.ts';
 import type { Fix, Rule, RuleContext } from '../types.ts';
+import { compareLoadOrder, relativeToRoot } from '../../workspace/load-order.ts';
+import { gradeDuplicate } from './duplicate-grade.ts';
 
 /** `x`, `y1`, `w123`: ini params (the grammar's `ini_parameter`). */
 const INI_PARAM = /^[xyzw]\d{0,3}$/i;
@@ -268,38 +271,60 @@ export const XM106: Rule = {
   },
 };
 
+/** Relative to the duplicate's folder, so the message doesn't depend on where the package lives. */
+function relativeLocation(from: IniFile, to: IniFile): string {
+  return relative(dirname(from.path), to.path).split(sep).join('/');
+}
+
 export const XM107: Rule = {
   id: 'XM107',
   severity: 'warning',
   description: 'Duplicate section name within the same namespace',
   check({ file, workspace, lookup, report }) {
-    // The DLL keeps the first and warns for the rest, in load order (d3dx.ini, then includes).
+    // The DLL keeps the first and warns for the rest, in its own load order (see load-order.ts).
     // Files it never loads (`exclude_recursive`, e.g. DISABLED folders) can only clash with
     // themselves: a disabled copy of a library isn't a duplicate of the enabled one.
-    const firstByName = new Map<string, { path: string; line: number }>();
+    const winners = new Map<string, { file: IniFile; section: SectionModel }>();
     const excluded = workspace.isExcluded(file.path);
     const ownPackage = workspace.packageRoot(file);
+    const loadPath = (f: IniFile): string => relativeToRoot(f.path, ownPackage);
+    const clashes = (other: IniFile, section: SectionModel): boolean =>
+      // Global sections from included files merge into the main one instead of duplicating.
+      other.namespace === '' || lookup.sectionPrefix(section.name.text) !== undefined;
+
     for (const other of workspace.files.values()) {
       if (other !== file && (excluded || workspace.isExcluded(other.path))) continue;
       // One lint run can span several packages; the DLL only ever loads one.
       if (workspace.packageRoot(other) !== ownPackage) continue;
       for (const section of other.sections) {
-        const prefixed = lookup.sectionPrefix(section.name.text) !== undefined;
-        // Global sections from included files merge into the main one instead of duplicating.
-        if (other.namespace !== '' && !prefixed) continue;
+        if (!clashes(other, section)) continue;
         const key = section.qualifiedName.toLowerCase();
-        const first = firstByName.get(key);
-        if (!first) {
-          firstByName.set(key, { path: other.path, line: section.header.line });
-        } else if (other === file) {
-          const where =
-            first.path === file.path ? `line ${first.line + 1}` : `${first.path}:${first.line + 1}`;
-          report(
-            section.name.span.range,
-            `Duplicate section found: [${section.name.text}] (first at ${where}; the DLL uses the first)`,
-          );
+        const first = winners.get(key);
+        if (
+          !first ||
+          (other !== first.file && compareLoadOrder(loadPath(other), loadPath(first.file)) < 0)
+        ) {
+          winners.set(key, { file: other, section });
         }
       }
+    }
+
+    for (const section of file.sections) {
+      if (!clashes(file, section)) continue;
+      const first = winners.get(section.qualifiedName.toLowerCase());
+      if (!first || first.section === section) continue;
+
+      const line = first.section.header.line + 1;
+      const sameFile = first.file === file;
+      const where = sameFile ? `line ${line}` : `${relativeLocation(file, first.file)}:${line}`;
+      const grade = sameFile ? undefined : gradeDuplicate(workspace, { file, section }, first);
+      const note = grade?.note ? `; ${grade.note}` : '';
+      report(
+        section.name.span.range,
+        `Duplicate section found: [${section.name.text}] (first at ${where}; the DLL uses the first${note})`,
+        undefined,
+        grade?.severity,
+      );
     }
   },
 };

@@ -2,6 +2,7 @@
 
 mod argument_count;
 mod bare_line;
+mod duplicate_grade;
 mod duplicate_key;
 mod duplicate_section;
 mod empty_value;
