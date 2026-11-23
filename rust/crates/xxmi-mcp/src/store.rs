@@ -1,4 +1,4 @@
-//! The data volume (docs/06-mcp-server.md "As built"), the same layout the TypeScript server uses:
+//! The data volume (docs/06-mcp-server.md "As built"):
 //!
 //!   <DATA_DIR>/repos/<owner>/<repo>/<sha>/      checkout of one commit (text files only)
 //!   <DATA_DIR>/index/<owner>__<repo>/<sha>.json  library symbols of a package commit

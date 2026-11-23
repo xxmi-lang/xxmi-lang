@@ -11,7 +11,7 @@ The TypeScript implementation stays the reference. The release pipeline is not p
 - `build.rs` embeds `packages/core/dist/spec.json` and `snapshots/zzmi.json`, so run `pnpm build` first.
 
 - `xxmi-spec-extractor` ports `packages/spec-extractor` and the overlay merge of `packages/core/src/spec/load.ts`. It is a library plus its own binary, `xxmi-spec-extract` (not part of `xxmi` and not shipped in releases), with the flags and exit codes of `pnpm spec:extract`. Extra flags: `--full <file>` writes the overlay-merged spec as compact JSON (`--spec-root <dir>`, default `spec`), and `--dll-commit`, `--dll-commit-date`, `--dll-repository` (and `--baseline-*`) stand in for git metadata when a source is not a checkout.
-- `xxmi-mcp` ports `packages/mcp-server`: the nine tools and the HTTP surface (`/mcp`, `/healthz`, `/admin/refresh`), the git-based indexer with per-DLL-version spec builds (via `xxmi-spec-extractor`), and the same volume layout and environment variables, so either server can run on the other's `/data`. It uses the same `builder` stamp scheme, so each rebuilds the other's specs once. How to run it: `docs/06-mcp-server.md` (Rust server).
+- `xxmi-mcp` ports the former `packages/mcp-server` (now removed): the nine tools and the HTTP surface (`/mcp`, `/healthz`, `/admin/refresh`), the git-based indexer with per-DLL-version spec builds (via `xxmi-spec-extractor`), and the same volume layout and environment variables. It uses the same `builder` stamp scheme as the TypeScript server, so a volume that server wrote has its specs rebuilt once. How to run it: `docs/06-mcp-server.md` (Rust server).
 
 ## Build and verify
 
@@ -21,8 +21,7 @@ node rust/bench/parity.mjs        # lint, query, index against the TS CLI
 node rust/bench/lsp-parity.mjs    # starts the TS and the Rust server on the same sessions
 node rust/bench/lsp-latency.mjs   # XXMI_TRACE_TIMING=1 adds the per-span breakdown of an edit
 node rust/bench/spec-parity.mjs   # spec extractor: TS against Rust on the DLL at master and six tags
-node rust/bench/mcp-parity.mjs    # MCP server: TS against Rust, fixture volume then local-ref indexing; ends with scripts/mcp-acceptance.ts
-node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
+node rust/bench/mcp-load.mjs      # req/s, latency and RSS of the Rust server
 ```
 
 `cargo test` runs the rule goldens (`fixtures/rules`, `fixtures/xxmi-1.3.1`, quick fixes against `fixed.ini`), the LSP protocol session, and the robustness suites (core fuzz, hostile LSP input).
@@ -33,7 +32,7 @@ node rust/bench/mcp-load.mjs      # req/s, latency and RSS of both servers
 - `lsp-parity.mjs`: 31,945 responses (documentSymbol, hover, definition, references, completion, rename, codeAction, published diagnostics after open, edit and close), 0 mismatches; it exits 1 on any difference.
 
 - `spec-parity.mjs`: XXMI-Libs-Package at `master`, v1.3.3, v1.3.2, v1.3.1, v1.2.3, v1.2.2 and v1.2.0 (git archive), baseline 3Dmigoto head: every `spec/generated/*.json` byte-identical to the TS output, and the Rust spec merged with `spec/overlay` identical to `packages/core/dist/spec.json` for master; 0 differences. The fixtures in `fixtures/spec-extractor` match their goldens.
-- `mcp-parity.mjs`: 91 requests on a fixture volume (every tool with good and bad arguments, the HTTP edge cases) and 15 more after both servers index the local refs in `../xxmi-refs` (GitHub URLs rewritten to them with git `insteadOf`), 0 mismatches after dropping timestamps. `scripts/mcp-acceptance.ts` passes 6/6 against the Rust server. Rate limiting is switched off for the run (a token bucket is timing-dependent; both servers' HTTP tests cover it), and `search_source` is compared on one file because ripgrep lists files in a run-dependent order in both servers.
+- `mcp-parity.mjs` (removed with the TypeScript server; last run): 91 requests on a fixture volume (every tool with good and bad arguments, the HTTP edge cases) and 15 more after both servers index the local refs in `../xxmi-refs` (GitHub URLs rewritten to them with git `insteadOf`), 0 mismatches after dropping timestamps. `scripts/mcp-acceptance.ts` passes 6/6 against the Rust server. Rate limiting is switched off for the run (a token bucket is timing-dependent; both servers' HTTP tests cover it), and `search_source` is compared on one file because ripgrep lists files in a run-dependent order in both servers.
 
 ## Speed and size (Apple M3 Max; 5,048-line document next to ZZMI)
 
@@ -62,7 +61,7 @@ What is left of an edit is the workspace-wide symbol table and usage (2.8 ms) an
 | RSS idle | 119 MB | 6 MB |
 | RSS peak under load | 119 MB | 34-39 MB |
 | RSS peak while indexing the local refs and building the DLL specs | 119 MB | 47 MB |
-| Docker image (`Dockerfile.rust`, Debian trixie-slim with git and ripgrep) | | 311 MB |
+| Docker image (`docker/mcp/Dockerfile`, Debian trixie-slim with git and ripgrep) | | 311 MB |
 
 The image size is dominated by Debian, git and ripgrep, not by the 6 MB binary.
 

@@ -1,6 +1,6 @@
 [package]
 name = "xxmi-mcp"
-description = "xxmi-mcp: hosted read-only MCP server for XXMI (Rust port of packages/mcp-server)"
+description = "xxmi-mcp: hosted read-only MCP server for XXMI"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
