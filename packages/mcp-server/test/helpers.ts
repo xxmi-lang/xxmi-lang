@@ -32,10 +32,11 @@ export const TEMP_PREFIX = 'xxmi-mcp-';
 
 const tempDirs: string[] = [];
 
+// Windows removes thousands of small files slowly (AV scanning), well past vitest's 10 s hook default.
 afterAll(() => {
   for (const dir of tempDirs.splice(0))
     rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
-});
+}, 120_000);
 
 /** Polls until `condition` holds, so a slow runner delays a test instead of failing it. */
 export async function waitFor(condition: () => boolean, timeoutMs = 30_000): Promise<void> {
