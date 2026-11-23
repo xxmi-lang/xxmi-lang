@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use serde_json::{Map, Value};
 
-pub use blocking::{BlockingGate, MAX_BLOCKING_THREADS};
+pub use blocking::{BlockingGate, MAX_BLOCKING_THREADS, run_job};
 pub use shared::{Args, ToolContext, ToolError, ToolOutput, ToolResult};
 
 use crate::schema;

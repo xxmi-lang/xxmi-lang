@@ -63,6 +63,16 @@ pub fn lint_texts(
     options: &LintOptions,
     configs: &ConfigLoader,
 ) -> Result<LintResult, LintError> {
+    lint_texts_while(files, options, configs, &|| true)
+}
+
+/// Like `lint_texts`, but asks `keep_going` before each file and gives up when it says no.
+pub fn lint_texts_while(
+    files: &[(PathBuf, String)],
+    options: &LintOptions,
+    configs: &ConfigLoader,
+    keep_going: &dyn Fn() -> bool,
+) -> Result<LintResult, LintError> {
     let resolver = PathResolver::in_memory(files.iter().map(|(path, _)| path.as_path()));
     let mut workspace = Workspace::with_resolver(options.lookup, &options.snapshots, resolver);
 
@@ -74,11 +84,14 @@ pub fn lint_texts(
 
     let mut targets = Vec::new();
     for (path, text) in ordered {
+        if !keep_going() {
+            return Err(LintError::Cancelled);
+        }
         let full = resolve_path(path);
         let fallback = full.parent().unwrap_or(Path::new("")).to_path_buf();
         targets.push(workspace.open_document(&full, text.clone(), &fallback)?);
     }
-    lint_targets_with(&workspace, &targets, options, configs)
+    lint_targets_with(&workspace, &targets, options, configs, keep_going)
 }
 
 fn is_d3dx(path: &Path) -> bool {
@@ -91,7 +104,13 @@ fn lint_targets(
     targets: &[FileId],
     options: &LintOptions,
 ) -> Result<LintResult, LintError> {
-    lint_targets_with(workspace, targets, options, &ConfigLoader::default())
+    lint_targets_with(
+        workspace,
+        targets,
+        options,
+        &ConfigLoader::default(),
+        &|| true,
+    )
 }
 
 fn lint_targets_with(
@@ -99,11 +118,15 @@ fn lint_targets_with(
     targets: &[FileId],
     options: &LintOptions,
     configs: &ConfigLoader,
+    keep_going: &dyn Fn() -> bool,
 ) -> Result<LintResult, LintError> {
     let mut seen: HashSet<&Path> = HashSet::new();
     let mut files = Vec::new();
 
     for &id in targets {
+        if !keep_going() {
+            return Err(LintError::Cancelled);
+        }
         let file = &workspace.files()[id];
         if !seen.insert(&file.path) {
             continue;

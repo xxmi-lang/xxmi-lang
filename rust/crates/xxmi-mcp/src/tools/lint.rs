@@ -6,10 +6,12 @@ use std::time::Instant;
 
 use serde_json::{Map, Value, json};
 use xxmi_core::lint::format::{format_json, format_text};
-use xxmi_core::lint::{ConfigLoader, LintOptions, LintResult, lint_texts};
+use xxmi_core::lint::{ConfigLoader, LintError, LintOptions, LintResult, lint_texts_while};
 
+use crate::cancel::cancelled;
 use crate::specs::ResolvedSpec;
 
+use super::blocking::cancelled_error;
 use super::package::{PackageChoice, choose_package};
 use super::shared::{Args, ToolContext, ToolError, ToolOutput, ToolResult, with_spec};
 
@@ -132,8 +134,16 @@ fn run_lint(
     };
 
     let started = Instant::now();
-    let result = lint_texts(&virtual_files(files), &options, &ConfigLoader::disabled())
-        .map_err(|e| ToolError::internal(e.to_string()))?;
+    let result = lint_texts_while(
+        &virtual_files(files),
+        &options,
+        &ConfigLoader::disabled(),
+        &|| !cancelled(),
+    )
+    .map_err(|e| match e {
+        LintError::Cancelled => cancelled_error(),
+        other => ToolError::internal(other.to_string()),
+    })?;
 
     // Sizes and counts only: the submitted text must never reach the logs.
     ctx.logger.info(

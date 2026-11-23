@@ -17,6 +17,7 @@ impl From<LintError> for CliError {
         match error {
             LintError::Config(error) => Self::Usage(error.to_string()),
             LintError::Io(error) => Self::Internal(error.to_string()),
+            LintError::Cancelled => Self::Internal("lint cancelled".into()),
         }
     }
 }

@@ -15,6 +15,7 @@ use crate::specs::short;
 
 use xxmi_core::query::spec::SpecEntry;
 
+use super::blocking::checkpoint;
 use super::shared::{Args, ToolContext, ToolOutput, ToolResult, spread, to_data, with_spec};
 
 fn entry_line(entry: &SpecEntry) -> String {
@@ -74,6 +75,7 @@ pub fn find_implementation_tool(ctx: &ToolContext, args: &Args) -> ToolResult {
         &*tree_for(&target.dir),
         args.count("limit").unwrap_or(20),
     );
+    checkpoint()?;
 
     let mut hits = result.hits;
     for hit in &mut hits {

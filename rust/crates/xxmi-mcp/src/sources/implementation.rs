@@ -13,6 +13,8 @@ use xxmi_core::lookup::Lookup;
 use xxmi_core::query::spec::SpecEntry;
 use xxmi_core::query::spec_all::{SpecQuery, lookup_spec};
 
+use crate::cancel::cancelled;
+
 use super::slice_utf16;
 use super::tree::SourceTree;
 
@@ -250,8 +252,12 @@ pub fn locate_spec_entry(entry: &SpecEntry, tree: &dyn SourceTree) -> Option<Imp
     rank_hits(entry_hits(entry, tree)).into_iter().next()
 }
 
+/// Ends early once the call has timed out; the tool reports that after the scan.
 fn source_files(tree: &dyn SourceTree) -> impl Iterator<Item = &String> {
-    tree.files().iter().filter(|f| SOURCE_FILE.is_match(f))
+    tree.files()
+        .iter()
+        .take_while(|_| !cancelled())
+        .filter(|f| SOURCE_FILE.is_match(f))
 }
 
 fn mention_hits(

@@ -1,12 +1,12 @@
 //! Runs a synchronous tool on a blocking thread, with a bounded queue in front of the pool.
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 use super::SyncTool;
 use super::shared::{Args, ToolContext, ToolError, ToolResult};
+use crate::cancel::{CancelFlag, cancelled};
 
 /// Tool calls park on blocking threads; a small pool keeps their memory bounded.
 pub const MAX_BLOCKING_THREADS: usize = 8;
@@ -39,29 +39,48 @@ impl Default for BlockingGate {
     }
 }
 
-/// Tells a queued task that nobody waits for it any more: the future was dropped by a timeout.
-struct CancelOnDrop(Arc<AtomicBool>);
+/// Tells the task that nobody waits for it any more: the future was dropped by a timeout.
+struct CancelOnDrop(CancelFlag);
 
 impl Drop for CancelOnDrop {
     fn drop(&mut self) {
-        self.0.store(true, Ordering::Relaxed);
+        self.0.cancel();
     }
 }
 
-/// The core's documents are not `Send`, so a tool runs start to finish on one blocking thread.
-/// The permit travels into the task and is released only when the work ends,
-/// even after a timeout has dropped the caller; a task still queued by then does not start.
+pub fn cancelled_error() -> ToolError {
+    ToolError::new("cancelled: the call had already timed out")
+}
+
+/// Stops a tool at a natural loop point once its call has timed out.
+pub fn checkpoint() -> Result<(), ToolError> {
+    if cancelled() {
+        return Err(cancelled_error());
+    }
+    Ok(())
+}
+
 pub async fn run_blocking(ctx: Arc<ToolContext>, run: SyncTool, args: Args) -> ToolResult {
     let permit = ctx.blocking.admit()?;
-    let cancelled = Arc::new(AtomicBool::new(false));
-    let _on_drop = CancelOnDrop(cancelled.clone());
+    run_job(permit, move || run(&ctx, &args)).await
+}
+
+/// The core's documents are not `Send`, so a tool runs start to finish on one blocking thread.
+/// The permit travels into the task and is released only when the work ends, even after a timeout
+/// has dropped the caller; a task still queued by then does not start,
+/// and a running one sees the timeout at its `checkpoint`s.
+pub async fn run_job(
+    permit: OwnedSemaphorePermit,
+    job: impl FnOnce() -> ToolResult + Send + 'static,
+) -> ToolResult {
+    let flag = CancelFlag::default();
+    let _on_drop = CancelOnDrop(flag.clone());
 
     tokio::task::spawn_blocking(move || {
         let _permit = permit;
-        if cancelled.load(Ordering::Relaxed) {
-            return Err(ToolError::new("cancelled: the call had already timed out"));
-        }
-        run(&ctx, &args)
+        let _installed = flag.install();
+        checkpoint()?;
+        job()
     })
     .await
     .map_err(|e| ToolError::internal(format!("tool task failed: {e}")))?

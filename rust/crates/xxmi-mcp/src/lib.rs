@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod bundled;
+pub mod cancel;
 pub mod catalog;
 pub mod config;
 pub mod exec;

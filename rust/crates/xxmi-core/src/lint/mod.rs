@@ -24,7 +24,7 @@ use crate::workspace::snapshot::Snapshots;
 pub use collect::collect_ini_files;
 pub use config::{ConfigError, ConfigLoader, RuleSetting};
 pub use file::lint_file;
-pub use run::{lint_paths, lint_text, lint_texts};
+pub use run::{lint_paths, lint_text, lint_texts, lint_texts_while};
 
 pub struct LintOptions {
     /// Only run these rule ids (upper-case).
@@ -76,6 +76,8 @@ pub enum LintError {
     /// A bad `xxmi.toml`: a usage error, not a crash.
     Config(ConfigError),
     Io(io::Error),
+    /// The caller's `keep_going` check said stop.
+    Cancelled,
 }
 
 impl fmt::Display for LintError {
@@ -83,6 +85,7 @@ impl fmt::Display for LintError {
         match self {
             Self::Config(error) => error.fmt(f),
             Self::Io(error) => error.fmt(f),
+            Self::Cancelled => f.write_str("lint cancelled"),
         }
     }
 }
