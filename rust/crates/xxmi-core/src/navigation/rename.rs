@@ -206,7 +206,7 @@ pub fn rename(
     if let Some(new_name) = new_name {
         add_edit(&mut edits, declaring, declaration.name, new_name);
     }
-    if declaration.file == id && offset.is_some_and(|o| contains(declaration.whole, o)) {
+    if declaration.file == id && contains(declaration.whole, offset) {
         placeholder_range = file.range_of(declaration.name);
     }
 
@@ -221,7 +221,7 @@ pub fn rename(
         if let Some(new_name) = new_name {
             add_edit(&mut edits, other, name, new_name);
         }
-        if other_id == id && offset.is_some_and(|o| contains(reference.span, o)) {
+        if other_id == id && contains(reference.span, offset) {
             placeholder_range = other.range_of(name);
         }
     }
