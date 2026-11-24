@@ -48,7 +48,7 @@ fn check_line(context: &RuleContext, line: &LineModel) -> Option<Finding> {
     Some(Finding {
         span: key,
         message: format!(
-            "`{}` is copied on every draw: with no `ref` the DLL copies into a custom resource.",
+            "`{}` is copied each time the line runs: with no `ref` the DLL copies into a custom resource.",
             key.slice(context.text)
         ),
         fix: Some(insert_ref(value)),

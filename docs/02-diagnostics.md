@@ -260,7 +260,7 @@ Default severity: error. Assignment to a `locked` global; the DLL rejects the li
 
 ### XM305
 
-Default severity: warning. A `Resource\ZZMI\<Name>` slot assigned from a resource with no `ref`: the DLL copies it on every run of the line. Only reported under the `zzmi` profile. Quick fix: yes (inserts `ref `).
+Default severity: warning. A `Resource\ZZMI\<Name>` slot assigned from a resource with no `ref`: the DLL copies it each time the line runs. Only reported under the `zzmi` profile. Quick fix: yes (inserts `ref `).
 
 ### XM306
 
