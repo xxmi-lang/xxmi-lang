@@ -213,6 +213,6 @@ As built (`rust/crates/xxmi-core/src/profile/`):
   2. `profile = "<id>"` in the `xxmi.toml` at or above the package root.
   3. A package folder named after one of the six MI ids (`gimi`, `srmi`, `wwmi`, `zzmi`, `himi`, `efmi`; case-insensitive), or one holding `Core/<MI>/`.
   4. References to a library namespace that only one profile's snapshot declares.
-  5. `xxmi`. A loose file with no reference or setting that picks an MI gets no library completion.
+  5. `xxmi`. A loose file with no reference or setting that picks an MI gets no library completion. Only in this case, XM201 accepts a name without a namespace that some bundled library defines that way (`CommandListSkinTexture` in ZZMI's `d3dx_patch.ini`, kept for older mods): the MI can't be known, and it is not an error. A profile chosen by `--mi-package`, the editor setting or `xxmi.toml` (even `xxmi`) decides on its own library.
 
 Not implemented: the earlier `spec/profiles/zzmi.toml` sketch (format eras, hash sources, core namespace). The registry holds only id, name, dialect and snapshot.
