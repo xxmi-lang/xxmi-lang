@@ -1297,6 +1297,20 @@
       "line": 129
     },
     {
+      "key": "$\\efmiv1\\enum_object_status_custom",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 25
+    },
+    {
+      "key": "$\\efmiv1\\enum_object_status_unknown",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 26
+    },
+    {
       "key": "$\\efmiv1\\enum_override_type_custom",
       "persist": false,
       "locked": true,

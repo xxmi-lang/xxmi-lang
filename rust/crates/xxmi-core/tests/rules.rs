@@ -1,6 +1,7 @@
 //! Lints the repository's rule fixtures and compares against the golden output checked in:
 //! fixtures/rules/XMnnn/{bad,good}(.ini|/) with expected.json (and fixed.ini when
-//! the rule has quick fixes), and fixtures/xxmi-1.3.1/*.expected.json.
+//! the rule has quick fixes),
+//! and fixtures/xxmi-1.3.1/*.expected.json and fixtures/xxmi-dialect/*.expected.json.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -298,7 +299,27 @@ fn every_rule_has_a_fixture_directory() {
 
 #[test]
 fn xxmi_1_3_1_fixtures_match_the_golden_output() {
-    let dir = fixtures().join("xxmi-1.3.1");
+    assert_eq!(
+        check_golden_dir("xxmi-1.3.1"),
+        3,
+        "clean, matchtextures-missing and run-misspelled"
+    );
+}
+
+/// fixtures/xxmi-dialect: hex and binary literals (and the forms that stay errors),
+/// and multi-term pool indexes, so a parser that lacks them fails here.
+#[test]
+fn xxmi_dialect_fixtures_match_the_golden_output() {
+    assert_eq!(
+        check_golden_dir("xxmi-dialect"),
+        4,
+        "binary-literals, hex-literals, index-expressions and numeric-literals-rejected"
+    );
+}
+
+/// A fixture without an expected.json must lint clean; returns the number of fixtures checked.
+fn check_golden_dir(name: &str) -> usize {
+    let dir = fixtures().join(name);
     let mut checked = 0;
 
     for entry in fs::read_dir(&dir).expect("fixture directory exists") {
@@ -320,10 +341,7 @@ fn xxmi_1_3_1_fixtures_match_the_golden_output() {
         assert_eq!(actual, expected, "{}", path.display());
         checked += 1;
     }
-    assert_eq!(
-        checked, 3,
-        "clean, matchtextures-missing and run-misspelled"
-    );
+    checked
 }
 
 /// fixtures/ownership: every line a dedicated rule names is reported by that rule alone,
@@ -362,6 +380,38 @@ fn stray_lines_are_reported_once_under_their_own_rule() {
     let expected: Vec<String> =
         serde_json::from_str(&fs::read_to_string(dir.join("expected.json")).unwrap()).unwrap();
     assert_eq!(found, expected);
+}
+
+/// fixtures/index-variables: variables inside a pool index expression count as uses,
+/// so none is reported unused and an undeclared one is reported.
+#[test]
+fn variables_inside_a_pool_index_expression_are_references() {
+    let ids = |path: PathBuf| -> Vec<(String, String)> {
+        let dir = path.parent().unwrap().to_path_buf();
+        diagnose(&path, &dir, None)
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d["id"].as_str().unwrap(),
+                    "XM001" | "XM109" | "XM203" | "XM204"
+                )
+            })
+            .map(|d| {
+                (
+                    d["id"].as_str().unwrap().to_string(),
+                    d["message"].as_str().unwrap().to_string(),
+                )
+            })
+            .collect()
+    };
+
+    let declared = fixtures().join("xxmi-dialect/index-expressions.ini");
+    assert_eq!(ids(declared), []);
+
+    let undeclared = ids(fixtures().join("index-variables/undeclared.ini"));
+    assert_eq!(undeclared.len(), 1, "{undeclared:?}");
+    assert_eq!(undeclared[0].0, "XM203");
+    assert!(undeclared[0].1.contains("$lod"), "{undeclared:?}");
 }
 
 #[test]
