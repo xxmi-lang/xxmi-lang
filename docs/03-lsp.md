@@ -64,6 +64,7 @@ Measure on the largest file in `corpus/` and on the whole ZZMI package.
 - Files over 5 MB (some CN mods are huge flat files): full parse, but only syntax rules run live; cross-file rules run on save.
 - Settings are read from `xxmi.toml` and `workspace/configuration` (section `xxmi`). The client setting overrides the file.
 - `xxmi.toml` is read once per folder and cached: editing it needs a server restart to take effect.
+- A broken `xxmi.toml` (unparsable, unknown `profile`, invalid rule value) is logged once with `window/logMessage`, and files under it are linted with the default settings and profile detection. The CLI still exits with a usage error (`04-cli.md`).
 
 ## Testing
 

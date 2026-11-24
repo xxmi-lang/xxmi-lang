@@ -53,7 +53,7 @@ impl<'a> Server<'a> {
         supports_configuration: bool,
     ) -> Self {
         let options = LintOptions::bundled();
-        let configs = ConfigLoader::default();
+        let configs = ConfigLoader::lenient();
         let mut workspace = Workspace::new(options.lookup, &options.snapshots);
         workspace.set_configs(configs.clone());
 
@@ -263,6 +263,15 @@ impl<'a> Server<'a> {
                 }
             };
             trace::span("publish", || self.send(publish(&uri, &diagnostics)));
+        }
+        self.report_config_problems();
+    }
+
+    /// A broken xxmi.toml is read once, so this reports it once per session.
+    fn report_config_problems(&self) {
+        for problem in self.configs.take_problems() {
+            let message = format!("xxmi-lsp: {problem}; linting with the defaults instead");
+            self.log(WARNING, message);
         }
     }
 
