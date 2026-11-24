@@ -90,6 +90,7 @@ fn precedence(
             operators,
             source: format!("{}:{group}", file.name),
             xxmi: false,
+            gimi: true,
         });
     }
     if levels.is_empty() {
@@ -113,6 +114,7 @@ pub fn extract_operators(
                 token,
                 source: format!("{CL}:operator_tokens"),
                 xxmi: false,
+                gimi: true,
                 docs: Default::default(),
             })
             .collect();
@@ -137,6 +139,7 @@ fn enum_values(file: &CppFile, name: &str) -> Result<Vec<SpecEnumValue>, AnchorN
             name,
             source: source.clone(),
             xxmi: false,
+            gimi: true,
         })
         .collect())
 }
@@ -154,6 +157,7 @@ pub fn extract_enums(x: &Extraction) -> Result<Vec<SpecEnum>, AnchorNotFound> {
                 values: enum_values(file, name)?,
                 source: format!("{}:{name}", file.name),
                 xxmi: false,
+                gimi: true,
                 docs: Default::default(),
             });
         }
@@ -180,10 +184,12 @@ pub fn extract_enums(x: &Extraction) -> Result<Vec<SpecEnum>, AnchorNotFound> {
                     name,
                     source: source.clone(),
                     xxmi: false,
+                    gimi: true,
                 })
                 .collect(),
             source,
             xxmi: false,
+            gimi: true,
             docs: Default::default(),
         }))
     })?;

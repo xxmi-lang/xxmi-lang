@@ -95,6 +95,8 @@ pub fn build_version_spec(input: &BuildInput) -> Result<BuiltSpec, String> {
         baseline_root: &input.baseline.dir,
         dll_git: Some(git_info(&input.dll)),
         baseline_git: Some(git_info(&input.baseline)),
+        gimi_root: None,
+        gimi_git: None,
     })
     .map_err(|e| e.to_string())?;
 

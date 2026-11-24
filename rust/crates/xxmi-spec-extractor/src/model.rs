@@ -51,6 +51,14 @@ impl<'de> Deserialize<'de> for Docs {
     }
 }
 
+fn yes() -> bool {
+    true
+}
+
+fn is_true(value: &bool) -> bool {
+    *value
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum MatchKind {
@@ -65,6 +73,8 @@ pub struct SpecKey {
     pub value_type: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub repeatable: Option<bool>,
     #[serde(flatten)]
@@ -76,6 +86,8 @@ pub struct SpecDynamicKeys {
     pub kind: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,6 +109,8 @@ pub struct SpecSection {
     pub dynamic_keys: Vec<SpecDynamicKeys>,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(flatten)]
     pub docs: Docs,
 }
@@ -106,6 +120,8 @@ pub struct SpecBuiltinSection {
     pub name: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,6 +131,8 @@ pub struct SpecCommandValue {
     pub match_kind: MatchKind,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,6 +145,8 @@ pub struct SpecCommand {
     pub values: Vec<SpecCommandValue>,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arg_count: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -144,6 +164,8 @@ pub struct SpecResourceMember {
     pub args: Vec<String>,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(flatten)]
     pub docs: Docs,
 }
@@ -153,6 +175,8 @@ pub struct SpecFunction {
     pub name: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(flatten)]
     pub docs: Docs,
 }
@@ -162,6 +186,8 @@ pub struct SpecOperatorToken {
     pub token: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(flatten)]
     pub docs: Docs,
 }
@@ -175,6 +201,8 @@ pub struct SpecPrecedenceLevel {
     pub operators: Vec<String>,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,6 +216,8 @@ pub struct SpecEnumValue {
     pub name: String,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,6 +226,8 @@ pub struct SpecEnum {
     pub values: Vec<SpecEnumValue>,
     pub source: String,
     pub xxmi: bool,
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    pub gimi: bool,
     #[serde(flatten)]
     pub docs: Docs,
 }
@@ -215,6 +247,9 @@ pub struct SpecMeta {
     pub dll: GitInfo,
     /// Vanilla 3DMigoto checkout used to decide `xxmi` flags.
     pub baseline: GitInfo,
+    /// XXMI-Libs-Package at v0.1.0 (vanilla GIMI DLL code), used to decide `gimi` flags.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gimi: Option<GitInfo>,
 }
 
 /// A spec without its `meta`: what one DLL checkout yields.

@@ -1,14 +1,15 @@
 //! Regenerates spec/generated/*.json from DLL source checkouts.
 //!
-//!   XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> xxmi-spec-extract [--check]
+//!   XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> [GIMI_DLL_SRC=<XXMI-Libs-Package @ v0.1.0>]
+//!   xxmi-spec-extract [--check]
 //!
-//! --dll DIR / --baseline DIR / --out DIR override the environment and the default output
+//! --dll DIR / --baseline DIR / --gimi DIR / --out DIR override the environment and the default output
 //! (spec/generated under the working directory).
 //! --check writes nothing and exits 1 if the output would differ from what is on disk.
 //! --full FILE also writes the merged spec
 //! (the overlays of DIR/overlay, DIR from --spec-root, default spec) as compact JSON. --dll-commit,
 //! --dll-commit-date, --dll-repository
-//! (and the --baseline-* forms) stand in for git metadata when a source is not a git checkout.
+//! (and the --baseline-* and --gimi-* forms) stand in for git metadata when a source is not a git checkout.
 //!
 //! Exit codes: 0 ok, 1 --check found a difference, 2 usage error, 3 extraction failed.
 
@@ -21,12 +22,12 @@ use std::process::ExitCode;
 use xxmi_spec_extractor::overlay::{apply_overlays, read_overlays};
 use xxmi_spec_extractor::{ExtractError, ExtractOptions, GitInfo, extract_spec, serialize_spec};
 
-const USAGE: &str =
-    "usage: XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> xxmi-spec-extract [--check]";
+const USAGE: &str = "usage: XXMI_DLL_SRC=<XXMI-Libs-Package> MIGOTO_DLL_SRC=<3Dmigoto> [GIMI_DLL_SRC=<v0.1.0 checkout>] xxmi-spec-extract [--check]";
 
-const VALUE_FLAGS: [&str; 11] = [
+const VALUE_FLAGS: [&str; 15] = [
     "--dll",
     "--baseline",
+    "--gimi",
     "--out",
     "--full",
     "--dll-commit",
@@ -35,6 +36,9 @@ const VALUE_FLAGS: [&str; 11] = [
     "--baseline-commit",
     "--baseline-commit-date",
     "--baseline-repository",
+    "--gimi-commit",
+    "--gimi-commit-date",
+    "--gimi-repository",
     "--spec-root",
 ];
 
@@ -92,7 +96,12 @@ fn main() -> ExitCode {
         eprintln!("{USAGE}");
         return ExitCode::from(2);
     };
-    match run(&args, &dll, &baseline) {
+    match run(
+        &args,
+        &dll,
+        &baseline,
+        args.path("--gimi", "GIMI_DLL_SRC").as_deref(),
+    ) {
         Ok(code) => code,
         Err(ExtractError::Anchor(error)) => {
             eprintln!("Extraction failed: {error}");
@@ -108,15 +117,28 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(args: &Args, dll: &Path, baseline: &Path) -> Result<ExitCode, ExtractError> {
+fn run(
+    args: &Args,
+    dll: &Path,
+    baseline: &Path,
+    gimi: Option<&Path>,
+) -> Result<ExitCode, ExtractError> {
     let mut result = extract_spec(ExtractOptions {
         dll_root: dll,
         baseline_root: baseline,
         dll_git: args.git("dll"),
         baseline_git: args.git("baseline"),
+        gimi_root: gimi,
+        gimi_git: args.git("gimi"),
     })?;
     for warning in &result.baseline_warnings {
         eprintln!("baseline (not XXMI): {warning}");
+    }
+    for warning in &result.gimi_warnings {
+        eprintln!("gimi baseline (not at v0.1.0): {warning}");
+    }
+    for removed in &result.gimi_only {
+        eprintln!("gimi baseline only (removed since): {removed}");
     }
     let dll_info = &result.spec.meta.dll;
     let origin = if dll_info.repository.is_empty() {

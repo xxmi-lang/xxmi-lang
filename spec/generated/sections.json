@@ -59,7 +59,8 @@
           "name": "uav_byte_stride",
           "valueType": "int",
           "source": "IniHandler.cpp:parse_texture_override_common",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "iteration",
@@ -835,187 +836,218 @@
           "name": "pool_size",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_index_type",
           "valueType": "enum:PoolIndexTypeNames",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_lazy_initialization",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_element_type_switch_reset",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_allocate_slot_on_missing",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_expiration_timeout_frames",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_expiration_reset_elements",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_expiration_refresh_on_read",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_spatial_radius",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_persist_variables",
           "valueType": "bool",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "pool_variable_default_value",
           "valueType": "float",
           "source": "IniHandler.cpp:ParseResourcePoolSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "max_copies_per_frame",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "filename",
           "valueType": "string",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "type",
           "valueType": "enum:CustomResourceTypeNames",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "format",
           "valueType": "enum:DXGIFormats",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "color_space",
           "valueType": "enum:CustomColorSpaceNames",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "width",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "height",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "depth",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "mips",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "array",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "msaa",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "msaa_quality",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "byte_width",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "stride",
           "valueType": "int",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "width_multiply",
           "valueType": "float",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "height_multiply",
           "valueType": "float",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "bind_flags",
           "valueType": "string",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "misc_flags",
           "valueType": "string",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "data",
           "valueType": "string",
           "source": "IniHandler.cpp:ParseResourceInitialData",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "Resource",
@@ -1052,7 +1084,8 @@
           "name": "color_space",
           "valueType": "enum:CustomColorSpaceNames",
           "source": "IniHandler.cpp:ParseResourceSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "width",
@@ -1160,25 +1193,29 @@
           "name": "match_format",
           "valueType": "enum:DXGIFormats",
           "source": "IniHandler.cpp:ParseFilterSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "match_dhash",
           "valueType": "hash",
           "source": "IniHandler.cpp:ParseFilterSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "match_confidence",
           "valueType": "float",
           "source": "IniHandler.cpp:ParseFilterSection",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "Key",
@@ -1423,7 +1460,8 @@
           "name": "overlay_buffer_hash_lifetime",
           "valueType": "int",
           "source": "Hunting.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "reload_config",
@@ -1525,13 +1563,15 @@
           "name": "next_vertexbuffer_slot",
           "valueType": "key-binding",
           "source": "Hunting.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "previous_vertexbuffer_slot",
           "valueType": "key-binding",
           "source": "Hunting.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "next_indexbuffer",
@@ -1717,7 +1757,8 @@
           "name": "dump_mips",
           "valueType": "bool",
           "source": "Hunting.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "removedKeys": [
@@ -1763,7 +1804,8 @@
           "name": "log_level",
           "valueType": "string",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "debug",
@@ -1823,19 +1865,22 @@
           "name": "dll_initialization_delay",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "skip_early_includes_load",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "config_initialization_delay",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "proxy_d3d11",
@@ -1883,37 +1928,43 @@
           "name": "settings_auto_save_interval",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "clear_unknown_settings",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "screen_width",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "screen_height",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "force_detect_color_space",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "additional_foreground_window",
           "valueType": "string",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "removedKeys": [],
@@ -1932,25 +1983,29 @@
           "name": "toggle_input",
           "valueType": "key-binding",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "input_disable_mode",
           "valueType": "enum:InputDisableScopeNames",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "input",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "removedKeys": [],
       "dynamicKeys": [],
       "source": "IniHandler.cpp:RegularSections",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "Device",
@@ -2083,13 +2138,15 @@
           "name": "dhash_mip_size",
           "valueType": "int",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "dhash_allow_rehash",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "override_directory",
@@ -2125,25 +2182,29 @@
           "name": "cache_resource_data",
           "valueType": "string",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "track_region_hashes",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "track_implicit_index_buffers",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "allow_buffer_resize",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "assemble_signature_comments",
