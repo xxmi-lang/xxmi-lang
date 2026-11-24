@@ -68,7 +68,7 @@ Railway autodeploys pushes to `main` once CI passes. Build settings live in the 
 - Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`.
-- `RAILWAY_DOCKERFILE_PATH=docker/mcp/Dockerfile`: the service needs this to build the Dockerfile above.
+- The build uses the service's Dockerfile path setting, which must be `docker/mcp/Dockerfile`; no `RAILWAY_DOCKERFILE_PATH` variable is needed.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
 

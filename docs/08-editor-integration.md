@@ -21,7 +21,7 @@ A thin client, `vscode-languageclient/node`:
 - Activates on language `migoto`. Adds the `xxmi.*` settings listed under "As built" below (`xxmi.profile` and `xxmi.packagePath` are planned, not built).
 - Bundles the Rust `xxmi` binary for each platform (`bin/<os>-<arch>/`) and starts `xxmi lsp --stdio`, so no separate install is needed.
 - If lupomikti's extension isn't installed, show a one-time prompt linking to it (highlighting comes from there). Until it's on the Marketplace, link to their `.vsix` release.
-- Commands: `XXMI: Show detected format era`, `XXMI: Restart server`.
+- Commands: `XXMI: Restart server`.
 - Semantic tokens: declare `semanticTokenScopes` mapping our token types to the TextMate scopes their grammar already uses (read `source.migoto` in their tmLanguage and pick the matching scopes), so themes color resolved symbols the same way as plain highlighting.
 - Publish to both VS Code Marketplace and Open VSX (for VSCodium users).
 
