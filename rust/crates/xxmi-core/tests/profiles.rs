@@ -1,7 +1,7 @@
 //! Game profiles: which MI a package is checked against, and that packages stay apart.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use xxmi_core::defaults::{bundled_lookup, bundled_snapshots};
 use xxmi_core::lint::{ConfigLoader, LintError, LintOptions, lint_paths, lint_texts};
@@ -70,6 +70,11 @@ fn flagged(files: &[(&str, &str)], options: &LintOptions, code: &str) -> Vec<Str
         .filter(|f| f.diagnostics.iter().any(|d| d.id == code))
         .map(|f| f.path.to_string_lossy().into_owned())
         .collect()
+}
+
+/// What `flagged` reports for a virtual path: files are resolved (a drive is added on Windows).
+fn resolved(path: &str) -> String {
+    resolve_path(Path::new(path)).to_string_lossy().into_owned()
 }
 
 fn scratch(name: &str) -> PathBuf {
@@ -229,7 +234,10 @@ fn a_package_never_resolves_against_another_packages_files() {
     };
 
     // `Foo` is a namespace package b never declares: XM206, not XM201 (which needs a known namespace).
-    assert_eq!(flagged(&files, &options, "XM206"), ["/v/b/Mods/use.ini"]);
+    assert_eq!(
+        flagged(&files, &options, "XM206"),
+        [resolved("/v/b/Mods/use.ini")]
+    );
     assert!(flagged(&files, &options, "XM201").is_empty());
 }
 
@@ -251,7 +259,7 @@ fn a_library_call_resolves_under_its_own_profile_only() {
     // `WWMIv1` is not a namespace of the zzmi library, so the namespace check fires, not XM201.
     assert_eq!(
         flagged_under("zzmi", WWMI_CALL, "XM206"),
-        ["/v/loose/a.ini"]
+        [resolved("/v/loose/a.ini")]
     );
     assert!(flagged_under("zzmi", WWMI_CALL, "XM201").is_empty());
 }
