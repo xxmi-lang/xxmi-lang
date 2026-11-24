@@ -208,7 +208,7 @@ Default severity: warning. `;` comment after a value (the DLL keeps it in the va
 
 ### XM201
 
-Default severity: error. Unresolved `run = CommandList…` / `CustomShader…` target. Quick fix: yes.
+Default severity: error. Unresolved `run = CommandList…` / `CustomShader…` target. Quick fix: yes. Not reported when no MI was detected (the `xxmi` fallback) and a bundled library defines the name without a namespace.
 
 ### XM202
 

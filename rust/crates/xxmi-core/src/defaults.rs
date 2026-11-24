@@ -1,12 +1,15 @@
 //! The data core ships with: the merged spec and the library snapshots,
 //! both embedded at build time by build.rs.
 
+use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use crate::lookup::Lookup;
+use crate::model::SymbolKind;
 use crate::profile::PROFILES;
 use crate::spec::Spec;
 use crate::workspace::snapshot::SymbolSnapshot;
+use crate::workspace::symbols::explicit_namespace;
 
 const BUNDLED_SPEC: &str = include_str!(env!("XXMI_SPEC_JSON"));
 
@@ -32,4 +35,20 @@ pub fn bundled_snapshots() -> &'static [SymbolSnapshot] {
             .map(|json| serde_json::from_str(json).expect("the bundled snapshot parses"))
             .collect()
     })
+}
+
+/// Whether some bundled library declares a section of this kind under this name in the empty
+/// namespace (`CommandListSkinTexture`), compared case-insensitively like the DLL.
+pub fn is_library_global(kind: SymbolKind, name: &str) -> bool {
+    static GLOBALS: OnceLock<HashSet<(SymbolKind, String)>> = OnceLock::new();
+    let globals = GLOBALS.get_or_init(|| {
+        let lookup = bundled_lookup();
+        bundled_snapshots()
+            .iter()
+            .flat_map(|snapshot| &snapshot.sections)
+            .filter(|section| explicit_namespace(&section.qualified_name, lookup).is_none())
+            .map(|section| (section.kind, section.qualified_name.to_lowercase()))
+            .collect()
+    });
+    globals.contains(&(kind, name.to_lowercase()))
 }

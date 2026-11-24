@@ -272,3 +272,61 @@ fn a_loose_mod_calling_the_zzmi_library_resolves_it() {
         assert!(found.is_empty(), "{code}: {found:?}");
     }
 }
+
+const GLOBAL_CALL: &str = "[Present]\nrun = CommandListSkinTexture\n";
+
+#[test]
+fn a_library_global_is_accepted_when_no_mi_is_detected() {
+    let options = LintOptions::bundled();
+    let found = flagged(&[("/v/loose/a.ini", GLOBAL_CALL)], &options, "XM201");
+    assert!(found.is_empty(), "{found:?}");
+
+    let lower = "[Present]\nrun = commandlistskintexture\n";
+    assert!(flagged(&[("/v/loose/a.ini", lower)], &options, "XM201").is_empty());
+}
+
+#[test]
+fn a_chosen_profile_decides_the_library_global() {
+    assert!(flagged_under("zzmi", GLOBAL_CALL, "XM201").is_empty());
+
+    assert_eq!(
+        flagged_under("xxmi", GLOBAL_CALL, "XM201"),
+        [resolved("/v/loose/a.ini")]
+    );
+    assert_eq!(
+        flagged_under("wwmi", GLOBAL_CALL, "XM201"),
+        [resolved("/v/loose/a.ini")]
+    );
+}
+
+#[test]
+fn xxmi_toml_naming_xxmi_is_not_a_fallback() {
+    let dir = scratch("toml-xxmi");
+    fs::write(dir.join("xxmi.toml"), "profile = \"xxmi\"\n").unwrap();
+    fs::write(dir.join("a.ini"), GLOBAL_CALL).unwrap();
+
+    let result = lint_paths(std::slice::from_ref(&dir), &LintOptions::bundled()).unwrap();
+    let flagged = result
+        .files
+        .iter()
+        .any(|f| f.diagnostics.iter().any(|d| d.id == "XM201"));
+    assert!(flagged);
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
+fn unknown_names_are_still_unresolved_without_an_mi() {
+    let options = LintOptions::bundled();
+    let unknown = "[Present]\nrun = CommandListNoSuchThing\n";
+    assert_eq!(
+        flagged(&[("/v/loose/a.ini", unknown)], &options, "XM201"),
+        [resolved("/v/loose/a.ini")]
+    );
+
+    // The namespace picks zzmi, so this is not a fallback.
+    let namespaced = "[Present]\nrun = CommandList\\ZZMI\\NoSuchThing\n";
+    assert_eq!(
+        flagged(&[("/v/loose/a.ini", namespaced)], &options, "XM201"),
+        [resolved("/v/loose/a.ini")]
+    );
+}

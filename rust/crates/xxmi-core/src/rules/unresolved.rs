@@ -1,6 +1,7 @@
 //! XM201 and XM202: a section reference that resolves to nothing.
 
 use super::{Finding, RuleContext, replace_fix};
+use crate::defaults::is_library_global;
 use crate::model::{IniFile, Reference, SymbolKind};
 use crate::suggest::did_you_mean;
 use crate::workspace::symbols::{SymbolTable, explicit_namespace};
@@ -30,8 +31,11 @@ fn check_kinds(context: &RuleContext, kinds: &[SymbolKind]) -> Vec<Finding> {
         }
         // XM206 reports a namespace nobody declares.
         let namespace = explicit_namespace(&reference.text, context.lookup);
-        if namespace.is_some_and(|ns| !symbols.has_namespace(&ns)) {
-            continue;
+        match namespace {
+            Some(ns) if !symbols.has_namespace(&ns) => continue,
+            Some(_) => {}
+            None if is_fallback_global(context, reference) => continue,
+            None => {}
         }
 
         let names = local_names(symbols, reference.kind, file);
@@ -49,6 +53,17 @@ fn check_kinds(context: &RuleContext, kinds: &[SymbolKind]) -> Vec<Finding> {
         });
     }
     findings
+}
+
+/// Older mods call library sections that the library defines without a namespace
+/// (`CommandListSkinTexture`). With no MI to say which library applies, that is no error;
+/// this is XM201's alone, XM202 keeps reporting unresolved resources.
+fn is_fallback_global(context: &RuleContext, reference: &Reference) -> bool {
+    matches!(
+        reference.kind,
+        SymbolKind::CommandList | SymbolKind::CustomShader
+    ) && context.workspace.profile_is_fallback(context.file)
+        && is_library_global(reference.kind, &reference.text)
 }
 
 /// Names of symbols of `kind` reachable from `file` without a namespace, for suggestions.
