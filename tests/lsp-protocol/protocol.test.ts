@@ -2,104 +2,31 @@
  * Drives the Rust language server over real JSON-RPC (docs/03-lsp.md "Testing"). Set
  * XXMI_LSP_COMMAND to a JSON array, e.g. `["dist/bin/xxmi-lsp", "--stdio"]`.
  */
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import {
-  createProtocolConnection,
-  StreamMessageReader,
-  StreamMessageWriter,
-  type Diagnostic,
-  type ProtocolConnection,
-  type PublishDiagnosticsParams,
-} from 'vscode-languageserver-protocol/node';
+import type { Diagnostic } from 'vscode-languageserver-protocol/node';
+import { LspClient, uri } from './client.ts';
 
 const PACKAGE = resolve(import.meta.dirname, '../../fixtures/lsp/package');
 const MOD = join(PACKAGE, 'Mods/MyMod');
-const uri = (path: string): string => pathToFileURL(path).href;
 const MOD_INI = uri(join(MOD, 'mod.ini'));
 const EXTRA_INI = uri(join(MOD, 'extra.ini'));
 const LIB_INI = uri(join(PACKAGE, 'Core/Lib/lib.ini'));
 
-const commandJson = process.env.XXMI_LSP_COMMAND;
-if (!commandJson) {
-  throw new Error('Set XXMI_LSP_COMMAND to a JSON array, e.g. ["dist/bin/xxmi-lsp","--stdio"]');
-}
-const command = JSON.parse(commandJson) as string[];
-
-let child: ChildProcessWithoutNullStreams;
-let connection: ProtocolConnection;
-const diagnostics = new Map<string, Diagnostic[]>();
-const waiters: {
-  uri: string;
-  test: (d: Diagnostic[]) => boolean;
-  resolve: (d: Diagnostic[]) => void;
-}[] = [];
-
-/** Resolves when the server publishes diagnostics for `uri` that satisfy `test`. */
-function nextDiagnostics(
-  target: string,
-  test: (d: Diagnostic[]) => boolean = () => true,
-): Promise<Diagnostic[]> {
-  const current = diagnostics.get(target);
-  if (current && test(current)) return Promise.resolve(current);
-  return new Promise((resolveWait, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`no matching diagnostics for ${target}`));
-    }, 10_000);
-    waiters.push({
-      uri: target,
-      test,
-      resolve: (d) => {
-        clearTimeout(timer);
-        resolveWait(d);
-      },
-    });
-  });
-}
+const client = new LspClient();
+const connection = client.connection;
+const nextDiagnostics = (target: string, test?: (d: Diagnostic[]) => boolean) =>
+  client.waitForDiagnostics(target, test);
 
 beforeAll(async () => {
-  const [cmd = '', ...args] = command;
-  child = spawn(cmd, args, { stdio: 'pipe' });
-  child.stderr.on('data', (chunk: Buffer) => process.stderr.write(chunk));
-  connection = createProtocolConnection(
-    new StreamMessageReader(child.stdout),
-    new StreamMessageWriter(child.stdin),
-  );
-  connection.onNotification(
-    'textDocument/publishDiagnostics',
-    (params: PublishDiagnosticsParams) => {
-      diagnostics.set(params.uri, params.diagnostics);
-      for (const w of [...waiters]) {
-        if (w.uri === params.uri && w.test(params.diagnostics)) {
-          waiters.splice(waiters.indexOf(w), 1);
-          w.resolve(params.diagnostics);
-        }
-      }
-    },
-  );
-  connection.onRequest('workspace/configuration', () => [{ rules: {} }]);
-  connection.listen();
-  await connection.sendRequest('initialize', {
-    processId: process.pid,
-    rootUri: uri(MOD),
-    workspaceFolders: [{ uri: uri(MOD), name: 'MyMod' }],
-    capabilities: { workspace: { configuration: true } },
-  });
-  await connection.sendNotification('initialized', {});
+  await client.initialize(MOD, 'MyMod');
   const text = readFileSync(join(MOD, 'mod.ini'), 'utf8');
-  await connection.sendNotification('textDocument/didOpen', {
-    textDocument: { uri: MOD_INI, languageId: 'migoto', version: 1, text },
-  });
+  await client.open(join(MOD, 'mod.ini'), text);
 }, 30_000);
 
 afterAll(async () => {
-  await connection.sendRequest('shutdown');
-  await connection.sendNotification('exit');
-  connection.dispose();
-  child.kill();
+  await client.shutdown();
 });
 
 const pos = (line: number, character: number) => ({ line, character });
