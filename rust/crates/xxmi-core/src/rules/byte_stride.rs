@@ -9,7 +9,7 @@
 //! one unconditional `vb0` line and no other vertex buffer bound (any other is skipped,
 //! unless the value is the sum of all their strides), no `handling = skip`,
 //! a resource with its own data and a single literal `stride` that nothing copies into,
-//! and no called command list that might rebind `vb0`.
+//! and no called command list or custom shader that might bind a vertex buffer.
 
 use std::collections::{BTreeSet, HashSet};
 
@@ -106,11 +106,11 @@ fn mismatch_message(declared: u32, vb0: &Bound) -> String {
 
 /// The slots of every `vb<n>` line, in any branch.
 fn vertex_slots(section: &SectionModel) -> BTreeSet<u32> {
-    section
-        .lines
-        .iter()
-        .filter_map(|line| line.command.as_deref()?.strip_prefix("vb")?.parse().ok())
-        .collect()
+    section.lines.iter().filter_map(vertex_slot).collect()
+}
+
+fn vertex_slot(line: &LineModel) -> Option<u32> {
+    line.command.as_deref()?.strip_prefix("vb")?.parse().ok()
 }
 
 /// A `handling = skip` override replaces the draw, so a larger stride is deliberate.
@@ -209,8 +209,8 @@ fn is_copied_into(context: &RuleContext, qualified_name: &str) -> bool {
     })
 }
 
-/// Whether a command list or custom shader the section runs might bind `vb0`
-/// (or can't be followed: an unresolved target is not a certainty either way).
+/// Whether a command list or custom shader the section runs, at any depth,
+/// might bind a vertex buffer (or can't be followed: an unresolved target is not a certainty either way).
 fn calls_may_bind(
     context: &RuleContext,
     file_id: usize,
@@ -242,7 +242,8 @@ fn calls_may_bind(
                 file,
                 section: Some(target),
             }) => {
-                binds_vb0(context, file, target) || calls_may_bind(context, file, target, visited)
+                binds_vertex_buffer(context, file, target)
+                    || calls_may_bind(context, file, target, visited)
             }
             Some(Origin::File { .. }) => true,
         };
@@ -253,9 +254,9 @@ fn calls_may_bind(
     false
 }
 
-fn binds_vb0(context: &RuleContext, file: usize, section: usize) -> bool {
+fn binds_vertex_buffer(context: &RuleContext, file: usize, section: usize) -> bool {
     context.workspace.files()[file].sections[section]
         .lines
         .iter()
-        .any(|line| line.command.as_deref() == Some("vb0"))
+        .any(|line| vertex_slot(line).is_some())
 }
