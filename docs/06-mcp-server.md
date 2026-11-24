@@ -28,7 +28,7 @@ Railway service "xxmi-mcp" (1 replica, Dockerfile deploy)
   - `leotorrez/ZZMI-Package`: `main` plus tags
   - `leotorrez/XXMITools`: `main` plus tags
   - Later: other game packages (GIMI, SRMI, WWMI, HIMI)
-- **Indexed refs:** the default branch plus the last N release tags (N = 5). Tools take an optional `ref`, defaulting to the latest release, so users on older versions get matching answers.
+- **Indexed refs:** the default branch plus the last N release tags (N = `INDEXED_RELEASES`, default 3). Tools take an optional `ref`, defaulting to the latest release, so users on older versions get matching answers.
 - **Polling, not webhooks,** since we don't control all upstream repos. Add a webhook endpoint later for repos we do control.
 
 ## Tools
@@ -67,7 +67,8 @@ Railway autodeploys pushes to `main` once CI passes. Build settings live in the 
 - Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
 - Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
-- Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`, `INDEXED_TAGS=5`.
+- Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`.
+- `RAILWAY_DOCKERFILE_PATH=docker/mcp/Dockerfile`: the service needs this to build the Dockerfile above.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
 
@@ -208,7 +209,7 @@ From source: `cd rust && DATA_DIR=./data cargo run --release -p xxmi-mcp`.
 
 1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `docker/mcp/Dockerfile`, health check `/healthz`, restart policy `ON_FAILURE`.
 2. In the service: add a **volume** and mount it at `/data`.
-3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`:** Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so the image default of 1 keys every request on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
+3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`** on the service, overriding the image's 1 (the code default is 0): Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so with 1 every request is keyed on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
 4. Settings → Networking → **Generate domain** (or add a custom domain). Autodeploy from `main` after CI passes (see Deployment).
 5. Check `https://<domain>/healthz` (`ready` turns true after about 10 seconds), then `node scripts/mcp-acceptance.ts https://<domain>/mcp`.
 6. (Done.) Put the URL in the README and the plugin: change `plugin/.mcp.json` to `${XXMI_MCP_URL:-https://<domain>/mcp}` (`07-agent-integration.md`), and the client setup below.
