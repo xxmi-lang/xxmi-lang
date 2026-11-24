@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::model::IniFile;
-use crate::profile::{Evidence, Profile, detect};
+use crate::profile::{Evidence, Profile, detect, generic};
 
 use super::symbols::SymbolTable;
 use super::{FileId, Workspace};
@@ -36,6 +36,8 @@ impl<T> PerPackage<T> {
 
 pub struct Scope {
     pub profile: &'static Profile,
+    /// The profile is the generic one because nothing picked an MI, not because it was chosen.
+    pub by_fallback: bool,
     pub symbols: SymbolTable,
     pub files: Vec<FileId>,
 }
@@ -63,7 +65,7 @@ pub(super) fn build(workspace: &Workspace) -> Scopes {
 }
 
 fn scope(workspace: &Workspace, root: Option<&Path>, files: Vec<FileId>) -> Scope {
-    let profile = profile_of(workspace, root, &files);
+    let (profile, by_fallback) = profile_of(workspace, root, &files);
 
     let mut symbols = SymbolTable::new(workspace.lookup);
     for &id in &files {
@@ -80,24 +82,33 @@ fn scope(workspace: &Workspace, root: Option<&Path>, files: Vec<FileId>) -> Scop
 
     Scope {
         profile,
+        by_fallback,
         symbols,
         files,
     }
 }
 
-fn profile_of(workspace: &Workspace, root: Option<&Path>, ids: &[FileId]) -> &'static Profile {
+/// The profile, and whether detection found nothing and the generic one stands in.
+fn profile_of(
+    workspace: &Workspace,
+    root: Option<&Path>,
+    ids: &[FileId],
+) -> (&'static Profile, bool) {
     if let Some(forced) = workspace.profile_override {
-        return forced;
+        return (forced, false);
     }
 
     let files: Vec<&IniFile> = ids.iter().map(|&id| &workspace.files[id]).collect();
-    detect(&Evidence {
+    let configured = configured_profile(workspace, root, &files);
+    let profile = detect(&Evidence {
         root,
         resolver: &workspace.resolver,
-        configured: configured_profile(workspace, root, &files),
+        configured,
         files: &files,
         snapshots: workspace.snapshots.as_slice(),
-    })
+    });
+    let by_fallback = configured.is_none() && std::ptr::eq(profile, generic());
+    (profile, by_fallback)
 }
 
 /// The `profile` of the `xxmi.toml` at or above the package root, or above the first file when

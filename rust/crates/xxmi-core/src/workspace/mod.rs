@@ -282,6 +282,11 @@ impl Workspace {
         self.scopes().get(self.package_root(file)).profile
     }
 
+    /// Whether `file`'s package got the generic profile because no MI could be detected.
+    pub fn profile_is_fallback(&self, file: &IniFile) -> bool {
+        self.scopes().get(self.package_root(file)).by_fallback
+    }
+
     /// What the references in `file`'s package resolve to.
     pub fn usage_for(&self, file: &IniFile) -> &Usage {
         let usage = self.usage.get_or_init(|| {
