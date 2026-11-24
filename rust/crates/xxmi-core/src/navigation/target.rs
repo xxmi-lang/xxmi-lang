@@ -69,7 +69,7 @@ pub fn resolve_ref(workspace: &Workspace, id: FileId, reference: &Reference) -> 
 /// What the cursor is on: a reference, a declaration, or an include/filename path.
 pub fn target_at(workspace: &Workspace, id: FileId, pos: Position) -> Option<Target> {
     let file = &workspace.files()[id];
-    let offset = file.offset_at(pos)?;
+    let offset = file.offset_at(pos);
 
     if let Some(reference) = file.references.iter().find(|r| contains(r.span, offset)) {
         let symbol = resolve_ref(workspace, id, reference)?;

@@ -7,6 +7,7 @@ use line_index::{LineIndex, TextSize, WideEncoding, WideLineCol};
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostic::{Position, Range};
+use crate::document::offset_at;
 use crate::encoding::Encoding;
 use crate::scan::{ScannedLine, Span};
 use crate::spec::SpecSection;
@@ -184,17 +185,10 @@ impl IniFile {
         }
     }
 
-    /// Byte offset of an LSP position, or `None` when the position isn't inside the text.
-    pub fn offset_at(&self, pos: Position) -> Option<usize> {
-        let wide = WideLineCol {
-            line: pos.line,
-            col: pos.character,
-        };
-        let line_col = self.line_index.to_utf8(WideEncoding::Utf16, wide)?;
-        let offset = usize::from(self.line_index.offset(line_col)?);
-
-        let valid = offset <= self.text.len() && self.text.is_char_boundary(offset);
-        (valid && self.position_of(offset) == pos).then_some(offset)
+    /// Byte offset of an LSP position; one past a line's end is that line's end,
+    /// and one past the last line is the end of the text.
+    pub fn offset_at(&self, pos: Position) -> usize {
+        offset_at(&self.text, &self.line_index, pos)
     }
 
     fn position_of(&self, offset: usize) -> Position {

@@ -410,7 +410,7 @@ pub const RULES: [Rule; 34] = [
     rule(
         "XM403",
         Severity::Hint,
-        "Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase",
+        "Flow keyword that isn't lowercase, or section type not spelled as in the DLL",
         flow_case::check,
     )
     .with_fix(),

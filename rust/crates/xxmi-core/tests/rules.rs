@@ -128,6 +128,17 @@ fn check_good(id: &str) {
     );
 }
 
+/// A fix must not leave the finding behind, or applying it again would never settle.
+#[test]
+fn xm403_fix_is_idempotent() {
+    let dir = fixtures().join("rules/XM403");
+    let fixed = dir.join("fixed.ini");
+
+    let actual = diagnose(&fixed, &dir, Some(vec!["XM403".to_string()]));
+
+    assert_eq!(actual, Vec::<Value>::new());
+}
+
 macro_rules! rule_tests {
     ($($name:ident => $id:literal),* $(,)?) => {
         mod bad { $(#[test] fn $name() { super::check_bad($id) })* }

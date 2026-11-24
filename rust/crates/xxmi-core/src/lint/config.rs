@@ -136,6 +136,10 @@ fn parse_profile(data: &Table, path: &Path) -> Result<Option<&'static Profile>, 
 pub struct ConfigLoader {
     /// No xxmi.toml is ever read (the server must not touch its own disk).
     disabled: bool,
+    /// A broken xxmi.toml counts as an empty one and is queued in `problems`
+    /// instead of failing the lookup, so one bad file can't blank the diagnostics under it.
+    lenient: bool,
+    problems: Rc<RefCell<Vec<ConfigError>>>,
     cache: Rc<RefCell<HashMap<PathBuf, Rc<LintConfig>>>>,
 }
 
@@ -145,6 +149,18 @@ impl ConfigLoader {
             disabled: true,
             ..Self::default()
         }
+    }
+
+    pub fn lenient() -> Self {
+        Self {
+            lenient: true,
+            ..Self::default()
+        }
+    }
+
+    /// The errors of the broken files met since the last call; each file is met only once.
+    pub fn take_problems(&self) -> Vec<ConfigError> {
+        std::mem::take(&mut self.problems.borrow_mut())
     }
 
     pub fn for_directory(&self, dir: &Path) -> Result<Rc<LintConfig>, ConfigError> {
@@ -157,13 +173,23 @@ impl ConfigLoader {
 
         let candidate = dir.join("xxmi.toml");
         let config = match fs::read(&candidate) {
-            Ok(bytes) => parse_config(&String::from_utf8_lossy(&bytes), &candidate)?,
+            Ok(bytes) => self.parsed(&String::from_utf8_lossy(&bytes), &candidate)?,
             Err(_) => match dir.parent() {
                 Some(parent) => return self.cache_as(dir, self.for_directory(parent)?),
                 None => LintConfig::default(),
             },
         };
         self.cache_as(dir, Rc::new(config))
+    }
+
+    fn parsed(&self, text: &str, path: &Path) -> Result<LintConfig, ConfigError> {
+        match parse_config(text, path) {
+            Err(error) if self.lenient => {
+                self.problems.borrow_mut().push(error);
+                Ok(LintConfig::default())
+            }
+            parsed => parsed,
+        }
     }
 
     fn cache_as(&self, dir: &Path, config: Rc<LintConfig>) -> Result<Rc<LintConfig>, ConfigError> {
@@ -205,6 +231,28 @@ mod tests {
         );
         let mistyped = parse("profile = 3\n").unwrap_err().to_string();
         assert!(mistyped.starts_with("xxmi.toml: profile must be one of"));
+    }
+
+    #[test]
+    fn a_lenient_loader_defaults_a_broken_file_and_reports_it_once() {
+        let dir = std::env::temp_dir().join(format!("xxmi-lenient-{}", std::process::id()));
+        fs::create_dir_all(dir.join("mod")).unwrap();
+        fs::write(dir.join("xxmi.toml"), "profile = [").unwrap();
+
+        let loader = ConfigLoader::lenient();
+        assert!(
+            loader
+                .for_directory(&dir.join("mod"))
+                .unwrap()
+                .profile
+                .is_none()
+        );
+        assert!(loader.for_directory(&dir).unwrap().rules.is_empty());
+        assert_eq!(loader.take_problems().len(), 1);
+        assert!(loader.take_problems().is_empty());
+        assert!(ConfigLoader::default().for_directory(&dir).is_err());
+
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
