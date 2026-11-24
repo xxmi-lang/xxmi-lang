@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use super::xxmi_only::{Effect, unavailable};
 use super::{Finding, RuleContext};
 use crate::lookup::eq_caseless;
-use crate::model::{Usage, UsageKind};
+use crate::model::{Reference, Usage, UsageKind};
 
 /// The enum table of the names `x = frame_number` and `if fps > 30` read.
 const RUNTIME_VALUES: &str = "ParamOverrideTypeNames";
@@ -109,7 +109,7 @@ fn describe(usage: &Usage) -> String {
 
 /// A pool the file defines and uses, when the section kind that declares pools is `gimi: false`.
 /// An unresolved pool is XM202's.
-fn unavailable_pool(context: &RuleContext, reference: &crate::model::Reference) -> Option<String> {
+fn unavailable_pool(context: &RuleContext, reference: &Reference) -> Option<String> {
     let declaring = context
         .lookup
         .spec()
