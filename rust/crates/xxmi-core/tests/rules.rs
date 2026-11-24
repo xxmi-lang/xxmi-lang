@@ -1,6 +1,7 @@
 //! Lints the repository's rule fixtures and compares against the golden output checked in:
 //! fixtures/rules/XMnnn/{bad,good}(.ini|/) with expected.json (and fixed.ini when
-//! the rule has quick fixes), and fixtures/xxmi-1.3.1/*.expected.json and fixtures/xxmi-dialect/*.expected.json.
+//! the rule has quick fixes),
+//! and fixtures/xxmi-1.3.1/*.expected.json and fixtures/xxmi-dialect/*.expected.json.
 
 use std::fs;
 use std::path::{Path, PathBuf};
