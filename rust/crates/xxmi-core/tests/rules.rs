@@ -326,6 +326,38 @@ fn stray_lines_are_reported_once_under_their_own_rule() {
     assert_eq!(found, expected);
 }
 
+/// fixtures/index-variables: variables inside a pool index expression count as uses,
+/// so none is reported unused and an undeclared one is reported.
+#[test]
+fn variables_inside_a_pool_index_expression_are_references() {
+    let ids = |path: PathBuf| -> Vec<(String, String)> {
+        let dir = path.parent().unwrap().to_path_buf();
+        diagnose(&path, &dir, None)
+            .iter()
+            .filter(|d| {
+                matches!(
+                    d["id"].as_str().unwrap(),
+                    "XM001" | "XM109" | "XM203" | "XM204"
+                )
+            })
+            .map(|d| {
+                (
+                    d["id"].as_str().unwrap().to_string(),
+                    d["message"].as_str().unwrap().to_string(),
+                )
+            })
+            .collect()
+    };
+
+    let declared = fixtures().join("parser/xxmi-dialect/index-expressions.ini");
+    assert_eq!(ids(declared), []);
+
+    let undeclared = ids(fixtures().join("index-variables/undeclared.ini"));
+    assert_eq!(undeclared.len(), 1, "{undeclared:?}");
+    assert_eq!(undeclared[0].0, "XM203");
+    assert!(undeclared[0].1.contains("$lod"), "{undeclared:?}");
+}
+
 #[test]
 fn position_type_is_utf16_columns() {
     // Guards the unit the golden ranges are written in.
