@@ -19,7 +19,7 @@ pub struct Hover {
 
 pub fn hover(workspace: &Workspace, id: FileId, pos: Position) -> Option<Hover> {
     let file = &workspace.files()[id];
-    let offset = file.offset_at(pos)?;
+    let offset = file.offset_at(pos);
 
     match target_at(workspace, id, pos) {
         Some(Target::Symbol {

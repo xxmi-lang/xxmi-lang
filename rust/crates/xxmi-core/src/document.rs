@@ -421,4 +421,16 @@ mod tests {
         ]);
         assert_eq!(doc.text(), "[A]\n[B]x\nk = 1\n");
     }
+
+    #[test]
+    fn positions_past_the_end_clamp_without_overflow() {
+        let text = "[A]\nk = 😀\n";
+        let index = LineIndex::new(text);
+        let offset = |position| offset_at(text, &index, position);
+
+        assert_eq!(offset(at(0, u32::MAX)), 3);
+        assert_eq!(offset(at(1, u32::MAX)), text.len() - 1);
+        assert_eq!(offset(at(2, u32::MAX)), text.len());
+        assert_eq!(offset(at(u32::MAX, u32::MAX)), text.len());
+    }
 }
