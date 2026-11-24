@@ -15,7 +15,6 @@ A stdio language server written in Rust (`rust/crates/xxmi`). It is a single-fil
 | `textDocument/hover`                    | Spec docs for keys, commands and operators (with an "XXMI-only" badge where it applies); doc comments for user and library symbols; resolved value for `[Constants]` literals                                                                                        |
 | `textDocument/completion`               | Section prefixes after `[`; keys valid for the current section; commands in command lists; `$` variables in scope and cross-namespace; `CommandList\`, `Resource\` paths with namespace segments; enum values; DXGI formats; file paths for `filename =`/`include =` |
 | `textDocument/documentSymbol`           | Outline: sections grouped by kind                                                                                                                                                                                                                                    |
-| `textDocument/formatting`               | `xxmi fmt` rules (see `05-transforms.md`)                                                                                                                                                                                                                            |
 | `textDocument/codeAction`               | Quick fixes from `02-diagnostics.md`                                                                                                                                                                                                                                 |
 
 **Phase 2:**
@@ -25,11 +24,10 @@ A stdio language server written in Rust (`rust/crates/xxmi`). It is a single-fil
 - `textDocument/foldingRange`: sections, if-blocks, doc-comment blocks.
 - `textDocument/inlayHint`: resolved values of `[Constants]` in expressions; namespace of an unqualified reference when ambiguous.
 - `textDocument/signatureHelp` for commands with positional args (`store`, draw commands).
-- Custom command `xxmi/migrate` and `xxmi/normalize` exposed as code actions over the whole file ("Migrate this mod to blend-v2…").
 
 ### As implemented (M3)
 
-The Rust server (`xxmi-lsp`) implements phase 1 except formatting, which is not planned here any more (M4 moved to the maintainer's C# app, `09-roadmap.md`). Navigation, hover and completion logic is in `xxmi-core` (`rust/crates/xxmi-core/src/navigation/`); the server only keeps editor state and converts types.
+The Rust server (`xxmi-lsp`) implements phase 1 without formatting: that moved to the maintainer's C# app (M4, `09-roadmap.md`), and the server only informs. Navigation, hover and completion logic is in `xxmi-core` (`rust/crates/xxmi-core/src/navigation/`); the server only keeps editor state and converts types.
 
 - **Diagnostics:** every open document is re-linted after any change, so cross-file results stay current. The debounce has a leading edge: a change after one debounce period of quiet (50 ms) is linted at once (an agent's single edit gets diagnostics immediately), and a burst of keystrokes is linted one period after the last one.
 - **Definition, references, rename:** sections, variables (`$x`, `$\N\x`, locals), resources, pools, include targets and `filename =` paths. Rename edits only the name part of each reference and keeps prefixes and namespaces as written. It refuses symbols from the bundled snapshot, from the DLL's built-in sections, and from the package (`Core/`, d3dx.ini).

@@ -21,7 +21,7 @@ A thin client, `vscode-languageclient/node`:
 - Activates on language `migoto`. Adds the `xxmi.*` settings listed under "As built" below (`xxmi.profile` and `xxmi.packagePath` are planned, not built).
 - Bundles the Rust `xxmi` binary for each platform (`bin/<os>-<arch>/`) and starts `xxmi lsp --stdio`, so no separate install is needed.
 - If lupomikti's extension isn't installed, show a one-time prompt linking to it (highlighting comes from there). Until it's on the Marketplace, link to their `.vsix` release.
-- Commands: `XXMI: Migrate mod…`, `XXMI: Normalize mod…`, `XXMI: Show detected format era`, `XXMI: Restart server`.
+- Commands: `XXMI: Show detected format era`, `XXMI: Restart server`.
 - Semantic tokens: declare `semanticTokenScopes` mapping our token types to the TextMate scopes their grammar already uses (read `source.migoto` in their tmLanguage and pick the matching scopes), so themes color resolved symbols the same way as plain highlighting.
 - Publish to both VS Code Marketplace and Open VSX (for VSCodium users).
 
@@ -31,7 +31,7 @@ A thin client, `vscode-languageclient/node`:
 
 - **Language:** declares the language `migoto` with the same extensions as lupomikti's extension (`.ini`, `.3dm`, `.migoto`) but no grammar, so it works on its own and merges with theirs. It prompts once to install their extension if it's missing.
 - **Server:** the bundled `xxmi` binary for the current platform, run as `xxmi lsp --stdio`. `xxmi.lsp.path` runs another executable (the `xxmi` binary or a standalone `xxmi-lsp`) with `--stdio`.
-- **Settings and commands:** `xxmi.rules`, `xxmi.lsp.path`, `xxmi.lsp.preferPath`, `xxmi.requirePackage`, and the command `XXMI: Restart server`. `xxmi.profile` (planned, not built), `xxmi.packagePath`, the migrate/normalize commands and semantic tokens come with later milestones.
+- **Settings and commands:** `xxmi.rules`, `xxmi.lsp.path`, `xxmi.lsp.preferPath`, `xxmi.requirePackage`, and the command `XXMI: Restart server`. `xxmi.profile` (planned, not built), `xxmi.packagePath` and semantic tokens come with later milestones.
   - `xxmi.lsp.preferPath` (default off): run `xxmi-lsp` from PATH when it's found, otherwise the bundled server. `xxmi.lsp.path`, when set, still wins.
   - `xxmi.requirePackage` (default off): only report diagnostics for `.ini` files inside a mod package (a folder tree with a `d3dx.ini`). Nothing reads it yet; the server side is a separate PR.
 - **Tests:** `pnpm --filter ./packages/vscode test:vscode` starts a real VS Code with the extension and checks diagnostics after an edit, go to definition into a library, cross-file rename and hover (CI runs it under xvfb).
