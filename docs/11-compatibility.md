@@ -19,8 +19,9 @@ Each zip holds:
 
 ## Commands and flags
 
-- `xxmi lint [paths…]` with `--format text|json`, `--rules`, `--max-warnings`, `--require-package`, `--spec`, `--stdin` and `--stdin-path`.
+- `xxmi lint [paths…]` with `--format text|json`, `--rules`, `--max-warnings`, `--require-package`, `--mi-package`, `--spec`, `--stdin` and `--stdin-path`.
   With `--require-package`, files that are not inside a package (no `d3dx.ini` in a parent folder) are skipped. The editor setting `xxmi.requirePackage` does the same.
+  `--mi-package ID` sets the game profile of every package; its values are the `id`s in `profiles` below.
 - `xxmi query`, `xxmi index`, `xxmi lsp [--stdio]` and `xxmi capabilities [--json]`.
 - `xxmi --version` / `-v` and `xxmi --help` / `-h`.
 
@@ -58,7 +59,7 @@ Version 1 is frozen: a change to any field bumps `version`. Per-rule docs and qu
 - `capabilitiesVersion`: `1`. Bumped only when a key changes meaning or goes away.
 - `version`: the binary's semver.
 - `lintSchemaVersions`: the `version` values that `xxmi lint --format json` can emit, currently `[1]`.
-- `profiles`: always `[]`. There is no game-profile concept yet.
+- `profiles`: one object per game profile, with `id`, `name`, `dialect` (`xxmi` or `gimi`) and `hasLibrary`.
 - `rules`: one object per rule, in id order, with `id`, `defaultSeverity` (`error`, `warning`, `info` or `hint`), `title`, `docUrl` (an anchor in `02-diagnostics.md`) and `hasFix`.
 
 Without `--json`, it prints one line per rule: `ID  severity  title`.

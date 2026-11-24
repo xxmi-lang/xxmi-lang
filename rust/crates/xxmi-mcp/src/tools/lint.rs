@@ -7,6 +7,7 @@ use std::time::Instant;
 use serde_json::{Map, Value, json};
 use xxmi_core::lint::format::{format_json, format_text};
 use xxmi_core::lint::{ConfigLoader, LintError, LintOptions, LintResult, lint_texts_while};
+use xxmi_core::profile::by_id;
 
 use crate::cancel::cancelled;
 use crate::specs::ResolvedSpec;
@@ -132,6 +133,8 @@ fn run_lint(
         require_package: false,
         lookup: spec.lookup,
         snapshots: choice.snapshots.clone(),
+        // The game picks the library; a lint_ini mod is not detected.
+        profile: by_id(&choice.snapshot().name),
     };
 
     let started = Instant::now();

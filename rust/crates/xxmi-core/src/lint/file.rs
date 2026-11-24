@@ -34,6 +34,7 @@ pub fn lint_file(
         workspace,
         lookup: workspace.lookup(),
         package_root: workspace.package_root(file),
+        profile: workspace.profile_for(file),
     };
 
     let mut diagnostics = Vec::new();

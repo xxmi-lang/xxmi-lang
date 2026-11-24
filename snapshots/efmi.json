@@ -1,0 +1,1678 @@
+{
+  "version": 1,
+  "name": "efmi",
+  "source": {
+    "repository": "https://github.com/SpectrumQT/EFMI-Package",
+    "commit": "45e0ca07af9db81b0907c537c413d281db4f235b"
+  },
+  "namespaces": [
+    "Core\\EFMI\\Libraries\\Includes.ini",
+    "EFMIv1",
+    "Mouse",
+    "shaderfixes\\help.ini"
+  ],
+  "sections": [
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_Component_Instance_DrawCustom",
+      "path": "Core/EFMI/API.ini",
+      "line": 172
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_IterateInstancesRecursive_Internal",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 44
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_IterateTextureSlotsRecursive_Internal",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 21
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_ProcessShapeKeysUpdate",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 92
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_ShapeKeys_CopyShapeKeyedPosition",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 106
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_ShapeKeys_DequantizeValues",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 75
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_ShapeKeys_ProcessBatch",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 37
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_ShapeKeys_ProcessBatches",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 56
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_AdvanceOngoingIdentification",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 191
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_IdentifyCaller",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 76
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_SetOutput_Custom",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 107
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_SetOutput_ObjectStatus_Custom",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 95
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_SetOutput_ObjectStatus_Original",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 99
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_SetOutput_ObjectStatus_Skip",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 103
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_SetOutput_SpatialId",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 91
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\_SpatialIdentity_UpdateObjectStatusBitmask",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 257
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\BackupIniParams0",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 66
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\BackupIniParams1",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 78
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Callback_Component_DrawCustom",
+      "path": "Core/EFMI/API.ini",
+      "line": 170
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Callback_MergedSkeleton_ConnectComponent",
+      "path": "Core/EFMI/API.ini",
+      "line": 193
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Callback_OnInstance",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 38
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Callback_OnTexture",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 12
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Callback_ShapeKeys_AttachComponent",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 30
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_DrawInstances",
+      "path": "Core/EFMI/API.ini",
+      "line": 196
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_DrawInstances_NoDecomposition",
+      "path": "Core/EFMI/API.ini",
+      "line": 228
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_Instance_DrawOriginal",
+      "path": "Core/EFMI/API.ini",
+      "line": 164
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_ReadConfig",
+      "path": "Core/EFMI/API.ini",
+      "line": 48
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_SetInstanceConfig_PS",
+      "path": "Core/EFMI/API.ini",
+      "line": 114
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Component_SetInstanceConfig_VS",
+      "path": "Core/EFMI/API.ini",
+      "line": 102
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\CopyShapeKeyedPosition",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 387
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\DequantizeCustomShapeKeys",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 338
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\HideMajorNotification",
+      "path": "Core/EFMI/main.ini",
+      "line": 168
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\HideNotification",
+      "path": "Core/EFMI/main.ini",
+      "line": 176
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\InitializeMergedSkeleton",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 24
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\IterateInstances",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 40
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\IterateTextureSlots",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 14
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\LoadCustomShapeKeysBatch",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 291
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\MergedSkeleton_Apply",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 152
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\MergedSkeleton_AttachComponent",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 32
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\MergedSkeleton_DetectBoneDataSource",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 136
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\MergedSkeleton_ImportComponentInstanceBones",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 59
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\MergedSkeleton_OverrideComponentSkeleton",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 80
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\Object_ReadConfig",
+      "path": "Core/EFMI/API.ini",
+      "line": 30
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\OverrideTextures",
+      "path": "Core/EFMI/API.ini",
+      "line": 131
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\PassWindowInfo",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 6
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\PrintText",
+      "path": "Core/EFMI/API.ini",
+      "line": 237
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\RegisterMod",
+      "path": "Core/EFMI/main.ini",
+      "line": 95
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\RenderGUI",
+      "path": "Core/EFMI/main.ini",
+      "line": 118
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\RenderText",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 12
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\RestoreIniParams0",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 72
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\RestoreIniParams1",
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 84
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\ShapeKeys_Apply",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 120
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\SpatialIdentity_AttachDebugger",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 326
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\SpatialIdentity_IdentifyComponentInstances",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 33
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\SpatialIdentity_IdentifyObject",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 152
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\SpatialIdentity_SetOutput_Skip",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 129
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\SpatialIdentity_SetOutput_Unknown",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 115
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\EFMIv1\\ToggleMods",
+      "path": "Core/EFMI/main.ini",
+      "line": 88
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\shaderfixes\\help.ini\\Initialize",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 10
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandListUnbindAllRenderTargets",
+      "path": "d3dx.ini",
+      "line": 1008
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\_MergedSkeleton_BonesImporter_ConstantBuffer",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 272
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\_MergedSkeleton_BonesImporter_RollingBuffer",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 220
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\_MergedSkeleton_InstanceConfigOverrider_ConstantBuffer",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 360
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\_MergedSkeleton_InstanceConfigOverrider_RollingBuffer",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 322
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\FormatText",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 33
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\MergedSkeletonInitializer",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 194
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\RenderText",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 62
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\ShapeKeyDequantizer",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 301
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\ShapeKeyedPositionCopier",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 353
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\ShapeKeyLoader",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 259
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\EFMIv1\\ShapeKeySetter",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 227
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\Mouse\\SoftwareMouse",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 32
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\Mouse\\SoftwareMouseBW",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 107
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\shaderfixes\\help.ini\\FormatText",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 37
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\EFMIv1\\HideMajorNotification",
+      "path": "Core/EFMI/KeyBindings.ini",
+      "line": 6
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\EFMIv1\\HideNotification",
+      "path": "Core/EFMI/KeyBindings.ini",
+      "line": 28
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\EFMIv1\\ToggleHuntingModeGuide",
+      "path": "Core/EFMI/KeyBindings.ini",
+      "line": 22
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\EFMIv1\\ToggleMods",
+      "path": "Core/EFMI/KeyBindings.ini",
+      "line": 11
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\EFMIv1\\ToggleUserGuide",
+      "path": "Core/EFMI/KeyBindings.ini",
+      "line": 16
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\_SpatialDebug",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 309
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\_SpatialDebugData",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 319
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\_SpatialIdentity_KnownSpatialIds",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 147
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_MergedSkeleton_Component_LodRemaps",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 216
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_MergedSkeleton_Component_VertexGroupCounts",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 41
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_MergedSkeleton_Component_VertexGroupOffsets",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 40
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_MergedSkeleton_Instance_LodLevel",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 44
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_MergedSkeleton_Instance_UpdateFrame",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 43
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ObjectSpatialIdentity",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 47
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_BatchConfigs",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 21
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_BatchCount",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 19
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_BatchVertexCount",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 20
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_Component_FirstUpdatedDataIndex",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 190
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_Component_UpdateId",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 189
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_LodLevel_LastUpdateId",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 191
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_LodPositionCount",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 18
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_MorphedPositions",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 28
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_VertexIds",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 23
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_VertexOffsets",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 24
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeys_VertexPositions",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 25
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\Input_ShapeKeyValues",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 27
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\SpatialIdentity_IdentifiedInstances",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 59
+    },
+    {
+      "kind": "pool",
+      "qualifiedName": "Pool\\EFMIv1\\SpatialIdentity_SpatialIds",
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 56
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\_Component_Instance_ConfigRW",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 71
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ConfigWithBones",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 77
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\DebugRW",
+      "path": "Core/EFMI/main.ini",
+      "line": 37
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorIncompatibleVersionModNameParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 237
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorIncompatibleVersionModNameRef",
+      "path": "Core/EFMI/main.ini",
+      "line": 208
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorIncompatibleVersionNotificationParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 245
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorIncompatibleVersionRef",
+      "path": "Core/EFMI/main.ini",
+      "line": 206
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorOldVersionEFMI",
+      "path": "Core/EFMI/main.ini",
+      "line": 196
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ErrorOldVersionMod",
+      "path": "Core/EFMI/main.ini",
+      "line": 191
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Font",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 117
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\HuntingModeGuide",
+      "path": "Core/EFMI/main.ini",
+      "line": 186
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ComponentBoneMatrices",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 48
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_QuantizedShapeKeyDeltas",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 406
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ShapeKeyBatchConfigs",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 401
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ShapeKeyedPositions",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 407
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ShapeKeyValues",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 399
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ShapeKeyVertexIds",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 402
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_ShapeKeyVertexOffsets",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 403
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Input_VertexPositions",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 405
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModAuthor",
+      "path": "Core/EFMI/main.ini",
+      "line": 32
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModDesc",
+      "path": "Core/EFMI/main.ini",
+      "line": 33
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModLink",
+      "path": "Core/EFMI/main.ini",
+      "line": 34
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModLogo",
+      "path": "Core/EFMI/main.ini",
+      "line": 35
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModName",
+      "path": "Core/EFMI/main.ini",
+      "line": 31
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModsDisplayDisabled",
+      "path": "Core/EFMI/main.ini",
+      "line": 218
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\ModsDisplayEnabled",
+      "path": "Core/EFMI/main.ini",
+      "line": 214
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Original_PS_CB",
+      "path": "Core/EFMI/API.ini",
+      "line": 88
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Original_VS_CB",
+      "path": "Core/EFMI/API.ini",
+      "line": 86
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Original_VS_CB_Temp",
+      "path": "Core/EFMI/API.ini",
+      "line": 46
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Output_MergedSkeleton",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 218
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Output_QuantizedShapeKeyDeltas",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 410
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Output_ShapeKeyedPositions",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 411
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Output_ShapeKeyValues",
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 409
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\OutputMergedSkeleton_Template",
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 192
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\Text",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 113
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TextExample",
+      "path": "Core/EFMI/API.ini",
+      "line": 250
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TextFileExample",
+      "path": "Core/EFMI/API.ini",
+      "line": 256
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TextParams",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 114
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TextParamsExample",
+      "path": "Core/EFMI/API.ini",
+      "line": 266
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TextPosition",
+      "path": "Core/EFMI/TextPrinter.ini",
+      "line": 125
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\TopNotificationParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 222
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\UnnamedModName",
+      "path": "Core/EFMI/main.ini",
+      "line": 210
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\UserGuide",
+      "path": "Core/EFMI/main.ini",
+      "line": 181
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\UserGuideParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 261
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\UserNotificationParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 229
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\VersionNotification",
+      "path": "Core/EFMI/main.ini",
+      "line": 42
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\VersionNotificationParams",
+      "path": "Core/EFMI/main.ini",
+      "line": 253
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\EFMIv1\\VersionUpdateEFMI",
+      "path": "Core/EFMI/main.ini",
+      "line": 201
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\Color",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 26
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\Mask",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 27
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture1",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 28
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture2",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 29
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture3",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 30
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture4",
+      "path": "Core/EFMI/Libraries/Mouse.ini",
+      "line": 31
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Font",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 46
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Help",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 41
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpFull",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 39
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpShort",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 40
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Notification",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 43
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParams",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 45
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParamsDefault",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 64
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Params",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 42
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsFull",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 48
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsShort",
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 56
+    },
+    {
+      "kind": "shaderregex",
+      "qualifiedName": "ShaderRegex\\EFMIv1\\EnableTextureOverrides",
+      "path": "Core/EFMI/main.ini",
+      "line": 77
+    }
+  ],
+  "variables": [
+    {
+      "key": "$\\efmiv1\\bak_w0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 60
+    },
+    {
+      "key": "$\\efmiv1\\bak_w1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 64
+    },
+    {
+      "key": "$\\efmiv1\\bak_x0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 57
+    },
+    {
+      "key": "$\\efmiv1\\bak_x1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 61
+    },
+    {
+      "key": "$\\efmiv1\\bak_y0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 58
+    },
+    {
+      "key": "$\\efmiv1\\bak_y1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 62
+    },
+    {
+      "key": "$\\efmiv1\\bak_z0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 59
+    },
+    {
+      "key": "$\\efmiv1\\bak_z1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 63
+    },
+    {
+      "key": "$\\efmiv1\\bones_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 36
+    },
+    {
+      "key": "$\\efmiv1\\bones_data_source",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 132
+    },
+    {
+      "key": "$\\efmiv1\\cfg_instance_config_byte_size",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/API.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\efmiv1\\cfg_ms_bone_entry_size",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 12
+    },
+    {
+      "key": "$\\efmiv1\\cfg_ms_implicit_bones_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 10
+    },
+    {
+      "key": "$\\efmiv1\\cfg_ms_max_lod_level_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\efmiv1\\cfg_ms_skeletons_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 11
+    },
+    {
+      "key": "$\\efmiv1\\cfg_sk_batch_size",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\efmiv1\\cfg_sk_max_batch_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 10
+    },
+    {
+      "key": "$\\efmiv1\\cfg_sk_max_lod_level_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 11
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_base_radius",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_cell_size",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 17
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_detault_value",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 13
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_expiration_frames",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 10
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_expiration_read_refresh",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 12
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_expiration_reset",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 11
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_instance_load_ratio",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 14
+    },
+    {
+      "key": "$\\efmiv1\\cfg_spatial_max_instance_count",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 16
+    },
+    {
+      "key": "$\\efmiv1\\component_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 37
+    },
+    {
+      "key": "$\\efmiv1\\component_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 80
+    },
+    {
+      "key": "$\\efmiv1\\component_shapekey_batch_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 68
+    },
+    {
+      "key": "$\\efmiv1\\component_vg_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 52
+    },
+    {
+      "key": "$\\efmiv1\\component_vg_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 51
+    },
+    {
+      "key": "$\\efmiv1\\custom_mesh_scale",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 39
+    },
+    {
+      "key": "$\\efmiv1\\draw_call_has_modded_instance",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 63
+    },
+    {
+      "key": "$\\efmiv1\\draw_call_has_unknown_instance",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 64
+    },
+    {
+      "key": "$\\efmiv1\\draw_call_instance_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 36
+    },
+    {
+      "key": "$\\efmiv1\\enable_mods",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 52
+    },
+    {
+      "key": "$\\efmiv1\\enable_spatial_debugger",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 301
+    },
+    {
+      "key": "$\\efmiv1\\enum_bones_source_cb3",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 130
+    },
+    {
+      "key": "$\\efmiv1\\enum_bones_source_cb4",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 131
+    },
+    {
+      "key": "$\\efmiv1\\enum_bones_source_vs_t0",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 129
+    },
+    {
+      "key": "$\\efmiv1\\enum_override_type_custom",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 30
+    },
+    {
+      "key": "$\\efmiv1\\enum_override_type_original",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 29
+    },
+    {
+      "key": "$\\efmiv1\\enum_override_type_skip",
+      "persist": false,
+      "locked": true,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 28
+    },
+    {
+      "key": "$\\efmiv1\\first_run",
+      "persist": true,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 54
+    },
+    {
+      "key": "$\\efmiv1\\frame_distance",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 144
+    },
+    {
+      "key": "$\\efmiv1\\gpu_posed",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 81
+    },
+    {
+      "key": "$\\efmiv1\\identification_min_components",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 50
+    },
+    {
+      "key": "$\\efmiv1\\identification_timeout_frames",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 51
+    },
+    {
+      "key": "$\\efmiv1\\identifier_call_number",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 73
+    },
+    {
+      "key": "$\\efmiv1\\input_position_stride",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 214
+    },
+    {
+      "key": "$\\efmiv1\\instance_config_ps_cb_byte_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 95
+    },
+    {
+      "key": "$\\efmiv1\\instance_config_ps_cb_slot",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 94
+    },
+    {
+      "key": "$\\efmiv1\\instance_config_vs_cb_byte_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 92
+    },
+    {
+      "key": "$\\efmiv1\\instance_config_vs_cb_slot",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 91
+    },
+    {
+      "key": "$\\efmiv1\\instance_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 38
+    },
+    {
+      "key": "$\\efmiv1\\last_draw_call_number",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 72
+    },
+    {
+      "key": "$\\efmiv1\\last_slot_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 10
+    },
+    {
+      "key": "$\\efmiv1\\last_update_notification",
+      "persist": true,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 55
+    },
+    {
+      "key": "$\\efmiv1\\lod_level",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 82
+    },
+    {
+      "key": "$\\efmiv1\\lod_level_uid",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 196
+    },
+    {
+      "key": "$\\efmiv1\\merged_skeleton_connected",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/API.ini",
+      "line": 162
+    },
+    {
+      "key": "$\\efmiv1\\merged_skeleton_instance_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 17
+    },
+    {
+      "key": "$\\efmiv1\\merged_skeleton_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 16
+    },
+    {
+      "key": "$\\efmiv1\\mesh_vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 207
+    },
+    {
+      "key": "$\\efmiv1\\mesh_vertex_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 208
+    },
+    {
+      "key": "$\\efmiv1\\mod_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 63
+    },
+    {
+      "key": "$\\efmiv1\\mods_display_switch_time",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 60
+    },
+    {
+      "key": "$\\efmiv1\\object_guid",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 62
+    },
+    {
+      "key": "$\\efmiv1\\object_status_bitmask",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 143
+    },
+    {
+      "key": "$\\efmiv1\\output_position_stride",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 215
+    },
+    {
+      "key": "$\\efmiv1\\position_quantization_scale_x",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 217
+    },
+    {
+      "key": "$\\efmiv1\\position_quantization_scale_y",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 218
+    },
+    {
+      "key": "$\\efmiv1\\position_quantization_scale_z",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 219
+    },
+    {
+      "key": "$\\efmiv1\\required_version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 64
+    },
+    {
+      "key": "$\\efmiv1\\shapekey",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 206
+    },
+    {
+      "key": "$\\efmiv1\\shapekey_batch_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 210
+    },
+    {
+      "key": "$\\efmiv1\\shapekey_batch_vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 212
+    },
+    {
+      "key": "$\\efmiv1\\shapekey_batch_vertex_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 211
+    },
+    {
+      "key": "$\\efmiv1\\shapekey_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 203
+    },
+    {
+      "key": "$\\efmiv1\\shapekey_value",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 204
+    },
+    {
+      "key": "$\\efmiv1\\show_hunting_mode_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 58
+    },
+    {
+      "key": "$\\efmiv1\\show_update_notification",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 59
+    },
+    {
+      "key": "$\\efmiv1\\show_user_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 57
+    },
+    {
+      "key": "$\\efmiv1\\skip_skeleton_override",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/MergedSkeleton.ini",
+      "line": 133
+    },
+    {
+      "key": "$\\efmiv1\\slot_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Helpers.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\efmiv1\\source_position_uid",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/ShapeKeys.ini",
+      "line": 114
+    },
+    {
+      "key": "$\\efmiv1\\spatial_debugger_component_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 302
+    },
+    {
+      "key": "$\\efmiv1\\spatial_hash",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 142
+    },
+    {
+      "key": "$\\efmiv1\\spatial_hashes_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 303
+    },
+    {
+      "key": "$\\efmiv1\\version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/main.ini",
+      "line": 50
+    },
+    {
+      "key": "$\\efmiv1\\x",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 304
+    },
+    {
+      "key": "$\\efmiv1\\y",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 305
+    },
+    {
+      "key": "$\\efmiv1\\z",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/SpatialIdentification.ini",
+      "line": 306
+    },
+    {
+      "key": "$\\shaderfixes\\help.ini\\notification_timeout",
+      "persist": false,
+      "locked": false,
+      "path": "Core/EFMI/Libraries/Help.ini",
+      "line": 7
+    }
+  ]
+}

@@ -160,6 +160,29 @@ async fn lint_ini_reports_diagnostics_and_rejects_non_ini_files() {
 }
 
 #[tokio::test]
+async fn lint_ini_without_a_package_resolves_zzmi_library_calls() {
+    let dir = tempfile::tempdir().unwrap();
+    let app = app(dir.path(), &[]).await;
+    let files = json!({ "mod.ini": "[Present]\nrun = CommandList\\ZZMI\\SetTextures\n" });
+
+    let result = call(
+        &app,
+        "lint_ini",
+        json!({ "files": files, "format": "json" }),
+    )
+    .await;
+
+    let data = data_of(&result);
+    let ids: Vec<&str> = data["files"][0]["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|d| d["id"].as_str())
+        .collect();
+    assert!(!ids.contains(&"XM201"), "{data}");
+}
+
+#[tokio::test]
 async fn list_versions_lists_every_tracked_repo() {
     let dir = tempfile::tempdir().unwrap();
     let app = app(dir.path(), &[]).await;

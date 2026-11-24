@@ -98,10 +98,10 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 
 ## Configuration
 
-`xxmi.toml` at the workspace or mod root. The nearest one up the tree wins, and settings merge with defaults. Only `[rules]` is read today.
+`xxmi.toml` at the workspace or mod root. The nearest one up the tree wins, and settings merge with defaults. `[rules]` and `profile` are read today; `profile` picks the game profile for the package (see `docs/01-language-model.md` §5).
 
 ```toml
-profile = "zzmi"              # planned; not read yet
+profile = "zzmi"              # read: the game profile of the package
 package = "../.."             # planned; not read yet (packages are auto-detected today)
 
 [rules]

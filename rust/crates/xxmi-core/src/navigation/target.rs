@@ -54,7 +54,7 @@ pub fn contains(span: Span, offset: usize) -> bool {
 /// The symbol a reference resolves to from `id`.
 pub fn resolve_ref(workspace: &Workspace, id: FileId, reference: &Reference) -> Option<Symbol> {
     let file = &workspace.files()[id];
-    let symbols = workspace.symbols();
+    let symbols = workspace.symbols_for(file);
 
     if reference.kind == SymbolKind::Variable {
         return symbols
@@ -109,11 +109,12 @@ fn declaration_at(workspace: &Workspace, id: FileId, offset: usize) -> Option<Ta
 
 /// The section symbol declared by a section of a loaded file.
 fn own_symbol(workspace: &Workspace, id: FileId, index: usize) -> Option<SectionSymbol> {
-    let section = workspace.files()[id].sections.get(index)?;
+    let file = &workspace.files()[id];
+    let section = file.sections.get(index)?;
     section.kind?;
 
     workspace
-        .symbols()
+        .symbols_for(file)
         .sections_named(&section.qualified_name)
         .iter()
         .find(|s| {
@@ -145,7 +146,7 @@ fn variable_symbol_of(workspace: &Workspace, id: FileId, index: usize) -> Option
 
     let key = global_variable_key(&declaration.name, &file.namespace);
     workspace
-        .symbols()
+        .symbols_for(file)
         .all_variables()
         .find(|v| v.key == key && v.declaration == Some((id, index)))
         .cloned()

@@ -104,12 +104,15 @@ pub struct PathResolver {
 }
 
 impl PathResolver {
-    /// A resolver over absolute paths of in-memory files,
+    /// A resolver over the paths of in-memory files,
     /// so include and path checks never touch the host file system.
+    /// Paths are resolved first: a workspace looks them up resolved,
+    /// and `/v/a.ini` gains a drive on Windows.
     pub fn in_memory<'a>(paths: impl IntoIterator<Item = &'a Path>) -> Self {
         let mut dirs: HashMap<PathBuf, Vec<String>> = HashMap::new();
         for path in paths {
-            let mut child = path;
+            let resolved = resolve_path(path);
+            let mut child = resolved.as_path();
             while let Some(parent) = child.parent() {
                 let name = child
                     .file_name()
@@ -209,6 +212,14 @@ mod tests {
         assert_eq!(strip_verbatim(r"\\?\D:\a\b"), r"D:\a\b");
         assert_eq!(strip_verbatim(r"\\?\UNC\host\share\a"), r"\\host\share\a");
         assert_eq!(strip_verbatim(r"D:\a"), r"D:\a");
+    }
+
+    #[test]
+    fn in_memory_listings_are_keyed_by_the_resolved_path() {
+        let resolver = PathResolver::in_memory([Path::new("/v/ZZMI/d3dx.ini")]);
+        let dir = resolve_path(Path::new("/v/ZZMI"));
+        assert_eq!(resolver.list(&dir).unwrap().as_slice(), ["d3dx.ini"]);
+        assert!(resolver.is_directory(&dir));
     }
 
     #[test]

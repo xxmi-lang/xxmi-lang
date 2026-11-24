@@ -67,6 +67,21 @@
           "default": false,
           "description": "Only report diagnostics for .ini files inside a mod package (a folder tree with a d3dx.ini)."
         },
+        "xxmi.miPackage": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "xxmi",
+            "gimi",
+            "srmi",
+            "wwmi",
+            "zzmi",
+            "himi",
+            "efmi"
+          ],
+          "default": "auto",
+          "description": "Game profile for mod packages: auto detects it per package; a named profile is used for every package."
+        },
         "xxmi.lsp.preferPath": {
           "type": "boolean",
           "default": false,

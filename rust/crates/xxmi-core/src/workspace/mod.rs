@@ -4,6 +4,7 @@
 
 pub mod load_order;
 pub mod package;
+mod scopes;
 pub mod snapshot;
 pub mod symbols;
 pub mod usage;
@@ -18,13 +19,16 @@ use std::path::{Path, PathBuf};
 use crate::document::Document;
 use crate::encoding::{Encoding, decode_text};
 use crate::glob::Glob;
+use crate::lint::ConfigLoader;
 use crate::lookup::Lookup;
 use crate::model::{IniFile, LowerOptions, lower_ini};
 use crate::paths::{PathResolver, relative_path, resolve_path};
+use crate::profile::Profile;
 use crate::trace;
 
 use package::{default_excludes, find_package_root, path_namespace};
-use snapshot::Snapshots;
+use scopes::{PerPackage, Scopes};
+use snapshot::{Snapshots, SymbolSnapshot};
 use symbols::SymbolTable;
 use usage::Usage;
 
@@ -33,7 +37,12 @@ pub type FileId = usize;
 pub struct Workspace {
     lookup: &'static Lookup,
     resolver: PathResolver,
+    /// The libraries on offer; a package is checked against the one of its profile.
     snapshots: Snapshots,
+    /// Wins over detecting a package's profile (`--mi-package`, `xxmi.miPackage`).
+    profile_override: Option<&'static Profile>,
+    /// Where a package's `xxmi.toml` names its profile.
+    configs: ConfigLoader,
     /// In load order, which decides which of two duplicate sections the DLL keeps.
     files: Vec<IniFile>,
     file_ids: HashMap<PathBuf, FileId>,
@@ -58,8 +67,8 @@ pub struct Workspace {
     documents: HashMap<PathBuf, Document>,
     /// `canonicalize` results: symlinked libraries share an editor buffer with their target.
     real_paths: RefCell<HashMap<PathBuf, PathBuf>>,
-    symbols: OnceCell<SymbolTable>,
-    usage: OnceCell<Usage>,
+    scopes: OnceCell<Scopes>,
+    usage: OnceCell<PerPackage<Usage>>,
 }
 
 impl Workspace {
@@ -76,6 +85,8 @@ impl Workspace {
             lookup,
             resolver,
             snapshots: snapshots.into(),
+            profile_override: None,
+            configs: ConfigLoader::disabled(),
             files: Vec::new(),
             file_ids: HashMap::new(),
             package_roots: HashMap::new(),
@@ -89,9 +100,25 @@ impl Workspace {
             overlays: HashMap::new(),
             documents: HashMap::new(),
             real_paths: RefCell::new(HashMap::new()),
-            symbols: OnceCell::new(),
+            scopes: OnceCell::new(),
             usage: OnceCell::new(),
         }
+    }
+
+    pub fn set_profile_override(&mut self, profile: Option<&'static Profile>) {
+        self.profile_override = profile;
+        self.invalidate();
+    }
+
+    /// Reads each package's `xxmi.toml` through `configs`; none is read by default.
+    pub fn set_configs(&mut self, configs: ConfigLoader) {
+        self.configs = configs;
+        self.invalidate();
+    }
+
+    fn invalidate(&mut self) {
+        self.scopes = OnceCell::new();
+        self.usage = OnceCell::new();
     }
 
     pub fn lookup(&self) -> &'static Lookup {
@@ -223,31 +250,46 @@ impl Workspace {
         for other in self.file_ids.values_mut().filter(|other| **other > id) {
             *other -= 1;
         }
-        self.symbols = OnceCell::new();
-        self.usage = OnceCell::new();
+        self.invalidate();
     }
 
-    /// The symbols of every loaded file, plus the snapshots of libraries no loaded file provides.
-    pub fn symbols(&self) -> &SymbolTable {
-        self.symbols.get_or_init(|| {
-            trace::span("symbols", || {
-                let mut table = SymbolTable::new(self.lookup);
-                for (id, file) in self.files.iter().enumerate() {
-                    table.add_file(id, file);
-                }
-                for snapshot in self.snapshots.as_slice() {
-                    if !snapshot.namespaces.iter().any(|ns| table.has_namespace(ns)) {
-                        table.add_snapshot(snapshot);
-                    }
-                }
-                table
+    /// The snapshot of a profile's library, if the workspace was given it.
+    fn library_of(&self, profile: &Profile) -> Option<&SymbolSnapshot> {
+        self.snapshots
+            .as_slice()
+            .iter()
+            .find(|snapshot| snapshot.name == profile.id)
+    }
+
+    fn scopes(&self) -> &Scopes {
+        self.scopes
+            .get_or_init(|| trace::span("symbols", || scopes::build(self)))
+    }
+
+    /// The symbols of the package `file` belongs to, plus the library snapshot of its profile
+    /// unless a loaded file provides that library. Other packages' files are not in it.
+    pub fn symbols_for(&self, file: &IniFile) -> &SymbolTable {
+        self.symbols_at(self.package_root(file))
+    }
+
+    /// `symbols_for` by package root (`None`: the files that sit in no package).
+    pub fn symbols_at(&self, root: Option<&Path>) -> &SymbolTable {
+        &self.scopes().get(root).symbols
+    }
+
+    /// The profile `file`'s package is checked against.
+    pub fn profile_for(&self, file: &IniFile) -> &'static Profile {
+        self.scopes().get(self.package_root(file)).profile
+    }
+
+    /// What the references in `file`'s package resolve to.
+    pub fn usage_for(&self, file: &IniFile) -> &Usage {
+        let usage = self.usage.get_or_init(|| {
+            trace::span("usage", || {
+                self.scopes().map(|scope| usage::compute(self, scope))
             })
-        })
-    }
-
-    pub fn usage(&self) -> &Usage {
-        self.usage
-            .get_or_init(|| trace::span("usage", || usage::compute(self)))
+        });
+        usage.get(self.package_root(file))
     }
 
     /// Adds a file to lint. Its namespace comes from its path relative to the package root (or to
@@ -370,8 +412,7 @@ impl Workspace {
         };
 
         // Anything cached was computed from the files loaded so far.
-        self.symbols = OnceCell::new();
-        self.usage = OnceCell::new();
+        self.invalidate();
 
         let id = self.files.len();
         self.files.push(file);

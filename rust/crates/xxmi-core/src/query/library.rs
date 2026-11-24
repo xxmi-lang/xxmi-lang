@@ -11,7 +11,9 @@ use crate::model::{IniFile, SymbolKind};
 use crate::paths::relative_path;
 use crate::workspace::Workspace;
 use crate::workspace::snapshot::SymbolSnapshot;
-use crate::workspace::symbols::{Origin, SectionSymbol, VariableSymbol, explicit_namespace};
+use crate::workspace::symbols::{
+    Origin, SectionSymbol, SymbolTable, VariableSymbol, explicit_namespace,
+};
 
 use super::docs::{DocComment, comment_blocks, doc_above, split_lines};
 use super::utf16_cmp;
@@ -99,6 +101,10 @@ pub struct LoadedPackage<'a> {
 }
 
 impl LoadedPackage<'_> {
+    fn symbols(&self) -> &SymbolTable {
+        self.workspace.symbols_at(Some(self.root))
+    }
+
     fn rel(&self, path: &Path) -> String {
         relative_path(self.root, path).replace(std::path::MAIN_SEPARATOR, "/")
     }
@@ -109,9 +115,8 @@ enum Found<'a> {
     Variable(&'a VariableSymbol),
 }
 
-fn lookup_symbol<'a>(workspace: &'a Workspace, name: &str) -> Option<Found<'a>> {
+fn lookup_symbol<'a>(symbols: &'a SymbolTable, name: &str) -> Option<Found<'a>> {
     let lower = name.to_lowercase();
-    let symbols = workspace.symbols();
     symbols
         .all_sections()
         .find(|s| s.qualified_name.to_lowercase() == lower)
@@ -220,7 +225,7 @@ fn members_of(pkg: &LoadedPackage, lookup: &Lookup, qualified_name: &str) -> Vec
         }
     }
 
-    for variable in pkg.workspace.symbols().all_variables() {
+    for variable in pkg.symbols().all_variables() {
         let (Origin::File { file, .. }, true) = (&variable.origin, same_namespace(&variable.key))
         else {
             continue;
@@ -291,7 +296,7 @@ fn variable_info(pkg: &LoadedPackage, symbol: &VariableSymbol) -> Option<SymbolI
 /// Describes the symbol with this qualified name (`CommandList\ZZMI\SetTextures`,
 /// `$\TTL\alpha`) in a loaded package, or `None` when the package doesn't declare it.
 pub fn describe_symbol(pkg: &LoadedPackage, name: &str) -> Option<SymbolInfo> {
-    let found = lookup_symbol(pkg.workspace, name.trim())?;
+    let found = lookup_symbol(pkg.symbols(), name.trim())?;
     let (mut info, key) = match found {
         Found::Section(section) => {
             let info = section_info(pkg, section)?;
