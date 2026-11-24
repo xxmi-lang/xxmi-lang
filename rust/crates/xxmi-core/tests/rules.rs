@@ -154,7 +154,7 @@ rule_tests! {
     xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm114 => "XM114", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
     xm206 => "XM206", xm207 => "XM207", xm208 => "XM208", xm209 => "XM209", xm210 => "XM210",
-    xm211 => "XM211", xm212 => "XM212", xm305 => "XM305", xm307 => "XM307",
+    xm211 => "XM211", xm212 => "XM212", xm305 => "XM305", xm306 => "XM306", xm307 => "XM307",
     xm403 => "XM403",
 }
 
@@ -178,7 +178,7 @@ fn xm307_is_silent_outside_the_gimi_profile() {
 /// The ZZMI rules check ZZMI's library conventions, so the same fixtures are clean elsewhere.
 #[test]
 fn zzmi_rules_are_silent_outside_the_zzmi_profile() {
-    for (id, bad) in [("XM305", "bad.ini")] {
+    for (id, bad) in [("XM305", "bad.ini"), ("XM306", "bad")] {
         let dir = fixtures().join("rules").join(id);
         for profile_id in ["xxmi", "gimi", "wwmi"] {
             let options = LintOptions {

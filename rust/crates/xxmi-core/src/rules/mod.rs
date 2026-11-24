@@ -2,6 +2,7 @@
 
 mod argument_count;
 mod bare_line;
+mod byte_stride;
 mod copy_value;
 mod duplicate_grade;
 mod duplicate_key;
@@ -203,7 +204,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 35] = [
+pub const RULES: [Rule; 36] = [
     rule(
         "XM001",
         Severity::Error,
@@ -415,6 +416,12 @@ pub const RULES: [Rule; 35] = [
         slotfix_copy::check,
     )
     .with_fix(),
+    rule(
+        "XM306",
+        Severity::Warning,
+        "`override_byte_stride` differs from the `stride` of the `vb0` resource, under the `zzmi` profile",
+        byte_stride::check,
+    ),
     rule(
         "XM307",
         Severity::Warning,
