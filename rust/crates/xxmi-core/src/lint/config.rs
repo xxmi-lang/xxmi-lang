@@ -136,8 +136,8 @@ fn parse_profile(data: &Table, path: &Path) -> Result<Option<&'static Profile>, 
 pub struct ConfigLoader {
     /// No xxmi.toml is ever read (the server must not touch its own disk).
     disabled: bool,
-    /// A broken xxmi.toml counts as an empty one and is queued in `problems` instead of failing
-    /// the lookup, so one bad file can't blank the diagnostics under it.
+    /// A broken xxmi.toml counts as an empty one and is queued in `problems`
+    /// instead of failing the lookup, so one bad file can't blank the diagnostics under it.
     lenient: bool,
     problems: Rc<RefCell<Vec<ConfigError>>>,
     cache: Rc<RefCell<HashMap<PathBuf, Rc<LintConfig>>>>,

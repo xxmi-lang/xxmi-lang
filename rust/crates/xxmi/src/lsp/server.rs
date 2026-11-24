@@ -219,8 +219,8 @@ impl<'a> Server<'a> {
         self.publish(false);
     }
 
-    /// One notification is one batch with a single refresh: unpacking an archive reports
-    /// hundreds of created files at once.
+    /// One notification is one batch with a single refresh:
+    /// unpacking an archive reports hundreds of created files at once.
     pub fn files_changed(&mut self, changed: Vec<(String, bool)>) {
         let mut seen = HashSet::new();
         for (uri, created) in changed {

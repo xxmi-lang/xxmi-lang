@@ -18,8 +18,8 @@ pub fn collect_ini_files(path: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(out)
 }
 
-/// Whether `collect_ini_files(root)` returns `path`: a `.ini` file under the resolved `root`
-/// with no skipped name on the way.
+/// Whether `collect_ini_files(root)` returns `path`:
+/// a `.ini` file under the resolved `root` with no skipped name on the way.
 pub fn is_collected(root: &Path, path: &Path) -> bool {
     let Ok(relative) = path.strip_prefix(root) else {
         return false;
