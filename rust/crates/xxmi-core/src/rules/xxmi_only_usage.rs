@@ -1,5 +1,6 @@
-//! XM307, for what the parser finds inside lines: functions, operators, resource members,
-//! declaration modifiers, run-time values and resource pools.
+//! XM307, for what the parser finds inside lines:
+//! functions, operators, resource members, declaration modifiers,
+//! run-time values and resource pools.
 
 use std::collections::HashSet;
 
@@ -83,8 +84,8 @@ fn unavailable_name(context: &RuleContext, usage: &Usage) -> Option<String> {
     missing.then(|| describe(usage))
 }
 
-/// A member name that shader targets and resource targets both have is missing only if neither
-/// entry exists in the GIMI DLL.
+/// A member name that shader targets and resource targets both have is missing
+/// only if neither entry exists in the GIMI DLL.
 fn is_missing_member(context: &RuleContext, name: &str) -> bool {
     let mut members = context
         .lookup

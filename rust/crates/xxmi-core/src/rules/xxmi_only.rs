@@ -1,5 +1,6 @@
-//! XM307: syntax the GIMI DLL (XXMI-Libs-Package v0.1.0) lacks. The spec stamps those entries
-//! `gimi: false`; the rule only runs for the `gimi` dialect, so XXMI users aren't warned.
+//! XM307: syntax the GIMI DLL (XXMI-Libs-Package v0.1.0) lacks.
+//! The spec stamps those entries `gimi: false`; the rule only runs for the `gimi` dialect,
+//! so XXMI users aren't warned.
 
 use std::collections::HashSet;
 
@@ -11,8 +12,8 @@ use crate::profile::Dialect;
 use crate::scan::Span;
 use crate::spec::{SectionKind, SpecSection};
 
-/// Sections that configure the DLL itself (d3dx.ini): a mod rarely carries them, and the GIMI
-/// DLL has no use for the setting, so it is a hint rather than a warning.
+/// Sections that configure the DLL itself (d3dx.ini): a mod rarely carries them, and the GIMI DLL
+/// has no use for the setting, so it is a hint rather than a warning.
 const DLL_SETTINGS_SECTIONS: [&str; 5] = ["Logging", "System", "Device", "Rendering", "Hunting"];
 
 /// What the GIMI DLL does with the line, section or expression it can't read.
