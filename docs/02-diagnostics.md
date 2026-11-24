@@ -57,7 +57,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM304 | W | Pool persistence on a non-ring index type (mirrors the DLL warning) | — |
 | XM401 | I | Auto-generated or meaningless name (heuristics in `05-transforms.md`) | Rename (LSP rename) |
 | XM402 | I | Very long flat command list that repeats a block ≥ N times | Extract CommandList |
-| XM403 | H | Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase | Lowercase the keyword |
+| XM403 | H | Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase, or a section type not spelled as in the DLL | Lowercase the keyword; respell the section type |
 | XM501 | I | Mod detected as older format era (`position`, …) | "Run `xxmi migrate`" |
 | XM502 | W | Construct known to break after a specific game or package update | Link to recipe |
 
@@ -92,7 +92,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM210:** `declare_local_variable` refuses a name that the section's scope stack already holds ("Illegal redeclaration of local variable") and the line is dropped. `if` opens a scope, `elif` and `else` clear it, `endif` closes it, so sibling branches may reuse a name. A local that masks a global is only a notice there, so it isn't reported. Its declarations XM204 leaves to this rule.
 - **XM211:** the first declaration wins, `locked` included, across every file of the namespace in the DLL's load order (files the DLL doesn't load don't count). When that declaration is `locked`, each later one (`global`, `persist` or `locked`) is reported, in the same file or another: its value never applies. XM209 leaves those declarations to this rule.
 - **XM212:** the target of an assignment goes through `GetVariable`, which fails on a `locked` variable whatever the namespace, so the line is dropped. It covers every command-list section including `[Constants]` itself (its non-`global` lines are parsed as a command list), `$ns\x` qualified names, and `store`. A `local` of the same name wins the lookup, so assigning it is fine. `[Key…]` and `[Preset…]` sections aren't command lists, but `Override::ParseIniSection` reads each `$var = …` key through the same `GetVariable`, so a `locked` target fails there too (the value is skipped) and is reported.
-- **XM403:** `ParseCommandList` lower-cases the whole line before `ParseCommandListFlowControl`, so `If`, `ELSE IF` and `EndIf` work and the rule is style only. There is no off-by-default switch for `XM4xx` yet: it runs in the CLI, the language server and the MCP server like any other rule, and `XM403 = "off"` in `xxmi.toml` turns it off, and `--rules` runs only the ids it lists.
+- **XM403:** `ParseCommandList` lower-cases the whole line before `ParseCommandListFlowControl`, so `If`, `ELSE IF` and `EndIf` work and the rule is style only. Section headers are checked too: the type prefix (`[textureoverrideFoo]`, `[constants]`) is compared with the spelling in the DLL's section tables (`IniHandler.cpp:43-81`), and only the prefix is reported and fixed, because the DLL compares section names case-insensitively (`WStringInsensitiveLess`, `IniHandler.cpp:172`) and so no reference breaks. Keys, commands, values, variables and names you choose are not checked: their casing is your preference. There is no off-by-default switch for `XM4xx` yet: it runs in the CLI, the language server and the MCP server like any other rule, and `XM403 = "off"` in `xxmi.toml` turns it off, and `--rules` runs only the ids it lists.
 
 `pnpm test:corpus` lints every root and diffs per-rule counts against `corpus/.baseline.json` (`lint` key); with `--strict` any lint error fails.
 
@@ -254,4 +254,4 @@ Default severity: error. Assignment to a `locked` global; the DLL rejects the li
 
 ### XM403
 
-Default severity: hint. Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase; the DLL accepts any case. Quick fix: yes (lowercases the keyword).
+Default severity: hint. Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase, or a section header whose type (`TextureOverride`, `Resource`, `Constants`, …) isn't spelled as in the DLL; the DLL accepts any case. Keys, commands, values, variables and names you choose are not checked. Quick fix: yes (lowercases the keyword, or respells the section type and leaves the rest of the name).
