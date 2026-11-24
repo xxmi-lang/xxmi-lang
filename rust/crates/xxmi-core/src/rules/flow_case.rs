@@ -1,4 +1,4 @@
-//! XM403: a flow keyword that isn't lowercase.
+//! XM403: a flow keyword that isn't lowercase, or a section type not spelled as in the DLL.
 
 use super::keywords::{FlowKeyword, flow_keyword};
 use super::{Finding, FixSpec, RuleContext};
@@ -14,6 +14,52 @@ fn keyword_length(keyword: FlowKeyword, lowered: &str) -> usize {
 }
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
+    let mut findings = flow_findings(context);
+    findings.extend(section_type_findings(context));
+    findings
+}
+
+/// The type prefix of each recognised header, when it isn't spelled as the spec has it.
+/// Only the prefix is touched: the rest of the name is the user's,
+/// and references compare it case-insensitively
+/// (`WStringInsensitiveLess`, IniHandler.cpp:172), so a fix breaks none.
+fn section_type_findings(context: &RuleContext) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for section in &context.file.sections {
+        let Some(spec) = section.spec else {
+            continue;
+        };
+
+        let canonical = spec.name.as_str();
+        let start = section.name.start;
+        let span = Span {
+            start,
+            end: start + canonical.len(),
+        };
+        let Some(written) = context.text.get(span.start..span.end) else {
+            continue;
+        };
+        // A non-ASCII letter can lower-case into the prefix (the Kelvin sign into `k`).
+        if written == canonical || !written.eq_ignore_ascii_case(canonical) {
+            continue;
+        }
+
+        findings.push(Finding {
+            span,
+            message: format!("Section type `{written}` should be spelled `{canonical}`."),
+            fix: Some(FixSpec {
+                title: format!("Change to `{canonical}`"),
+                span,
+                new_text: canonical.to_string(),
+                also: Vec::new(),
+            }),
+            severity: None,
+        });
+    }
+    findings
+}
+
+fn flow_findings(context: &RuleContext) -> Vec<Finding> {
     let mut findings = Vec::new();
     for section in &context.file.sections {
         if section.spec.map(|s| s.kind) != Some(SectionKind::CommandList) {

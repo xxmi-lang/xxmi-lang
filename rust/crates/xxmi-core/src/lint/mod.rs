@@ -22,7 +22,7 @@ use crate::lookup::Lookup;
 use crate::profile::Profile;
 use crate::workspace::snapshot::Snapshots;
 
-pub use collect::collect_ini_files;
+pub use collect::{collect_ini_files, is_collected};
 pub use config::{ConfigError, ConfigLoader, RuleSetting};
 pub use file::lint_file;
 pub use run::{lint_paths, lint_text, lint_texts, lint_texts_while};

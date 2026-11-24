@@ -155,18 +155,14 @@ fn fresh_chunk(parser: &mut Parser, text: &str, span: Span) -> Chunk {
     Chunk::new(span, tree)
 }
 
-/// LSP position to a byte offset, clamped to the line like the spec asks for characters past its end.
+/// LSP position to a byte offset; characters past the line end clamp to it, before the line break.
 pub fn offset_at(text: &str, index: &LineIndex, position: Position) -> usize {
     let Some(line) = index.line(position.line) else {
         return text.len();
     };
     let start = usize::from(line.start());
     let end = usize::from(line.end());
-    let content_end = if text[start..end].ends_with('\n') {
-        end - 1
-    } else {
-        end
-    };
+    let content_end = line_content_end(&text[start..end]) + start;
 
     let wide = WideLineCol {
         line: position.line,
@@ -181,6 +177,14 @@ pub fn offset_at(text: &str, index: &LineIndex, position: Position) -> usize {
         offset -= 1;
     }
     offset
+}
+
+/// The length of the line without its `\n` or `\r\n` break.
+fn line_content_end(line: &str) -> usize {
+    match line.strip_suffix('\n') {
+        Some(content) => content.strip_suffix('\r').unwrap_or(content).len(),
+        None => line.len(),
+    }
 }
 
 /// Chunks whose text is unchanged keep their tree;
@@ -420,5 +424,44 @@ mod tests {
             replace(at(1, 3), at(1, 3), "x"),
         ]);
         assert_eq!(doc.text(), "[A]\n[B]x\nk = 1\n");
+    }
+
+    #[test]
+    fn positions_past_the_line_end_stop_before_the_line_break() {
+        let text = "ab\r\ncd\n\nef";
+        let index = LineIndex::new(text);
+        let offset = |position| offset_at(text, &index, position);
+
+        assert_eq!(offset(at(0, 99)), 2, "CRLF line");
+        assert_eq!(offset(at(0, 3)), 2, "between the \\r and the \\n");
+        assert_eq!(offset(at(1, 99)), 6, "LF line");
+        assert_eq!(offset(at(2, 99)), 7, "empty line");
+        assert_eq!(offset(at(3, 99)), text.len(), "last line without a newline");
+    }
+
+    #[test]
+    fn an_empty_crlf_line_clamps_to_its_start() {
+        let text = "a\r\n\r\nb";
+        let index = LineIndex::new(text);
+
+        assert_eq!(offset_at(text, &index, at(1, 5)), 3);
+    }
+
+    #[test]
+    fn appending_at_a_crlf_line_end_keeps_the_break() {
+        let change = replace(at(0, 99), at(0, 99), "!");
+        assert_edit("[A]\r\nk = 1\r\n", change, "[A]!\r\nk = 1\r\n");
+    }
+
+    #[test]
+    fn positions_past_the_end_clamp_without_overflow() {
+        let text = "[A]\nk = 😀\n";
+        let index = LineIndex::new(text);
+        let offset = |position| offset_at(text, &index, position);
+
+        assert_eq!(offset(at(0, u32::MAX)), 3);
+        assert_eq!(offset(at(1, u32::MAX)), text.len() - 1);
+        assert_eq!(offset(at(2, u32::MAX)), text.len());
+        assert_eq!(offset(at(u32::MAX, u32::MAX)), text.len());
     }
 }

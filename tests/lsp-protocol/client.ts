@@ -36,6 +36,8 @@ export class LspClient {
   /** Answer of `workspace/configuration`; change it, then notify the server. */
   settings: Record<string, unknown> = { rules: {} };
   private readonly child: ChildProcessWithoutNullStreams;
+  /** Messages of `window/logMessage`, in arrival order. */
+  readonly logs: string[] = [];
   private readonly published = new Map<string, Diagnostic[]>();
   private readonly waiters: Waiter[] = [];
 
@@ -53,6 +55,9 @@ export class LspClient {
         this.record(params);
       },
     );
+    this.connection.onNotification('window/logMessage', (params: { message: string }) => {
+      this.logs.push(params.message);
+    });
     this.connection.onRequest('workspace/configuration', () => [this.settings]);
     this.connection.listen();
   }

@@ -168,5 +168,175 @@
         }
       ]
     }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Section type `textureoverride` should be spelled `TextureOverride`.",
+    "range": {
+      "start": {
+        "line": 7,
+        "character": 1
+      },
+      "end": {
+        "line": 7,
+        "character": 16
+      }
+    },
+    "fix": {
+      "title": "Change to `TextureOverride`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 1
+            },
+            "end": {
+              "line": 7,
+              "character": 16
+            }
+          },
+          "newText": "TextureOverride"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Section type `SHADEROVERRIDE` should be spelled `ShaderOverride`.",
+    "range": {
+      "start": {
+        "line": 10,
+        "character": 1
+      },
+      "end": {
+        "line": 10,
+        "character": 15
+      }
+    },
+    "fix": {
+      "title": "Change to `ShaderOverride`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 1
+            },
+            "end": {
+              "line": 10,
+              "character": 15
+            }
+          },
+          "newText": "ShaderOverride"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Section type `present` should be spelled `Present`.",
+    "range": {
+      "start": {
+        "line": 15,
+        "character": 1
+      },
+      "end": {
+        "line": 15,
+        "character": 8
+      }
+    },
+    "fix": {
+      "title": "Change to `Present`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 15,
+              "character": 1
+            },
+            "end": {
+              "line": 15,
+              "character": 8
+            }
+          },
+          "newText": "Present"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Section type `key` should be spelled `Key`.",
+    "range": {
+      "start": {
+        "line": 18,
+        "character": 1
+      },
+      "end": {
+        "line": 18,
+        "character": 4
+      }
+    },
+    "fix": {
+      "title": "Change to `Key`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 1
+            },
+            "end": {
+              "line": 18,
+              "character": 4
+            }
+          },
+          "newText": "Key"
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM403",
+    "severity": "hint",
+    "message": "Section type `resource` should be spelled `Resource`.",
+    "range": {
+      "start": {
+        "line": 24,
+        "character": 1
+      },
+      "end": {
+        "line": 24,
+        "character": 9
+      }
+    },
+    "fix": {
+      "title": "Change to `Resource`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 24,
+              "character": 1
+            },
+            "end": {
+              "line": 24,
+              "character": 9
+            }
+          },
+          "newText": "Resource"
+        }
+      ]
+    }
   }
 ]
