@@ -11,7 +11,9 @@ use crate::scan::{ScannedIni, ScannedLine, Span};
 use crate::spec::SectionKind;
 
 use super::collect::analyse_chunk;
-use super::types::{IniFile, Issue, LineModel, Reference, SectionModel, VariableDeclaration};
+use super::types::{
+    IniFile, Issue, LineModel, Reference, SectionModel, Usage, VariableDeclaration,
+};
 
 pub struct LowerOptions<'a> {
     pub path: PathBuf,
@@ -39,11 +41,19 @@ pub fn lower_ini(options: LowerOptions) -> IniFile {
     let mut sections = section_models(text, scan, &namespace, lookup);
 
     let mut references = Vec::new();
+    let mut usages = Vec::new();
     let mut variables = Vec::new();
     let mut preamble_issues = Vec::new();
     if let Some(chunk) = doc.preamble_chunk() {
         let mut target = ChunkTarget::new(None, 0, &mut preamble, &mut preamble_issues);
-        analyse(text, chunk, &mut target, &mut references, &mut variables);
+        analyse(
+            text,
+            chunk,
+            &mut target,
+            &mut references,
+            &mut usages,
+            &mut variables,
+        );
     }
     for (index, section) in sections.iter_mut().enumerate() {
         let line = section.header.line;
@@ -54,6 +64,7 @@ pub fn lower_ini(options: LowerOptions) -> IniFile {
             doc.section_chunk(index),
             &mut target,
             &mut references,
+            &mut usages,
             &mut variables,
         );
     }
@@ -68,6 +79,7 @@ pub fn lower_ini(options: LowerOptions) -> IniFile {
         sections,
         comments: scan.comments.clone(),
         references,
+        usages,
         variables,
         line_index: doc.line_index().clone(),
     }
@@ -183,6 +195,7 @@ fn analyse(
     chunk: &Chunk,
     target: &mut ChunkTarget,
     references: &mut Vec<Reference>,
+    usages: &mut Vec<Usage>,
     variables: &mut Vec<VariableDeclaration>,
 ) {
     let analysis = chunk
@@ -210,6 +223,12 @@ fn analyse(
         span: shift(r.span, chunk.span),
         section: target.section,
         access: r.access,
+    }));
+    usages.extend(analysis.usages.iter().map(|u| Usage {
+        kind: u.kind,
+        text: u.text.clone(),
+        span: shift(u.span, chunk.span),
+        section: target.section,
     }));
     variables.extend(analysis.variables.iter().map(|v| VariableDeclaration {
         name: v.name.clone(),

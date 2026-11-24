@@ -254,6 +254,8 @@ pub struct SpecPrecedenceLevel {
 #[derive(Debug, Deserialize)]
 pub struct SpecEnumValue {
     pub name: String,
+    #[serde(flatten)]
+    pub meta: Meta,
 }
 
 impl Spec {

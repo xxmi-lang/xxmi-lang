@@ -135,14 +135,13 @@ Moved to the maintainer's C# app, together with M4 (see above). Old plan, for hi
 - Kate `hlsl.xml`, then offer it to lupomikti's `kate-plugin` and/or KDE.
 - **XXMITools template CI:** in XXMITools (PR to leotorrez), add a job that renders each `templates/*.ini.j2` with fixture contexts (derive the context shape from where `migoto/exporter.py` renders the template), then runs `xxmi lint` on the output.
 - Propose the `;;` doc-comment convention to ZZMI maintainers, with a PR annotating the public API of SlotFix and TTLib.
-- A rule under the `gimi` profile that warns about syntax that needs the XXMI DLL (a warning, not an error).
 - Plugin evals (`07-agent-integration.md`).
 
 ## Delivered outside the milestones
 
 - **Rust port** (`rust/`): complete. `xxmi-core`, the `xxmi` CLI and LSP, `xxmi-mcp` and `xxmi-spec-extractor` are ported, the TypeScript implementation (core, CLI, LSP, MCP server, spec extractor) is removed, and the release binaries are built from Rust.
 - **.NET library** (`dotnet/`, `10-dotnet.md`): `XxmiLang.Core` (definitions, interfaces, source-generated JSON) and `XxmiLang` (implementation), both `net10.0` and Native AOT compatible, `XxmiLang.Native.<rid>` for the six binary targets, as a typed client over the `xxmi` binary (`XxmiLinter` over `xxmi lint --format json`, `XxmiLanguageService` over the new `xxmi lsp --stdio`). No language logic in C#. CI tests it on all three OSes; the release workflow pushes the packages to nuget.org through Trusted Publishing (GitHub OIDC) once the `NUGET_USER` repository variable exists; the `.nupkg` files are not on the GitHub release, which has one zip per platform (`xxmi`, `xxmi-lsp`) plus the `.vsix`. A `XxmiQuery` wrapper can now be added: `xxmi query` exists (M6).
-- **Game profiles** (`01-language-model.md` §5): `xxmi`, `gimi`, `srmi`, `wwmi`, `zzmi`, `himi` and `efmi`. A package's profile is detected, or set with `--mi-package` or `xxmi.miPackage`, and each profile with a library has its own snapshot.
+- **Game profiles** (`01-language-model.md` §5): `xxmi`, `gimi`, `srmi`, `wwmi`, `zzmi`, `himi` and `efmi`. A package's profile is detected, or set with `--mi-package` or `xxmi.miPackage`, and each profile with a library has its own snapshot. Under `gimi`, XM307 warns about syntax that needs the XXMI DLL.
 
 ## Open questions (resolve with maintainers as they come up)
 

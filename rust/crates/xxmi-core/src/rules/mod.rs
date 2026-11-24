@@ -33,6 +33,8 @@ mod unknown_variable;
 mod unresolved;
 mod unused_section;
 mod unused_variable;
+mod xxmi_only;
+mod xxmi_only_usage;
 
 use std::path::Path;
 
@@ -194,7 +196,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 33] = [
+pub const RULES: [Rule; 34] = [
     rule(
         "XM001",
         Severity::Error,
@@ -398,6 +400,12 @@ pub const RULES: [Rule; 33] = [
         Severity::Error,
         "Assignment to a locked global (the DLL rejects the line)",
         locked_assigned::check,
+    ),
+    rule(
+        "XM307",
+        Severity::Warning,
+        "Syntax the GIMI DLL lacks, under the `gimi` profile (warning; hint in d3dx.ini-style sections)",
+        xxmi_only::check,
     ),
     rule(
         "XM403",
