@@ -63,6 +63,7 @@ Measure on the largest file in `corpus/` and on the whole ZZMI package.
 - Never crash on input. Catch per-request, log, and return an empty result.
 - Files over 5 MB (some CN mods are huge flat files): full parse, but only syntax rules run live; cross-file rules run on save.
 - Settings are read from `xxmi.toml` and `workspace/configuration` (section `xxmi`). The client setting overrides the file.
+- `xxmi.toml` is read once per folder and cached: editing it needs a server restart to take effect.
 
 ## Testing
 

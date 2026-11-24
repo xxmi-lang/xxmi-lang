@@ -53,11 +53,15 @@ impl<'a> Server<'a> {
         supports_configuration: bool,
     ) -> Self {
         let options = LintOptions::bundled();
+        let configs = ConfigLoader::default();
+        let mut workspace = Workspace::new(options.lookup, &options.snapshots);
+        workspace.set_configs(configs.clone());
+
         Self {
             connection,
-            workspace: Workspace::new(options.lookup, &options.snapshots),
+            workspace,
             documents: Documents::default(),
-            configs: ConfigLoader::default(),
+            configs,
             options,
             uri_by_path: HashMap::new(),
             pending: HashMap::new(),
