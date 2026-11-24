@@ -201,6 +201,7 @@ fn merge_command(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems:
                 values: Vec::new(),
                 source: "manual".to_string(),
                 xxmi,
+                gimi: true,
                 arg_count: None,
                 indirect: None,
                 form: None,
@@ -226,6 +227,7 @@ fn merge_member(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems: 
                 args: Vec::new(),
                 source: "manual".to_string(),
                 xxmi,
+                gimi: true,
                 docs,
             })
         },
@@ -246,6 +248,7 @@ fn merge_function(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems
                 name: name.to_string(),
                 source: "manual".to_string(),
                 xxmi,
+                gimi: true,
                 docs,
             })
         },
@@ -267,6 +270,7 @@ fn merge_enum(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems: &m
                 values: Vec::new(),
                 source: "manual".to_string(),
                 xxmi,
+                gimi: true,
                 docs,
             })
         },
@@ -283,6 +287,7 @@ fn merge_operator(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems
             token: name.to_string(),
             source: "manual".to_string(),
             xxmi,
+            gimi: true,
             docs,
         });
     }
@@ -313,6 +318,7 @@ fn section_index(
         dynamic_keys: Vec::new(),
         source: "manual".to_string(),
         xxmi,
+        gimi: true,
         docs,
     });
     Some(spec.body.sections.len() - 1)
@@ -350,6 +356,7 @@ fn merge_section(spec: &mut Spec, name: &str, raw: &Table, path: &str, problems:
                     value_type: text_of(key_raw, "valueType"),
                     source: "manual".to_string(),
                     xxmi,
+                    gimi: true,
                     repeatable: None,
                     docs,
                 })

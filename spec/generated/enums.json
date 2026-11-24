@@ -16,7 +16,8 @@
         {
           "name": "locked",
           "source": "CommandList.h:VariableFlagNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:VariableFlagNames",
@@ -227,16 +228,19 @@
         {
           "name": "sRGB",
           "source": "CommandList.h:CustomColorSpaceNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Linear",
           "source": "CommandList.h:CustomColorSpaceNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:CustomColorSpaceNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "CustomResourceBindFlagNames",
@@ -301,26 +305,31 @@
         {
           "name": "vertex_buffer",
           "source": "CommandList.h:DataCacheBindFlagNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "index_buffer",
           "source": "CommandList.h:DataCacheBindFlagNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "constant_buffer",
           "source": "CommandList.h:DataCacheBindFlagNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "all",
           "source": "CommandList.h:DataCacheBindFlagNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:DataCacheBindFlagNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "PoolIndexTypeNames",
@@ -328,26 +337,31 @@
         {
           "name": "ring",
           "source": "CommandList.h:PoolIndexTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "fifo",
           "source": "CommandList.h:PoolIndexTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "static",
           "source": "CommandList.h:PoolIndexTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "spatial",
           "source": "CommandList.h:PoolIndexTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:PoolIndexTypeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ResourceCopyTargetTypeNames",
@@ -355,101 +369,121 @@
         {
           "name": "Empty",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ConstantBuffer",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ShaderResource",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "VertexBuffer",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "IndexBuffer",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "StreamOutput",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "RenderTarget",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "DepthStencilTarget",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "UnorderedAccessView",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "CustomResource",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "IniParams",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "CursorMask",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "CursorColor",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ThisResource",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Pool",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "SwapChain",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "RealSwapChain",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "FakeSwapChain",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "CPU",
           "source": "CommandList.h:ResourceCopyTargetTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:ResourceCopyTargetTypeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ResourceCopyTargetEvaluationModeNames",
@@ -457,131 +491,157 @@
         {
           "name": "Resource",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceIdentity",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceStride",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceSourceStride",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceSize",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceOffset",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceRegionHash",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceSpatialHash",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceFormat",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceWidth",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceHeight",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceArray",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceMips",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceHammingDistance",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "ResourceBindFlags",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolIdentity",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolSize",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolIndex",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolFullRangeResource",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolFullRangeVariable",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "PoolRange",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "SlotRange",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Variable",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "LayoutElementFormat",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "LayoutElementOffset",
           "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:ResourceCopyTargetEvaluationModeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ResourceCopyOptionNames",
@@ -651,16 +711,19 @@
         {
           "name": "Filter",
           "source": "CommandList.h:ResourceFilterTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Empty",
           "source": "CommandList.h:ResourceFilterTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:ResourceFilterTypeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ResourceFilterTargetEvaluationModeNames",
@@ -668,21 +731,25 @@
         {
           "name": "FilterIdentity",
           "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Format",
           "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "Confidence",
           "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:ResourceFilterTargetEvaluationModeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ParamOverrideTypeNames",
@@ -875,32 +942,38 @@
         {
           "name": "frame_number",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "draw_number",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "dispatch_number",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "frame_time",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "fps",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "resource_filter",
           "source": "CommandList.h:ParamOverrideTypeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "CommandList.h:ParamOverrideTypeNames",
@@ -1127,26 +1200,31 @@
         {
           "name": "disabled",
           "source": "globals.h:LogVerbosityNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "warning",
           "source": "globals.h:LogVerbosityNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "info",
           "source": "globals.h:LogVerbosityNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "debug",
           "source": "globals.h:LogVerbosityNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "globals.h:LogVerbosityNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "MarkingModeNames",
@@ -1486,16 +1564,19 @@
         {
           "name": "mods",
           "source": "globals.h:InputDisableScopeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         },
         {
           "name": "all",
           "source": "globals.h:InputDisableScopeNames",
-          "xxmi": true
+          "xxmi": true,
+          "gimi": false
         }
       ],
       "source": "globals.h:InputDisableScopeNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "XInputButtons",

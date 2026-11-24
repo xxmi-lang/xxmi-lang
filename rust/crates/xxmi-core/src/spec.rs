@@ -2,8 +2,12 @@
 //!
 use serde::Deserialize;
 
+fn available() -> bool {
+    true
+}
+
 /// What every spec entry carries: where it came from, plus the documentation overlays add.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Meta {
     /// `<file>:<symbol>` in the XXMI DLL source, or `manual`.
     #[serde(default)]
@@ -11,6 +15,9 @@ pub struct Meta {
     /// In the XXMI fork but not in vanilla 3DMigoto.
     #[serde(default)]
     pub xxmi: bool,
+    /// Present in the GIMI DLL (XXMI-Libs-Package v0.1.0); overlay-only entries count as present.
+    #[serde(default = "available")]
+    pub gimi: bool,
     pub doc: Option<String>,
     pub example: Option<String>,
     pub since: Option<String>,

@@ -17,6 +17,8 @@ fn spec() -> Spec {
         baseline_root: &fixtures.join("vanilla"),
         dll_git: Some(git.clone()),
         baseline_git: Some(git),
+        gimi_root: None,
+        gimi_git: None,
     })
     .unwrap()
     .spec

@@ -146,7 +146,8 @@
       "match": "prefix",
       "values": [],
       "source": "CommandList.cpp:ParseCommandListGeneralCommands",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "snapshotinitialtextures",
@@ -155,6 +156,7 @@
       "values": [],
       "source": "CommandList.cpp:ParseCommandListGeneralCommands",
       "xxmi": true,
+      "gimi": false,
       "form": "value"
     },
     {
@@ -164,6 +166,7 @@
       "values": [],
       "source": "CommandList.cpp:ParseCommandListGeneralCommands",
       "xxmi": true,
+      "gimi": false,
       "form": "value"
     },
     {
@@ -346,7 +349,8 @@
       "match": "exact",
       "values": [],
       "source": "CommandList.h:VariableFlagNames",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "post",
@@ -371,63 +375,72 @@
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "size",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "array",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "index",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "width",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "offset",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "stride",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "format",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "height",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "region",
@@ -437,21 +450,24 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "bindflags",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "lastframe",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "hashregion",
@@ -461,7 +477,8 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "spatialhash",
@@ -473,14 +490,16 @@
         "float"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "sourcestride",
       "target": "resource",
       "args": [],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "elementformat",
@@ -490,7 +509,8 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "elementoffset",
@@ -500,7 +520,8 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "hammingdistance",
@@ -509,14 +530,16 @@
         "filter"
       ],
       "source": "CommandList.cpp:ResourceCopyTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_mask",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_type",
@@ -525,7 +548,8 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_size",
@@ -534,14 +558,16 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_mask",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_type",
@@ -550,7 +576,8 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_stride",
@@ -559,14 +586,16 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_last_slot",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_dimension",
@@ -575,154 +604,182 @@
         "unsigned"
       ],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_slot_count",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cb_first_slot",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_last_slot",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_slot_count",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "srv_first_slot",
       "target": "shader",
       "args": [],
       "source": "CommandList.cpp:ShaderTarget::ParseTargetMember",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     }
   ],
   "functions": [
     {
       "name": "countbits",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "sin",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "cos",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "tan",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "asin",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "acos",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "atan",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "abs",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "sign",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "ceil",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "floor",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "trunc",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "round",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "frac",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "sqrt",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "rsqrt",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "exp",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "exp2",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "log",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "log2",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "saturate",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "name": "random",
       "source": "CommandList.cpp:unary_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     }
   ]
 }

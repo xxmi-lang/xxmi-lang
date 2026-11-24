@@ -28,6 +28,8 @@ fn extract_fixture() -> (Spec, Vec<String>) {
         baseline_root: &fixtures.join("vanilla"),
         dll_git: Some(git("xxmi")),
         baseline_git: Some(git("vanilla")),
+        gimi_root: None,
+        gimi_git: None,
     })
     .unwrap();
     (result.spec, result.baseline_warnings)
@@ -36,6 +38,7 @@ fn extract_fixture() -> (Spec, Vec<String>) {
 trait Flagged {
     fn identity(&self) -> &str;
     fn is_xxmi(&self) -> bool;
+    fn is_gimi(&self) -> bool;
 }
 
 macro_rules! flagged {
@@ -46,6 +49,9 @@ macro_rules! flagged {
             }
             fn is_xxmi(&self) -> bool {
                 self.xxmi
+            }
+            fn is_gimi(&self) -> bool {
+                self.gimi
             }
         }
     };
@@ -63,6 +69,13 @@ fn flag<T: Flagged>(entries: &[T], name: &str) -> Option<bool> {
         .iter()
         .find(|e| e.identity().to_lowercase() == name.to_lowercase())
         .map(Flagged::is_xxmi)
+}
+
+fn gimi_flag<T: Flagged>(entries: &[T], name: &str) -> Option<bool> {
+    entries
+        .iter()
+        .find(|e| e.identity().to_lowercase() == name.to_lowercase())
+        .map(Flagged::is_gimi)
 }
 
 fn section<'a>(spec: &'a Spec, name: &str) -> &'a xxmi_spec_extractor::SpecSection {
@@ -500,6 +513,8 @@ fn real_spec() -> Option<Spec> {
             baseline_root: Path::new(&baseline),
             dll_git: Some(git("xxmi")),
             baseline_git: Some(git("vanilla")),
+            gimi_root: None,
+            gimi_git: None,
         })
         .unwrap()
         .spec,
@@ -576,5 +591,157 @@ fn real_dll_flags_xxmi_features() {
     let resource = section(&spec, "Resource");
     for key in ["type", "format", "filename", "stride"] {
         assert_eq!(flag(&resource.keys, key), Some(false), "{key}");
+    }
+}
+
+fn extract_with_gimi(gimi: Option<&Path>) -> Spec {
+    let fixtures = fixtures();
+    extract_spec(ExtractOptions {
+        dll_root: &fixtures.join("xxmi"),
+        baseline_root: &fixtures.join("vanilla"),
+        dll_git: Some(git("xxmi")),
+        baseline_git: Some(git("vanilla")),
+        gimi_root: gimi,
+        gimi_git: Some(git("gimi")),
+    })
+    .unwrap()
+    .spec
+}
+
+#[test]
+fn stamps_no_gimi_flag_without_a_gimi_baseline() {
+    let spec = extract_with_gimi(None);
+
+    assert!(spec.meta.gimi.is_none());
+    assert!(spec.body.sections.iter().all(|s| s.gimi));
+    assert!(spec.body.commands.iter().all(|c| c.gimi));
+    assert!(!serialize_spec(&spec)[0].1.contains("gimi"));
+}
+
+#[test]
+fn flags_what_the_gimi_baseline_lacks() {
+    // The vanilla fixture stands in for the GIMI baseline, so gimi is the inverse of xxmi.
+    let spec = extract_with_gimi(Some(&fixtures().join("vanilla")));
+    let body = &spec.body;
+
+    assert_eq!(
+        spec.meta.gimi.as_ref().unwrap().repository,
+        git("gimi").repository
+    );
+    assert!(body.commands.iter().any(|c| !c.gimi));
+    assert!(body.commands.iter().all(|c| c.gimi != c.xxmi));
+    assert!(body.sections.iter().all(|s| s.gimi != s.xxmi));
+    assert!(
+        body.sections
+            .iter()
+            .flat_map(|s| &s.keys)
+            .all(|k| k.gimi != k.xxmi)
+    );
+    assert!(serialize_spec(&spec)[1].1.contains("\"gimi\": false"));
+}
+
+#[test]
+fn omits_gimi_true_from_the_serialized_spec() {
+    let spec = extract_with_gimi(Some(&fixtures().join("xxmi")));
+
+    assert!(spec.body.commands.iter().all(|c| c.gimi));
+    assert!(
+        serialize_spec(&spec)
+            .iter()
+            .all(|(name, text)| *name == "meta.json" || !text.contains("gimi"))
+    );
+}
+
+/// Runs only with all three real checkouts; XXMI_DLL_SRC and MIGOTO_DLL_SRC are as for `real_spec`,
+/// GIMI_DLL_SRC is XXMI-Libs-Package at v0.1.0 (vanilla GIMI DLL code).
+fn real_gimi_spec() -> Option<Spec> {
+    let (Ok(dll), Ok(baseline), Ok(gimi)) = (
+        std::env::var("XXMI_DLL_SRC"),
+        std::env::var("MIGOTO_DLL_SRC"),
+        std::env::var("GIMI_DLL_SRC"),
+    ) else {
+        assert!(
+            std::env::var_os("XXMI_REQUIRE_DLL_SRC").is_none(),
+            "XXMI_DLL_SRC, MIGOTO_DLL_SRC and GIMI_DLL_SRC are required here"
+        );
+        return None;
+    };
+    Some(
+        extract_spec(ExtractOptions {
+            dll_root: Path::new(&dll),
+            baseline_root: Path::new(&baseline),
+            dll_git: Some(git("xxmi")),
+            baseline_git: Some(git("vanilla")),
+            gimi_root: Some(Path::new(&gimi)),
+            gimi_git: Some(git("gimi")),
+        })
+        .unwrap()
+        .spec,
+    )
+}
+
+#[test]
+fn real_dll_flags_what_the_gimi_dll_lacks() {
+    let Some(spec) = real_gimi_spec() else { return };
+    let body = &spec.body;
+
+    for name in ["Pool", "Filter", "Input"] {
+        assert_eq!(gimi_flag(&body.sections, name), Some(false), "{name}");
+    }
+    assert_eq!(gimi_flag(&body.commands, "locked"), Some(false));
+    for name in ["sin", "abs", "random", "countbits"] {
+        assert_eq!(gimi_flag(&body.functions, name), Some(false), "{name}");
+    }
+    for token in ["<<", ">>", "&", "|", "^", "~"] {
+        assert_eq!(
+            gimi_flag(&body.operators.tokens, token),
+            Some(false),
+            "{token}"
+        );
+    }
+    assert!(body.resource_members.iter().all(|m| !m.gimi));
+}
+
+#[test]
+fn real_dll_keeps_what_the_gimi_dll_has() {
+    let Some(spec) = real_gimi_spec() else { return };
+    let body = &spec.body;
+
+    for name in [
+        "store", "persist", "local", "global", "elif", "else if", "else", "run",
+    ] {
+        assert_eq!(gimi_flag(&body.commands, name), Some(true), "{name}");
+    }
+    for name in ["&&", "||", "==", "+", "**"] {
+        assert_eq!(
+            gimi_flag(&body.operators.tokens, name),
+            Some(true),
+            "{name}"
+        );
+    }
+
+    let texture_override = section(&spec, "TextureOverride");
+    for key in [
+        "override_byte_stride",
+        "override_vertex_count",
+        "filter_index",
+        "match_priority",
+        "match_first_index",
+    ] {
+        assert_eq!(gimi_flag(&texture_override.keys, key), Some(true), "{key}");
+    }
+    assert_eq!(
+        gimi_flag(&texture_override.keys, "uav_byte_stride"),
+        Some(false)
+    );
+
+    for name in [
+        "TextureOverride",
+        "ShaderOverride",
+        "Resource",
+        "CommandList",
+        "Key",
+    ] {
+        assert_eq!(gimi_flag(&body.sections, name), Some(true), "{name}");
     }
 }

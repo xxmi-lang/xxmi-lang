@@ -40,17 +40,20 @@ Line numbers are from `master` as of 2026-09-29 and will move. The extractor mus
 
 A missing anchor makes extraction exit 3 and name what's missing, instead of silently shrinking the spec. `xxmi: true` is not hand-marked. The extractor runs a second, lenient extraction over vanilla 3DMigoto (`bo3b/3Dmigoto`) and flags every entry vanilla lacks, matching names case-insensitively. Where the two DLLs differ in shape, the extractor accepts both: XXMI's `ParseResourceSection` vs. vanilla's `ParseResourceSections`, and `line.compare(0, 5, L"local")` vs. `name.compare(0, 6, L"local ")`. An integration test pins known vanilla features (`run`, `if`, `local`, `global`, Resource `type`/`format`, …) to `xxmi: false`, so an anchor mismatch in the baseline can't quietly mark them XXMI-only.
 
+`gimi: false` marks what the GIMI DLL lacks. Most Genshin players can't use the XXMI DLL (anti-cheat) and run the GIMI DLL, which is XXMI-Libs-Package at tag `v0.1.0` (vanilla GIMI DLL code). With `GIMI_DLL_SRC` set, the extractor runs the same lenient extraction over that checkout and flags every entry it lacks; the field is omitted when the entry is present, and absent entirely when no GIMI source is given. Entries only the `v0.1.0` tree has (removed since, such as the 3D Vision keys) are not added to the spec; the extractor lists them on stderr. Overlay-only (`manual`) entries are never stamped, so they count as present in the GIMI DLL. The extractor does not model the `resource_copy`, `filter` and `pool` command forms as commands, so they carry no flag. Core exposes the flag as `Meta::gimi` (default `true`).
+
 Known limits: keys the DLL builds at runtime (`blend[0]`…`mask[7]`, via `swprintf`) have `valueType: "unknown"`; overlays may supply a type. XXMI no longer reads any `[Stereo]` or `[ConvergenceMap]` keys (vanilla did), so those sections have none.
 
 ### Output
 
-`spec/generated/` holds five files, written by `pnpm spec:extract` (`XXMI_DLL_SRC` = XXMI-Libs-Package checkout, `MIGOTO_DLL_SRC` = 3Dmigoto checkout). The types are in `rust/crates/xxmi-core/src/spec.rs`.
+`spec/generated/` holds five files, written by `pnpm spec:extract` (`XXMI_DLL_SRC` = XXMI-Libs-Package checkout, `MIGOTO_DLL_SRC` = 3Dmigoto checkout, `GIMI_DLL_SRC` = XXMI-Libs-Package at the `v0.1.0` commit pinned in `meta.json`). The types are in `rust/crates/xxmi-core/src/spec.rs`.
 
 ```jsonc
 // meta.json: no wall-clock timestamp, so the same commits give byte-identical output
 { "extractorVersion": 1,
   "dll":      { "repository": "https://github.com/SpectrumQT/XXMI-Libs-Package", "commit": "…", "commitDate": "…" },
-  "baseline": { "repository": "https://github.com/bo3b/3Dmigoto", "commit": "…", "commitDate": "…" } }
+  "baseline": { "repository": "https://github.com/bo3b/3Dmigoto", "commit": "…", "commitDate": "…" },
+  "gimi":     { "repository": "https://github.com/SpectrumQT/XXMI-Libs-Package", "commit": "0a029a74…", "commitDate": "…" } }
 // sections.json
 { "sections": [ { "name": "Resource", "prefix": true, "kind": "regular",
     "allowsBareLines": false, "allowsDuplicateKeys": false,

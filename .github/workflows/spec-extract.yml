@@ -49,6 +49,25 @@ jobs:
             /util.h
           sparse-checkout-cone-mode: false
 
+      - name: Read the GIMI baseline pin
+        id: gimi
+        run: echo "commit=$(node -p "require('./spec/generated/meta.json').gimi.commit")" >> "$GITHUB_OUTPUT"
+
+      - name: Check out XXMI-Libs-Package v0.1.0 (GIMI DLL baseline)
+        uses: actions/checkout@v4
+        with:
+          repository: SpectrumQT/XXMI-Libs-Package
+          ref: ${{ steps.gimi.outputs.commit }}
+          path: .dll/gimi
+          persist-credentials: false
+          # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
+          sparse-checkout: |
+            /DirectX11/
+            /D3DCompiler/
+            /Injector/
+            /util.h
+          sparse-checkout-cone-mode: false
+
       - name: Check out 3Dmigoto master
         uses: actions/checkout@v4
         with:
@@ -70,6 +89,7 @@ jobs:
         env:
           XXMI_DLL_SRC: .dll/xxmi
           MIGOTO_DLL_SRC: .dll/vanilla
+          GIMI_DLL_SRC: .dll/gimi
 
       - name: Check for changes
         id: diff

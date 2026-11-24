@@ -13,12 +13,14 @@
     {
       "token": "<<",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": ">>",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": "==",
@@ -78,22 +80,26 @@
     {
       "token": "~",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": "&",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": "|",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": "^",
       "source": "CommandList.cpp:operator_tokens",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "token": "*",
@@ -193,7 +199,8 @@
         ">>"
       ],
       "source": "CommandList.cpp:shift_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "level": 5,
@@ -232,7 +239,8 @@
         "&"
       ],
       "source": "CommandList.cpp:bitwise_and_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "level": 8,
@@ -243,7 +251,8 @@
         "^"
       ],
       "source": "CommandList.cpp:bitwise_xor_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "level": 9,
@@ -254,7 +263,8 @@
         "|"
       ],
       "source": "CommandList.cpp:bitwise_or_operators",
-      "xxmi": true
+      "xxmi": true,
+      "gimi": false
     },
     {
       "level": 10,

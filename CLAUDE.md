@@ -48,7 +48,7 @@ pnpm test:corpus         # parses corpus/ (local only) + $XXMI_PACKAGE_SRC; fail
 pnpm test:lsp            # JSON-RPC protocol suite; XXMI_LSP_COMMAND points it at the server binary
 pnpm check:version       # rust/Cargo.toml version must match the VS Code and plugin manifests
 pnpm grammar:update      # vendors the tree-sitter-migoto C sources from a fork checkout (XXMI_GRAMMAR_SRC env var)
-pnpm spec:extract        # runs xxmi-spec-extract: regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags)
+pnpm spec:extract        # runs xxmi-spec-extract: regenerates spec/generated/*.json (XXMI_DLL_SRC = XXMI-Libs-Package, MIGOTO_DLL_SRC = bo3b/3Dmigoto for xxmi flags, GIMI_DLL_SRC = XXMI-Libs-Package @ v0.1.0 for gimi flags)
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
 pnpm xxmi query symbol 'CommandList\ZZMI\SetTextures'      # read-only lookups (spec, library symbols)
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp   # the M6 questions against a running MCP server (docs/06)
