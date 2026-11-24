@@ -1,0 +1,66 @@
+[
+  {
+    "path": "bad/mod.ini",
+    "id": "XM306",
+    "severity": "hint",
+    "message": "`override_byte_stride = 56` is not `stride = 40` of `vb0 = ResourcePosition`; the DLL doesn't compare them and the hash may match another buffer, so check it is intended.",
+    "range": {
+      "start": {
+        "line": 6,
+        "character": 23
+      },
+      "end": {
+        "line": 6,
+        "character": 25
+      }
+    }
+  },
+  {
+    "path": "bad/mod.ini",
+    "id": "XM306",
+    "severity": "hint",
+    "message": "`override_byte_stride = 72` looks like the strides of vb0, vb1 and vb2 added up (40 + 12 + 20); `vb0` alone is 40.",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 23
+      },
+      "end": {
+        "line": 14,
+        "character": 25
+      }
+    }
+  },
+  {
+    "path": "bad/mod.ini",
+    "id": "XM306",
+    "severity": "hint",
+    "message": "`override_byte_stride = 88` looks like the strides of vb0, vb1, vb2 and vb3 added up (40 + 12 + 20 + 16); `vb0` alone is 40.",
+    "range": {
+      "start": {
+        "line": 23,
+        "character": 23
+      },
+      "end": {
+        "line": 23,
+        "character": 25
+      }
+    }
+  },
+  {
+    "path": "bad/mod.ini",
+    "id": "XM306",
+    "severity": "hint",
+    "message": "`override_byte_stride = 52` is not `stride = 40` of `vb0 = ResourcePosition`; the DLL doesn't compare them and the hash may match another buffer, so check it is intended.",
+    "range": {
+      "start": {
+        "line": 33,
+        "character": 23
+      },
+      "end": {
+        "line": 33,
+        "character": 25
+      }
+    }
+  }
+]

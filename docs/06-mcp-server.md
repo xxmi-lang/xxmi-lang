@@ -63,12 +63,12 @@ MCP **resources** (read-only): `xxmi://spec/{dll_ref}/sections.json`, `…/comma
 
 Railway autodeploys pushes to `main` once CI passes. Build settings live in the Railway service, not in the repo:
 
-- Dockerfile: `docker/mcp/Dockerfile` (`dockerfilePath`)
+- Dockerfile: `/docker/mcp/Dockerfile` (`dockerfilePath`)
 - Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
 - Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`.
-- `RAILWAY_DOCKERFILE_PATH=docker/mcp/Dockerfile`: the service needs this to build the Dockerfile above.
+- The build uses the service's Dockerfile path setting, which must be `/docker/mcp/Dockerfile`; no `RAILWAY_DOCKERFILE_PATH` variable is needed.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
 
@@ -207,7 +207,7 @@ From source: `cd rust && DATA_DIR=./data cargo run --release -p xxmi-mcp`.
 
 **Railway setup (needs the maintainer's account):**
 
-1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `docker/mcp/Dockerfile`, health check `/healthz`, restart policy `ON_FAILURE`.
+1. New project, "Deploy from GitHub repo", pick `xxmi-lang/xxmi-lang`. Set the build settings in the service (see Deployment): Dockerfile `/docker/mcp/Dockerfile`, health check `/healthz`, restart policy `ON_FAILURE`.
 2. In the service: add a **volume** and mount it at `/data`.
 3. Variables: `ADMIN_TOKEN` (any long random string; optional), `GITHUB_TOKEN` (optional and normally unnecessary). Leave `PORT` alone; the image already sets `DATA_DIR=/data`. **Set `TRUSTED_PROXY_HOPS=2`** on the service, overriding the image's 1 (the code default is 0): Railway's edge puts two entries at the end of `X-Forwarded-For` (the client, then its own proxy), so with 1 every request is keyed on a different proxy address and the rate limit never triggers (verified on the live service: 60 parallel requests all succeeded with 1; with 2, 20 passed and 40 got 429, also with spoofed `X-Forwarded-For`). Keep the service at one replica.
 4. Settings → Networking → **Generate domain** (or add a custom domain). Autodeploy from `main` after CI passes (see Deployment).
