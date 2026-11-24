@@ -418,7 +418,7 @@ pub const RULES: [Rule; 36] = [
     .with_fix(),
     rule(
         "XM306",
-        Severity::Warning,
+        Severity::Hint,
         "`override_byte_stride` differs from the `stride` of the `vb0` resource, under the `zzmi` profile",
         byte_stride::check,
     ),

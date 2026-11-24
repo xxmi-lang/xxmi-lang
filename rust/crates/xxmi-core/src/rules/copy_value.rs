@@ -1,5 +1,5 @@
-//! The source side of a resource copy (`dst = [options] Resource…`), as
-//! `parse_resource_copy_target_source` reads it: option words and the target in any order.
+//! The source side of a resource copy (`dst = [options] Resource…`),
+//! as `parse_resource_copy_target_source` reads it: option words and the target in any order.
 
 /// `ResourceCopyOptionNames` (CommandList.h).
 const OPTIONS: [&str; 11] = [

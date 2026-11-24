@@ -1,13 +1,17 @@
 //! XM306: `override_byte_stride` differs from the `stride` of the resource the same
 //! TextureOverride binds to `vb0` (zzmi profile).
 //!
-//! The DLL never compares them: `IniHandler.cpp` only multiplies the value by
-//! `override_vertex_count` into the buffer size (`HackerDevice.cpp` grows the matching buffer to it).
-//! So this is a convention check, and it reports only what the files settle:
-//! one unconditional `vb0` line, a resource with its own data and a single literal `stride`
-//! that nothing copies into, and no called command list that might rebind `vb0`.
+//! The DLL never compares them: `IniHandler.cpp` only multiplies the value
+//! by `override_vertex_count` into the buffer size,
+//! and `HackerDevice.cpp` grows the matching buffer to it.
+//! The hash may match any vertex buffer, so a difference can be intended;
+//! this is a hint, and it reports only what the files settle:
+//! one unconditional `vb0` line and no other vertex buffer bound (any other is skipped,
+//! unless the value is the sum of all their strides), no `handling = skip`,
+//! a resource with its own data and a single literal `stride` that nothing copies into,
+//! and no called command list that might rebind `vb0`.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use super::copy_value::resource_source;
 use super::keywords::{FlowKeyword, flow_keyword};
@@ -53,31 +57,71 @@ fn check_section(context: &RuleContext, index: usize, section: &SectionModel) ->
         return None;
     }
 
-    Some(Finding::new(
-        value,
-        message(context, section, declared, &vb0),
+    let slots = vertex_slots(section);
+    let message = if slots.len() > 1 {
+        summed_message(context, section, &slots, declared, &vb0)?
+    } else if skips_draw(context.text, section) {
+        return None;
+    } else {
+        mismatch_message(declared, &vb0)
+    };
+
+    Some(Finding::new(value, message))
+}
+
+/// Reports a value equal to the strides of every bound buffer added up;
+/// any other value with several buffers bound is left alone.
+fn summed_message(
+    context: &RuleContext,
+    section: &SectionModel,
+    slots: &BTreeSet<u32>,
+    declared: u32,
+    vb0: &Bound,
+) -> Option<String> {
+    let strides: Vec<u32> = slots
+        .iter()
+        .map(|&slot| bound(context, section, slot).map(|b| b.stride))
+        .collect::<Option<_>>()?;
+    if strides.iter().sum::<u32>() != declared {
+        return None;
+    }
+
+    let names: Vec<String> = slots.iter().map(|slot| format!("vb{slot}")).collect();
+    let (last, rest) = names.split_last()?;
+    let parts: Vec<String> = strides.iter().map(u32::to_string).collect();
+    Some(format!(
+        "`override_byte_stride = {declared}` looks like the strides of {} and {last} added up ({}); `vb0` alone is {}.",
+        rest.join(", "),
+        parts.join(" + "),
+        vb0.stride
     ))
 }
 
-fn message(context: &RuleContext, section: &SectionModel, declared: u32, vb0: &Bound) -> String {
-    let strides: Option<Vec<u32>> = (0..=2)
-        .map(|slot| bound(context, section, slot).map(|b| b.stride))
-        .collect();
+fn mismatch_message(declared: u32, vb0: &Bound) -> String {
+    format!(
+        "`override_byte_stride = {declared}` is not `stride = {}` of `vb0 = {}`; the DLL doesn't compare them and the hash may match another buffer, so check it is intended.",
+        vb0.stride, vb0.resource
+    )
+}
 
-    match strides {
-        Some(strides) if strides.iter().sum::<u32>() == declared => {
-            let parts: Vec<String> = strides.iter().map(u32::to_string).collect();
-            format!(
-                "`override_byte_stride = {declared}` looks like the strides of vb0, vb1 and vb2 added up ({}); `vb0` alone is {}.",
-                parts.join(" + "),
-                vb0.stride
-            )
-        }
-        _ => format!(
-            "`override_byte_stride = {declared}` differs from `stride = {}` of `vb0 = {}`.",
-            vb0.stride, vb0.resource
-        ),
-    }
+/// The slots of every `vb<n>` line, in any branch.
+fn vertex_slots(section: &SectionModel) -> BTreeSet<u32> {
+    section
+        .lines
+        .iter()
+        .filter_map(|line| line.command.as_deref()?.strip_prefix("vb")?.parse().ok())
+        .collect()
+}
+
+/// A `handling = skip` override replaces the draw, so a larger stride is deliberate.
+fn skips_draw(text: &str, section: &SectionModel) -> bool {
+    section.lines.iter().any(|line| {
+        line.command.as_deref() == Some("handling")
+            && line
+                .scanned
+                .value
+                .is_some_and(|value| value.slice(text).eq_ignore_ascii_case("skip"))
+    })
 }
 
 /// The value of a key that appears exactly once with a value.
