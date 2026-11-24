@@ -16,7 +16,8 @@ use super::{
 
 /// Lints files and folders.
 pub fn lint_paths(paths: &[PathBuf], options: &LintOptions) -> Result<LintResult, LintError> {
-    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
+    let configs = ConfigLoader::default();
+    let mut workspace = workspace_for(options, PathResolver::default(), &configs);
 
     let mut targets = Vec::new();
     for path in paths {
@@ -35,7 +36,7 @@ pub fn lint_paths(paths: &[PathBuf], options: &LintOptions) -> Result<LintResult
             targets.push(workspace.add_target(&file, &base)?);
         }
     }
-    lint_targets(&workspace, &targets, options)
+    lint_targets(&workspace, &targets, options, &configs)
 }
 
 /// Lints `text` as if it were the file at `path`: the text goes into the workspace the way the
@@ -47,14 +48,15 @@ pub fn lint_text(
     encoding: Encoding,
     options: &LintOptions,
 ) -> Result<LintResult, LintError> {
-    let mut workspace = Workspace::new(options.lookup, &options.snapshots);
+    let configs = ConfigLoader::default();
+    let mut workspace = workspace_for(options, PathResolver::default(), &configs);
     let full = resolve_path(path);
     workspace.set_overlay(&full, text);
 
     let fallback = full.parent().unwrap_or(Path::new("")).to_path_buf();
     let id = workspace.add_target(&full, &fallback)?;
     workspace.file_mut(id).encoding = encoding;
-    lint_targets(&workspace, &[id], options)
+    lint_targets(&workspace, &[id], options, &configs)
 }
 
 /// Lints in-memory files that never touch the host file system:
@@ -76,7 +78,7 @@ pub fn lint_texts_while(
     keep_going: &dyn Fn() -> bool,
 ) -> Result<LintResult, LintError> {
     let resolver = PathResolver::in_memory(files.iter().map(|(path, _)| path.as_path()));
-    let mut workspace = Workspace::with_resolver(options.lookup, &options.snapshots, resolver);
+    let mut workspace = workspace_for(options, resolver, configs);
 
     let mut ordered: Vec<&(PathBuf, String)> = files.iter().collect();
     ordered.sort_by_key(|(path, _)| !is_d3dx(path));
@@ -96,6 +98,17 @@ pub fn lint_texts_while(
     lint_targets_with(&workspace, &targets, options, configs, keep_going)
 }
 
+fn workspace_for(
+    options: &LintOptions,
+    resolver: PathResolver,
+    configs: &ConfigLoader,
+) -> Workspace {
+    let mut workspace = Workspace::with_resolver(options.lookup, &options.snapshots, resolver);
+    workspace.set_profile_override(options.profile);
+    workspace.set_configs(configs.clone());
+    workspace
+}
+
 fn is_d3dx(path: &Path) -> bool {
     path.file_name()
         .is_some_and(|name| name.to_string_lossy().eq_ignore_ascii_case("d3dx.ini"))
@@ -105,14 +118,9 @@ fn lint_targets(
     workspace: &Workspace,
     targets: &[FileId],
     options: &LintOptions,
+    configs: &ConfigLoader,
 ) -> Result<LintResult, LintError> {
-    lint_targets_with(
-        workspace,
-        targets,
-        options,
-        &ConfigLoader::default(),
-        &|| true,
-    )
+    lint_targets_with(workspace, targets, options, configs, &|| true)
 }
 
 fn lint_targets_with(

@@ -114,6 +114,46 @@ fn link_binary(link: &std::path::Path) {
 }
 
 #[test]
+fn mi_package_forces_the_profile() {
+    let fixture = Fixture::new(
+        "mi-package",
+        &[(
+            "mod.ini",
+            "[Present]\nrun = CommandList\\WWMIv1\\BackupRestoreVertexTextureSlots\n",
+        )],
+    );
+    let lint = |id: &str| {
+        xxmi(&[
+            "lint",
+            "--format",
+            "json",
+            "--mi-package",
+            id,
+            &fixture.path("mod.ini"),
+        ])
+    };
+
+    let wwmi = lint("wwmi");
+    let zzmi = lint("zzmi");
+
+    assert!(!stdout(&wwmi).contains("XM20"), "{}", stdout(&wwmi));
+    assert!(stdout(&zzmi).contains("XM206"), "{}", stdout(&zzmi));
+}
+
+#[test]
+fn an_unknown_mi_package_is_a_usage_error_listing_the_ids() {
+    let fixture = Fixture::new("mi-package-unknown", &[("mod.ini", "[Constants]\n")]);
+
+    let output = xxmi(&["lint", "--mi-package", "nope", &fixture.path("mod.ini")]);
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    for id in ["xxmi", "gimi", "srmi", "wwmi", "zzmi", "himi", "efmi"] {
+        assert!(stderr.contains(id), "{stderr}");
+    }
+}
+
+#[test]
 fn standalone_lsp_name_answers_version() {
     let dir = Fixture::new("lsp-name", &[]);
     let link = dir.dir.join(if cfg!(windows) {

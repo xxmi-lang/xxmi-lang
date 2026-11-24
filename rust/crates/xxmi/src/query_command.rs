@@ -79,7 +79,8 @@ impl Library {
             )));
         }
         bundled_snapshots()
-            .first()
+            .iter()
+            .find(|snapshot| snapshot.name == "zzmi")
             .map(Self::Bundled)
             .ok_or_else(|| {
                 CliError::Usage("no package found and no bundled library snapshot".to_string())

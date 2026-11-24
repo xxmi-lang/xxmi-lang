@@ -1,4 +1,4 @@
-//! What the references of a workspace resolve to, computed once per symbol table (the `usage`
+//! What the references of a package resolve to, computed once per symbol table (the `usage`
 //! cache): XM204 and XM205 read it.
 
 use std::collections::HashSet;
@@ -7,6 +7,7 @@ use crate::model::SymbolKind;
 use crate::model::mesh::binds_core_mesh_slot;
 
 use super::Workspace;
+use super::scopes::Scope;
 use super::symbols::ResolvedVariable;
 
 pub struct Usage {
@@ -20,9 +21,9 @@ pub struct Usage {
     pub locals: HashSet<(usize, usize)>,
 }
 
-/// Resolves every reference in the workspace once, recording what is used.
-pub(super) fn compute(workspace: &Workspace) -> Usage {
-    let symbols = workspace.symbols();
+/// Resolves every reference in a package once, recording what is used.
+pub(super) fn compute(workspace: &Workspace, scope: &Scope) -> Usage {
+    let symbols = &scope.symbols;
     let mut usage = Usage {
         sections: HashSet::new(),
         mesh_bound: HashSet::new(),
@@ -30,7 +31,8 @@ pub(super) fn compute(workspace: &Workspace) -> Usage {
         locals: HashSet::new(),
     };
 
-    for (id, file) in workspace.files().iter().enumerate() {
+    for &id in &scope.files {
+        let file = &workspace.files()[id];
         for reference in &file.references {
             if reference.kind == SymbolKind::Variable {
                 match symbols.resolve_variable(reference, file) {

@@ -1,5 +1,6 @@
 //! Usage and help texts.
 
+use xxmi_core::profile;
 use xxmi_core::rules::RULES;
 
 pub const USAGE: &str = concat!(
@@ -20,6 +21,8 @@ pub fn lint_help() -> String {
         .map(|r| format!("  {}  {:<7}  {}", r.id, r.severity.as_str(), r.description))
         .collect();
 
+    let profiles: Vec<&str> = profile::ids().collect();
+
     format!(
         concat!(
             "xxmi lint [paths…]  Lint .ini files and folders (default: .)\n",
@@ -29,6 +32,7 @@ pub fn lint_help() -> String {
             "  --rules XM201,XM202  run only these rules\n",
             "  --max-warnings N     exit 1 if there are more than N warnings\n",
             "  --require-package    skip files that are not inside a package (no d3dx.ini in any parent folder)\n",
+            "  --mi-package <id>    check every package against this MI's library ({}); default: detect it per package\n",
             "  --stdin              read one file's text from stdin instead of from disk\n",
             "  --stdin-path <path>  with --stdin: the file the text stands for. Its namespace and package come\n",
             "                       from this path, which doesn't need to exist; paths in the output are this one\n",
@@ -37,6 +41,7 @@ pub fn lint_help() -> String {
             "Rules:\n",
             "{}"
         ),
+        profiles.join(", "),
         rules.join("\n")
     )
 }

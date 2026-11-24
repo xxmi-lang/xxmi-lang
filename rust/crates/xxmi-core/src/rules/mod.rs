@@ -39,6 +39,7 @@ use std::path::Path;
 use crate::diagnostic::Severity;
 use crate::lookup::Lookup;
 use crate::model::IniFile;
+use crate::profile::Profile;
 use crate::scan::Span;
 use crate::suggest::nearest;
 use crate::workspace::symbols::SymbolTable;
@@ -52,11 +53,13 @@ pub struct RuleContext<'a> {
     pub lookup: &'static Lookup,
     /// The 3DMigoto folder the file was loaded under, if found.
     pub package_root: Option<&'a Path>,
+    /// The MI library the file's package is checked against.
+    pub profile: &'static Profile,
 }
 
 impl RuleContext<'_> {
     pub fn symbols(&self) -> &SymbolTable {
-        self.workspace.symbols()
+        self.workspace.symbols_for(self.file)
     }
 
     /// Files under a package's `Core/` folder are libraries other mods call into.

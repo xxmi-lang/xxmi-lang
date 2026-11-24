@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use xxmi_core::lint::{
     ConfigLoader, LintOptions, RuleSetting, collect_ini_files, lint_file, skipped_for_package,
 };
+use xxmi_core::profile::{self, Profile};
 use xxmi_core::trace;
 use xxmi_core::workspace::{FileId, Workspace};
 
@@ -288,6 +289,8 @@ impl<'a> Server<'a> {
         self.configuration_request = None;
         self.options.overrides = rule_overrides(result.as_ref());
         self.options.require_package = require_package(result.as_ref());
+        self.workspace
+            .set_profile_override(mi_package(result.as_ref()));
         self.publish(false);
     }
 
@@ -341,6 +344,16 @@ fn require_package(result: Option<&Value>) -> bool {
         .unwrap_or(false)
 }
 
+/// `xxmi.miPackage` of the settings answer: a profile id, or `auto` (and anything unknown) to
+/// detect the profile of each package.
+fn mi_package(result: Option<&Value>) -> Option<&'static Profile> {
+    result
+        .and_then(|settings| settings.get(0))
+        .and_then(|section| section.get("miPackage"))
+        .and_then(Value::as_str)
+        .and_then(profile::by_id)
+}
+
 /// `xxmi.rules` of the settings answer: rule id to setting name.
 fn rule_overrides(result: Option<&Value>) -> HashMap<String, RuleSetting> {
     let rules = result
@@ -370,6 +383,17 @@ mod tests {
         )));
         assert!(!require_package(Some(&json!([{}]))));
         assert!(!require_package(None));
+    }
+
+    #[test]
+    fn mi_package_is_a_profile_id_or_auto() {
+        let setting = |value| mi_package(Some(&json!([{ "miPackage": value }]))).map(|p| p.id);
+
+        assert_eq!(setting("wwmi"), Some("wwmi"));
+        assert_eq!(setting("auto"), None);
+        assert_eq!(setting("nope"), None);
+        assert_eq!(mi_package(Some(&json!([{}]))), None);
+        assert_eq!(mi_package(None), None);
     }
 
     #[test]

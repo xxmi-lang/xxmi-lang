@@ -147,7 +147,13 @@ fn invalid_name_message(is_variable: bool) -> &'static str {
     }
 }
 
-fn conflicts(workspace: &Workspace, symbol: &Symbol, placeholder: &str, new_name: &str) -> bool {
+fn conflicts(
+    workspace: &Workspace,
+    file: &IniFile,
+    symbol: &Symbol,
+    placeholder: &str,
+    new_name: &str,
+) -> bool {
     let stem = |name: &str| {
         name.get(..name.len().saturating_sub(placeholder.len()))
             .unwrap_or("")
@@ -156,12 +162,15 @@ fn conflicts(workspace: &Workspace, symbol: &Symbol, placeholder: &str, new_name
     let found = match symbol {
         Symbol::Section(section) => {
             let renamed = stem(&section.qualified_name) + new_name;
-            !workspace.symbols().sections_named(&renamed).is_empty()
+            !workspace
+                .symbols_for(file)
+                .sections_named(&renamed)
+                .is_empty()
         }
         Symbol::Variable(variable) => {
             let renamed = stem(&variable.key) + &new_name.to_lowercase();
             workspace
-                .symbols()
+                .symbols_for(file)
                 .all_variables()
                 .any(|v| v.key == renamed)
         }
@@ -218,7 +227,7 @@ pub fn rename(
     }
 
     if let Some(new_name) = new_name {
-        validate(workspace, &symbol, &placeholder, new_name)?;
+        validate(workspace, file, &symbol, &placeholder, new_name)?;
     }
     Ok(RenameOutcome {
         range: placeholder_range,
@@ -229,6 +238,7 @@ pub fn rename(
 
 fn validate(
     workspace: &Workspace,
+    file: &IniFile,
     symbol: &Symbol,
     placeholder: &str,
     new_name: &str,
@@ -242,7 +252,7 @@ fn validate(
     if !valid {
         return Err(invalid_name_message(is_variable).to_string());
     }
-    if conflicts(workspace, symbol, placeholder, new_name) {
+    if conflicts(workspace, file, symbol, placeholder, new_name) {
         return Err(format!(
             "`{new_name}` is already declared in that namespace."
         ));

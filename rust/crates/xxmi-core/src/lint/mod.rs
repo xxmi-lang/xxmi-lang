@@ -19,6 +19,7 @@ use crate::defaults::{bundled_lookup, bundled_snapshots};
 use crate::diagnostic::Diagnostic;
 use crate::encoding::Encoding;
 use crate::lookup::Lookup;
+use crate::profile::Profile;
 use crate::workspace::snapshot::Snapshots;
 
 pub use collect::collect_ini_files;
@@ -36,7 +37,10 @@ pub struct LintOptions {
     /// Skip files that sit in no package (no d3dx.ini in any ancestor folder).
     pub require_package: bool,
     pub lookup: &'static Lookup,
+    /// The libraries on offer; a package is checked against the one of its profile.
     pub snapshots: Snapshots,
+    /// Checks every package against this profile instead of detecting each one's.
+    pub profile: Option<&'static Profile>,
 }
 
 impl LintOptions {
@@ -49,6 +53,7 @@ impl LintOptions {
             require_package: false,
             lookup: bundled_lookup(),
             snapshots: bundled_snapshots().into(),
+            profile: None,
         }
     }
 }

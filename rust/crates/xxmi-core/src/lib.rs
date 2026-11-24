@@ -11,6 +11,7 @@ pub mod model;
 pub mod navigation;
 pub mod parse;
 pub mod paths;
+pub mod profile;
 pub mod query;
 pub mod rules;
 pub mod scan;

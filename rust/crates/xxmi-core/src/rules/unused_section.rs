@@ -10,7 +10,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
         return Vec::new();
     }
 
-    let used = &context.workspace.usage().sections;
+    let used = &context.workspace.usage_for(file).sections;
     file.sections
         .iter()
         .filter(|s| {

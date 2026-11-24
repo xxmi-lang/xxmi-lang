@@ -66,7 +66,7 @@ fn normalized_lines((file, section): (&IniFile, &SectionModel)) -> Vec<String> {
         .collect()
 }
 
-/// A Resource a `vb0`-`vb2` or `ib` line binds anywhere in the workspace,
+/// A Resource a `vb0`-`vb2` or `ib` line binds anywhere in its package,
 /// or one backed by a `.buf` or `.ib` file.
 fn is_mesh_resource(context: &RuleContext, (file, section): (&IniFile, &SectionModel)) -> bool {
     if section.kind != Some(SymbolKind::Resource) {
@@ -75,7 +75,7 @@ fn is_mesh_resource(context: &RuleContext, (file, section): (&IniFile, &SectionM
 
     let bound = context
         .workspace
-        .usage()
+        .usage_for(file)
         .mesh_bound
         .contains(&section.qualified_name.to_lowercase());
     bound || has_mesh_filename(file, section)
