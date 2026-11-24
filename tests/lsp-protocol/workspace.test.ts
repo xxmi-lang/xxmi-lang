@@ -46,3 +46,54 @@ describe('xxmi-lsp with a broken xxmi.toml', { timeout: 30_000 }, () => {
     expect(s.client.logs.filter((m) => m.includes('xxmi.toml'))).toHaveLength(1);
   });
 });
+
+describe('xxmi-lsp with files created after startup', { timeout: 30_000 }, () => {
+  it('loads a created file the index would have loaded, in one refresh', async () => {
+    const s = begin();
+    const path = s.write('a.ini', MOD_TEXT);
+    const initial = s.next(path, exactly('XM206'));
+    await s.start();
+    await s.open(path, MOD_TEXT);
+    await initial;
+
+    const lib = s.write('Lib/lib.ini', LIB_TEXT);
+    const more = Array.from({ length: 50 }, (_, i) => s.write(`more/m${i}.ini`, '[Constants]\n'));
+    const hidden = s.write('DISABLEDLib/lib.ini', LIB_TEXT.replace('Lib', 'Other'));
+    const notIni = s.write('Lib/notes.txt', 'x');
+    const refreshed = s.next(path, exactly());
+    await s.created(lib, ...more, hidden, notIni);
+
+    await refreshed;
+  });
+
+  it('keeps a namespace of a created file in a skipped folder unresolved', async () => {
+    const s = begin();
+    const path = s.write('a.ini', `${MOD_HEAD}run = CommandList\\Other\\Foo\n`);
+    const initial = s.next(path, exactly('XM206'));
+    await s.start();
+    await s.open(path, `${MOD_HEAD}run = CommandList\\Other\\Foo\n`);
+    await initial;
+
+    const lib = s.write('DISABLEDLib/lib.ini', 'namespace = Other\n[CommandListFoo]\n');
+    const sentinel = s.write('Lib/lib.ini', LIB_TEXT);
+    const probe = s.next(path, () => true);
+    await s.created(lib, sentinel);
+
+    expect(codes(await probe)).toEqual(['XM206']);
+  });
+
+  it('unloads a deleted file', async () => {
+    const s = begin();
+    const lib = s.write('Lib/lib.ini', LIB_TEXT);
+    const path = s.write('a.ini', MOD_TEXT);
+    const initial = s.next(path, exactly());
+    await s.start();
+    await s.open(path, MOD_TEXT);
+    await initial;
+
+    const after = s.next(path, exactly('XM206'));
+    await s.deleted(lib);
+
+    await after;
+  });
+});

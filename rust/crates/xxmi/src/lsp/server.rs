@@ -1,14 +1,16 @@
 //! Editor state: the workspace, the open documents, the debounce timers and diagnostics.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use lsp_server::{Connection, Message, Notification, Request, RequestId};
 use serde_json::{Value, json};
 use xxmi_core::lint::{
-    ConfigLoader, LintOptions, RuleSetting, collect_ini_files, lint_file, skipped_for_package,
+    ConfigLoader, LintOptions, RuleSetting, collect_ini_files, is_collected, lint_file,
+    skipped_for_package,
 };
+use xxmi_core::paths::resolve_path;
 use xxmi_core::profile::{self, Profile};
 use xxmi_core::trace;
 use xxmi_core::workspace::{FileId, Workspace};
@@ -217,15 +219,40 @@ impl<'a> Server<'a> {
         self.publish(false);
     }
 
-    /// Created files are picked up when included or opened.
+    /// One notification is one batch with a single refresh: unpacking an archive reports
+    /// hundreds of created files at once.
     pub fn files_changed(&mut self, changed: Vec<(String, bool)>) {
+        let mut seen = HashSet::new();
         for (uri, created) in changed {
-            if self.documents.get(&uri).is_some() || created {
+            // The editor buffer wins; a repeated uri is read from disk only once.
+            if self.documents.get(&uri).is_some() || !seen.insert(uri.clone()) {
                 continue;
             }
-            self.workspace.reload(&uri_to_path(&uri));
+
+            let path = uri_to_path(&uri);
+            if self.workspace.reload(&path).is_none() && created {
+                self.index_created(&path);
+            }
         }
         self.publish(false);
+    }
+
+    /// Loads a file the startup index would have loaded.
+    fn index_created(&mut self, path: &Path) {
+        let full = resolve_path(path);
+        let root = self
+            .roots
+            .iter()
+            .map(|root| resolve_path(root))
+            .filter(|root| full.starts_with(root))
+            .max_by_key(|root| root.as_os_str().len());
+
+        if let Some(root) = root
+            && is_collected(&root, &full)
+            && full.is_file()
+        {
+            self.index_file(&full, &root);
+        }
     }
 
     pub fn publish(&mut self, full: bool) {
