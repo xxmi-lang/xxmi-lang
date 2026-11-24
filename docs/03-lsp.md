@@ -38,7 +38,7 @@ The Rust server (`xxmi-lsp`) implements phase 1 except formatting, which is not 
 - **Completion:** section kinds after `[`; keys, commands, flow keywords (`if`, `elif`, `else`, `endif`) and declarations (`local`, `global`) at the start of a line, inserting ` = ` (or a space after a keyword) unless the line already has `=`; `$` variables anywhere, including conditions; enum values, DXGI formats, command values, references (own-namespace names short, offered as soon as a prefix like `Res` is typed) and file paths after `=`; resources and pools for resource copies (`ps-t0 = `). Nothing in comments. The VS Code extension turns off word-based suggestions for `migoto`, so an empty result shows nothing instead of words from the file.
 - **Work queue:** document updates, saves and indexing run one at a time; requests wait for it. A failure is logged and never stops the queue or the process.
 - **Code actions:** "did you mean" quick fixes (XM102, XM105, XM201, XM202).
-- **Settings:** `xxmi.toml`, plus `workspace/configuration` section `xxmi` (`rules`), which wins.
+- **Settings:** `xxmi.toml`, plus `workspace/configuration` section `xxmi` (`rules`, `miPackage`), which wins. `miPackage` sets the game profile; see `01-language-model.md` §5.
 
 Measured with `rust/bench/lsp-latency.mjs` on an Apple M3 Max, with a 5,048-line document next to ZZMI:
 

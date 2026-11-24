@@ -52,7 +52,7 @@ pnpm spec:extract        # runs xxmi-spec-extract: regenerates spec/generated/*.
 pnpm xxmi lint path/to/mod                                 # CLI from source (paths relative to the cwd)
 pnpm xxmi query symbol 'CommandList\ZZMI\SetTextures'      # read-only lookups (spec, library symbols)
 node scripts/mcp-acceptance.ts http://localhost:3000/mcp   # the M6 questions against a running MCP server (docs/06)
-pnpm xxmi index ../ZZMI-Package/ZZMI --out snapshots/zzmi.json --name zzmi   # rebuild the bundled library snapshot
+pnpm xxmi index ../<X>-Package/<MI> --out snapshots/<id>.json --name <id>   # rebuild a profile's bundled library snapshot
 pnpm build:binaries --target host                          # single-file xxmi / xxmi-lsp in dist/bin (needs Rust); no --target: every release target
 XXMI_PACKAGE_SRC=../ZZMI-Package/ZZMI node rust/bench/lsp-latency.mjs   # LSP edit latency (docs/03)
 cd rust && cargo test --release                            # Rust unit and integration tests
