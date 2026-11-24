@@ -9,6 +9,7 @@ use xxmi_core::lint::format::{format_json, format_text};
 use xxmi_core::lint::{LintOptions, LintResult, lint_paths, lint_text};
 use xxmi_core::lookup::Lookup;
 use xxmi_core::paths::display_path;
+use xxmi_core::profile::{self, Profile};
 use xxmi_core::rules::RULES;
 use xxmi_core::spec::Spec;
 
@@ -17,12 +18,13 @@ use crate::error::CliError;
 use crate::help::lint_help;
 use crate::js_number::js_number;
 
-const OPTIONS: [OptionSpec; 8] = [
+const OPTIONS: [OptionSpec; 9] = [
     args::string("format"),
     args::string("rules"),
     args::string("max-warnings"),
     args::flag("stdin"),
     args::flag("require-package"),
+    args::string("mi-package"),
     args::string("stdin-path"),
     args::string("spec"),
     args::flag("help"),
@@ -49,6 +51,7 @@ pub fn run(raw_args: &[String]) -> Result<i32, CliError> {
     let mut options = LintOptions::bundled();
     options.rules = rules;
     options.require_package = parsed.flag("require-package");
+    options.profile = parse_mi_package(parsed.string("mi-package"))?;
     if let Some(path) = parsed.string("spec") {
         options.lookup = load_spec(Path::new(path))?;
     }
@@ -100,6 +103,20 @@ fn parse_rules(value: Option<&str>) -> Result<Option<Vec<String>>, CliError> {
         }
     }
     Ok(Some(rules))
+}
+
+fn parse_mi_package(value: Option<&str>) -> Result<Option<&'static Profile>, CliError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+
+    profile::by_id(value).map(Some).ok_or_else(|| {
+        let known: Vec<&str> = profile::ids().collect();
+        CliError::Usage(format!(
+            "unknown --mi-package {value}; use one of {}",
+            known.join(", ")
+        ))
+    })
 }
 
 fn parse_max_warnings(value: Option<&str>) -> Result<Option<f64>, CliError> {

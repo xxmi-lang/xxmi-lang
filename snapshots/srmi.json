@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "name": "srmi",
+  "source": {
+    "repository": "https://github.com/SpectrumQT/SRMI-Package",
+    "commit": "5ed58b01dec8332db785f0654bbab03f96f5c8df"
+  },
+  "namespaces": [
+    "SRMI",
+    "SRMIv1",
+    "shaderfixes\\help.ini"
+  ],
+  "sections": [
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\shaderfixes\\help.ini\\Initialize",
+      "path": "Core/SRMI/help.ini",
+      "line": 10
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMI\\ResetTempData",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 636
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\PassWindowInfo",
+      "path": "Core/SRMI/main.ini",
+      "line": 148
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\PrintText",
+      "path": "Core/SRMI/main.ini",
+      "line": 29
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\RenderGUI",
+      "path": "Core/SRMI/main.ini",
+      "line": 276
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\RenderText",
+      "path": "Core/SRMI/main.ini",
+      "line": 154
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\Skin",
+      "path": "Core/SRMI/main.ini",
+      "line": 107
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\SRMIv1\\SkinTexture",
+      "path": "Core/SRMI/main.ini",
+      "line": 123
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandListSkin",
+      "path": "Core/SRMI/d3dx_patch.ini",
+      "line": 4
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandListUnbindAllRenderTargets",
+      "path": "d3dx.ini",
+      "line": 1010
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\shaderfixes\\help.ini\\FormatText",
+      "path": "Core/SRMI/help.ini",
+      "line": 57
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS1VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 749
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS1VGs_24",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 765
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS2VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 781
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS3VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 798
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS4VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 815
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_NewSkinCS4VGs_56",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 831
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS1VG",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 715
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS1VGs_24",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 732
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS2VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 698
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS3VG",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 681
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS4VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 664
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMI\\_SingleSkinCS4VGs_56",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 647
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMIv1\\FormatText",
+      "path": "Core/SRMI/main.ini",
+      "line": 173
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\SRMIv1\\RenderText",
+      "path": "Core/SRMI/main.ini",
+      "line": 202
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\SRMIv1\\HideFirstRunNotification",
+      "path": "Core/SRMI/main.ini",
+      "line": 20
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\SRMIv1\\ToggleHuntingModeGuide",
+      "path": "Core/SRMI/main.ini",
+      "line": 15
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\SRMIv1\\ToggleMods",
+      "path": "Core/SRMI/main.ini",
+      "line": 5
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\SRMIv1\\ToggleUserGuide",
+      "path": "Core/SRMI/main.ini",
+      "line": 10
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Font",
+      "path": "Core/SRMI/help.ini",
+      "line": 67
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Help",
+      "path": "Core/SRMI/help.ini",
+      "line": 60
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpFull",
+      "path": "Core/SRMI/help.ini",
+      "line": 38
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpShort",
+      "path": "Core/SRMI/help.ini",
+      "line": 39
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Notification",
+      "path": "Core/SRMI/help.ini",
+      "line": 63
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParams",
+      "path": "Core/SRMI/help.ini",
+      "line": 65
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParamsDefault",
+      "path": "Core/SRMI/help.ini",
+      "line": 69
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Params",
+      "path": "Core/SRMI/help.ini",
+      "line": 61
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsFull",
+      "path": "Core/SRMI/help.ini",
+      "line": 41
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsShort",
+      "path": "Core/SRMI/help.ini",
+      "line": 49
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMI\\BlendBuffer",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 850
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMI\\DrawBuffer",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 851
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMI\\PositionBuffer",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 849
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMI\\SkinningMatrix",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 852
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\DebugRW",
+      "path": "Core/SRMI/main.ini",
+      "line": 140
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\ErrorIncompatibleVersionModNameParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 336
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\ErrorOldVersionSRMI",
+      "path": "Core/SRMI/main.ini",
+      "line": 316
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\Font",
+      "path": "Core/SRMI/main.ini",
+      "line": 257
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\HuntingModeGuide",
+      "path": "Core/SRMI/main.ini",
+      "line": 311
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\Text",
+      "path": "Core/SRMI/main.ini",
+      "line": 253
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TextExample",
+      "path": "Core/SRMI/main.ini",
+      "line": 41
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TextFileExample",
+      "path": "Core/SRMI/main.ini",
+      "line": 46
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TextParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 254
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TextParamsExample",
+      "path": "Core/SRMI/main.ini",
+      "line": 55
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TextPosition",
+      "path": "Core/SRMI/main.ini",
+      "line": 265
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\TopNotificationParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 321
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\UserGuide",
+      "path": "Core/SRMI/main.ini",
+      "line": 306
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\UserGuideParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 352
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\UserNotificationParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 328
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\VersionNotification",
+      "path": "Core/SRMI/main.ini",
+      "line": 86
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\SRMIv1\\VersionNotificationParams",
+      "path": "Core/SRMI/main.ini",
+      "line": 344
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\Multi1VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 418
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\Multi1VGs_24",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 490
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\Multi2VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 562
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\MultiNoSK4VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 164
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\MultiNoSK4VGs_56",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 92
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\MultiYesSK4VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 327
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\MultiYesSK4VGs_56",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 236
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\SingleSK1VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 29
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\SingleSK4VGs",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 50
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMI\\SingleSK4VGs_56",
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 71
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMIv1\\CharacterRoot",
+      "path": "Core/SRMI/main.ini",
+      "line": 98
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\SRMIv1\\Skin",
+      "path": "Core/SRMI/main.ini",
+      "line": 103
+    },
+    {
+      "kind": "shaderregex",
+      "qualifiedName": "ShaderRegex\\SRMIv1\\EnableTextureOverrides",
+      "path": "Core/SRMI/main.ini",
+      "line": 93
+    }
+  ],
+  "variables": [
+    {
+      "key": "$\\shaderfixes\\help.ini\\notification_timeout",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/help.ini",
+      "line": 7
+    },
+    {
+      "key": "$\\srmi\\__poseid",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 6
+    },
+    {
+      "key": "$\\srmi\\vertcount",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 4
+    },
+    {
+      "key": "$\\srmi\\vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/BatchedPose.ini",
+      "line": 5
+    },
+    {
+      "key": "$\\srmiv1\\first_run",
+      "persist": true,
+      "locked": false,
+      "path": "Core/SRMI/main.ini",
+      "line": 77
+    },
+    {
+      "key": "$\\srmiv1\\show_hunting_mode_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/main.ini",
+      "line": 79
+    },
+    {
+      "key": "$\\srmiv1\\show_user_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/main.ini",
+      "line": 78
+    },
+    {
+      "key": "$\\srmiv1\\version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/SRMI/main.ini",
+      "line": 75
+    },
+    {
+      "key": "$costume_mods",
+      "persist": false,
+      "locked": false,
+      "path": "d3dx.ini",
+      "line": 328
+    }
+  ]
+}

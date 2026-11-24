@@ -141,12 +141,27 @@ jobs:
         env:
           XXMI_PACKAGE_SRC: .zzmi-package
 
-      - name: Bundled ZZMI snapshot matches the pinned package
+      - name: Bundled snapshots match their pinned packages
         if: github.event_name != 'schedule'
         shell: bash
         run: |
-          pnpm xxmi index .zzmi-package/ZZMI --out "$RUNNER_TEMP/zzmi.json" --name zzmi
-          diff snapshots/zzmi.json "$RUNNER_TEMP/zzmi.json"
+          failed=0
+          for profile in gimi srmi wwmi zzmi himi efmi; do
+            repo=$(node -p "require('./snapshots/$profile.json').source.repository")
+            commit=$(node -p "require('./snapshots/$profile.json').source.commit")
+            mi=$(echo "$profile" | tr '[:lower:]' '[:upper:]')
+            dir="$RUNNER_TEMP/$profile-package"
+            git init -q "$dir"
+            git -C "$dir" remote add origin "$repo"
+            git -C "$dir" fetch -q --depth 1 "$repo" "$commit"
+            git -C "$dir" checkout -q FETCH_HEAD
+            pnpm xxmi index "$dir/$mi" --out "$RUNNER_TEMP/$profile.json" --name "$profile"
+            if ! diff snapshots/$profile.json "$RUNNER_TEMP/$profile.json"; then
+              echo "::error::snapshots/$profile.json differs from $repo at $commit"
+              failed=1
+            fi
+          done
+          exit "$failed"
 
       # docs/09-roadmap.md M3: test the compiled binaries, not just the Node build.
       - name: Build single-file binaries for this machine

@@ -1,0 +1,913 @@
+{
+  "version": 1,
+  "name": "wwmi",
+  "source": {
+    "repository": "https://github.com/SpectrumQT/WWMI-Package",
+    "commit": "8425abaaae0493c4cfa752a80e878bb5c1a000ec"
+  },
+  "namespaces": [
+    "WWMIv1",
+    "shaderfixes\\help.ini"
+  ],
+  "sections": [
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\shaderfixes\\help.ini\\Initialize",
+      "path": "Core/WWMI/help.ini",
+      "line": 10
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\_IterateTextureSlotsRecursive_Internal",
+      "path": "Core/WWMI/Helpers.ini",
+      "line": 21
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\BackupRestoreVertexTextureSlots",
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 62
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\Callback_OnTextureSlot",
+      "path": "Core/WWMI/Helpers.ini",
+      "line": 12
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\CheckXXMI",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 94
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\DisableShapeKeyOverride",
+      "path": "Core/WWMI/API.ini",
+      "line": 26
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\FireCallbacks",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 156
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\HideNotification",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 46
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\HuntingModeGuide",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 37
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\Initialize",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 103
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\IterateTextureSlots",
+      "path": "Core/WWMI/Helpers.ini",
+      "line": 14
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\LoadShapeKeysBatch",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 218
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\PassWindowInfo",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 6
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\PrintText",
+      "path": "Core/WWMI/API.ini",
+      "line": 45
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\RegisterMod",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 123
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\RenderGUI",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 62
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\RenderText",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 12
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\SetShapeKey",
+      "path": "Core/WWMI/API.ini",
+      "line": 9
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\ToggleCompatibilityMode",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 115
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\ToggleMods",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 109
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\WWMIv1\\ToggleUserGuide",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 28
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandListUnbindAllRenderTargets",
+      "path": "d3dx.ini",
+      "line": 1009
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\shaderfixes\\help.ini\\FormatText",
+      "path": "Core/WWMI/help.ini",
+      "line": 57
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\BlendRemapper",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 221
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\FormatText",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 33
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\MeshSkinner",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 211
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\RenderText",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 62
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeyApplier",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 259
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeyBatchOverrider",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 137
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeyLoader",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 190
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeyMultiplier",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 237
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeyOverrider",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 89
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\ShapeKeySetter",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 59
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\SkeletonMerger",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 178
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\WWMIv1\\SkeletonRemapper",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 258
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\HideFirstRunNotification",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 33
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\HideNotification",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 26
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\ToggleCompatibilityMode",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 11
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\ToggleHuntingModeGuide",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 21
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\ToggleMods",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 6
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\WWMIv1\\ToggleUserGuide",
+      "path": "Core/WWMI/KeyBindings.ini",
+      "line": 16
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Font",
+      "path": "Core/WWMI/help.ini",
+      "line": 67
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Help",
+      "path": "Core/WWMI/help.ini",
+      "line": 60
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpFull",
+      "path": "Core/WWMI/help.ini",
+      "line": 38
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpShort",
+      "path": "Core/WWMI/help.ini",
+      "line": 39
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Notification",
+      "path": "Core/WWMI/help.ini",
+      "line": 63
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParams",
+      "path": "Core/WWMI/help.ini",
+      "line": 65
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParamsDefault",
+      "path": "Core/WWMI/help.ini",
+      "line": 69
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Params",
+      "path": "Core/WWMI/help.ini",
+      "line": 61
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsFull",
+      "path": "Core/WWMI/help.ini",
+      "line": 41
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsShort",
+      "path": "Core/WWMI/help.ini",
+      "line": 49
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\CompatibilityModeDisabled",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 154
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\CompatibilityModeEnabled",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 149
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\DebugRW",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 39
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorCompatibilityModeDisabled",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 177
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorIncompatibleVersionModNameParams",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 219
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorIncompatibleVersionModNameRef",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 196
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorIncompatibleVersionRef",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 195
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorOldVersionMod",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 171
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorOldVersionWWMI",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 183
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ErrorOldVersionXXMI",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 189
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\Font",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 117
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\HuntingModeGuide",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 165
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModAuthor",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 34
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModDesc",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 35
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModLink",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 36
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModLogo",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 37
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModName",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 33
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModsDisplayDisabled",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 144
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\ModsDisplayEnabled",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 139
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\NotificationWidgetParams",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 235
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\OptionToggleWidgetParams",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 204
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\Text",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 113
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\TextExample",
+      "path": "Core/WWMI/API.ini",
+      "line": 58
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\TextFileExample",
+      "path": "Core/WWMI/API.ini",
+      "line": 64
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\TextParams",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 114
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\TextParamsExample",
+      "path": "Core/WWMI/API.ini",
+      "line": 74
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\TextPosition",
+      "path": "Core/WWMI/TextPrinter.ini",
+      "line": 125
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\UnnamedModName",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 199
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\UserGuide",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 159
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\UserNotificationParams",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 212
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\VersionNotification",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 44
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\WWMIv1\\VersionNotificationParams",
+      "path": "Core/WWMI/GUI.ini",
+      "line": 227
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\WWMIv1\\CharacterMenuBackgroundParticlesVS",
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 30
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\WWMIv1\\ShapeKeyLoaderCS",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 31
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\WWMIv1\\ShapeKeyMultiplierCS",
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 44
+    },
+    {
+      "kind": "shaderoverride",
+      "qualifiedName": "ShaderOverride\\WWMIv1\\UIDrawPS",
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 36
+    },
+    {
+      "kind": "shaderregex",
+      "qualifiedName": "ShaderRegex\\WWMIv1\\EnableTextureOverrides",
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 168
+    },
+    {
+      "kind": "textureoverride",
+      "qualifiedName": "TextureOverride\\WWMIv1\\OutfitTileBackgroundImage",
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 55
+    },
+    {
+      "kind": "textureoverride",
+      "qualifiedName": "TextureOverride\\WWMIv1\\OutfitTileSideGradientsImage",
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 48
+    }
+  ],
+  "variables": [
+    {
+      "key": "$\\shaderfixes\\help.ini\\notification_timeout",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/help.ini",
+      "line": 7
+    },
+    {
+      "key": "$\\wwmiv1\\blend_remap_bone_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 72
+    },
+    {
+      "key": "$\\wwmiv1\\blend_remap_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 70
+    },
+    {
+      "key": "$\\wwmiv1\\component_draw_calls_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 79
+    },
+    {
+      "key": "$\\wwmiv1\\custom_mesh_scale",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 68
+    },
+    {
+      "key": "$\\wwmiv1\\custom_vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 67
+    },
+    {
+      "key": "$\\wwmiv1\\custom_vertex_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 66
+    },
+    {
+      "key": "$\\wwmiv1\\enable_compatibility_mode",
+      "persist": true,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 77
+    },
+    {
+      "key": "$\\wwmiv1\\enable_ib_callbacks",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 55
+    },
+    {
+      "key": "$\\wwmiv1\\enable_mods",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 57
+    },
+    {
+      "key": "$\\wwmiv1\\enable_vb0_callbacks",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 78
+    },
+    {
+      "key": "$\\wwmiv1\\enum_guide_hunting_mode",
+      "persist": false,
+      "locked": true,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 21
+    },
+    {
+      "key": "$\\wwmiv1\\enum_guide_user",
+      "persist": false,
+      "locked": true,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 20
+    },
+    {
+      "key": "$\\wwmiv1\\enum_widget_compatibility_mode",
+      "persist": false,
+      "locked": true,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 18
+    },
+    {
+      "key": "$\\wwmiv1\\enum_widget_mods_display",
+      "persist": false,
+      "locked": true,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 17
+    },
+    {
+      "key": "$\\wwmiv1\\first_run",
+      "persist": true,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 5
+    },
+    {
+      "key": "$\\wwmiv1\\in_character_menu",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 20
+    },
+    {
+      "key": "$\\wwmiv1\\in_dressing_room",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WWMI-Utilities.ini",
+      "line": 21
+    },
+    {
+      "key": "$\\wwmiv1\\last_slot_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/Helpers.ini",
+      "line": 10
+    },
+    {
+      "key": "$\\wwmiv1\\mod_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 60
+    },
+    {
+      "key": "$\\wwmiv1\\object_guid",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 59
+    },
+    {
+      "key": "$\\wwmiv1\\option_toggle_time",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 15
+    },
+    {
+      "key": "$\\wwmiv1\\required_wwmi_version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 61
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_checksum",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_checksum_batch0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 11
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_checksum_batch1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 14
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_dispatch_size_y_original_batch0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 19
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_dispatch_size_y_original_batch1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 21
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 24
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_mode",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 23
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_value",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 25
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 8
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_count_batch0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 18
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_count_batch1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 20
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_offset_custom_batch0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 13
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_offset_custom_batch1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 16
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_offset_original_batch0",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 12
+    },
+    {
+      "key": "$\\wwmiv1\\shapekey_vertex_offset_original_batch1",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/ShapeKeys.ini",
+      "line": 15
+    },
+    {
+      "key": "$\\wwmiv1\\show_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 13
+    },
+    {
+      "key": "$\\wwmiv1\\show_mod_error",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 12
+    },
+    {
+      "key": "$\\wwmiv1\\show_notification_widget",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\wwmiv1\\show_option_toggle_widget",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 8
+    },
+    {
+      "key": "$\\wwmiv1\\show_wwmi_version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 7
+    },
+    {
+      "key": "$\\wwmiv1\\show_xxmi_error",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/GUI.ini",
+      "line": 11
+    },
+    {
+      "key": "$\\wwmiv1\\slot_id",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/Helpers.ini",
+      "line": 9
+    },
+    {
+      "key": "$\\wwmiv1\\vg_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 64
+    },
+    {
+      "key": "$\\wwmiv1\\vg_offset",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 63
+    },
+    {
+      "key": "$\\wwmiv1\\weights_per_vertex_count",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 71
+    },
+    {
+      "key": "$\\wwmiv1\\window_height",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 76
+    },
+    {
+      "key": "$\\wwmiv1\\window_width",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 75
+    },
+    {
+      "key": "$\\wwmiv1\\wwmi_version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/WWMI/WuWa-Model-Importer.ini",
+      "line": 53
+    }
+  ]
+}

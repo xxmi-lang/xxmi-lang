@@ -1,6 +1,7 @@
 //! `xxmi capabilities [--json]`: what this build offers, for tools that bundle the binary.
 
 use serde::Serialize;
+use xxmi_core::profile::{Dialect, PROFILES, Profile};
 use xxmi_core::rules::RULES;
 
 use crate::args::{self, OptionSpec};
@@ -12,7 +13,8 @@ const HELP: &str = concat!(
     "xxmi capabilities [--json]\n",
     "\n",
     "Lists the rules of this build (id, default severity, title, whether a quick fix exists),\n",
-    "the lint output schema versions and the version of this binary. --json prints it as one JSON line."
+    "its profiles (id, name, dialect, whether it ships a library), the lint output schema versions\n",
+    "and the version of this binary. --json prints it as one JSON line."
 );
 
 const DOC_BASE: &str = "https://github.com/xxmi-lang/xxmi-lang/blob/main/docs/02-diagnostics.md";
@@ -29,9 +31,28 @@ struct Capabilities {
     capabilities_version: u32,
     version: &'static str,
     lint_schema_versions: [u32; 1],
-    /// No game profile concept exists yet.
-    profiles: [&'static str; 0],
+    profiles: Vec<ProfileInfo>,
     rules: Vec<RuleInfo>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ProfileInfo {
+    id: &'static str,
+    name: &'static str,
+    dialect: Dialect,
+    has_library: bool,
+}
+
+impl From<&'static Profile> for ProfileInfo {
+    fn from(profile: &'static Profile) -> Self {
+        Self {
+            id: profile.id,
+            name: profile.name,
+            dialect: profile.dialect,
+            has_library: profile.snapshot.is_some(),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -49,7 +70,7 @@ fn capabilities() -> Capabilities {
         capabilities_version: CAPABILITIES_VERSION,
         version: env!("CARGO_PKG_VERSION"),
         lint_schema_versions: LINT_SCHEMA_VERSIONS,
-        profiles: [],
+        profiles: PROFILES.iter().map(ProfileInfo::from).collect(),
         rules: RULES
             .iter()
             .map(|rule| RuleInfo {
@@ -102,7 +123,13 @@ mod tests {
         let value = serde_json::to_value(capabilities()).unwrap();
         assert_eq!(value["capabilitiesVersion"], 1);
         assert_eq!(value["lintSchemaVersions"], serde_json::json!([1]));
-        assert_eq!(value["profiles"], serde_json::json!([]));
+        assert_eq!(
+            value["profiles"][0],
+            serde_json::json!({ "id": "xxmi", "name": "XXMI (generic)", "dialect": "xxmi", "hasLibrary": false })
+        );
+        assert_eq!(value["profiles"][1]["dialect"], "gimi");
+        assert_eq!(value["profiles"][4]["id"], "zzmi");
+        assert_eq!(value["profiles"][4]["hasLibrary"], true);
 
         let first = &value["rules"][0];
         assert_eq!(first["id"], "XM001");

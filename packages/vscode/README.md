@@ -25,6 +25,8 @@ one; both use the `migoto` language.
   the bundled server. `xxmi.lsp.path` wins over both.
 - `xxmi.requirePackage`: when on (default off), report diagnostics only for `.ini` files inside a
   mod package.
+- `xxmi.miPackage`: the game profile for every mod package. `auto` (default) detects it per package;
+  a profile id (`xxmi`, `gimi`, `srmi`, `wwmi`, `zzmi`, `himi`, `efmi`) uses that profile for all of them.
 
 Rule reference, CLI and other editors: https://github.com/xxmi-lang/xxmi-lang
 

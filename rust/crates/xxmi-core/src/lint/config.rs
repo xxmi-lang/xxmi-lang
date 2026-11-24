@@ -1,6 +1,8 @@
 //! `xxmi.toml`: the nearest one up the tree from a file wins (docs/02-diagnostics.md
 //! "Configuration").
 //!
+//!   profile = "zzmi"
+//!
 //!   [rules]
 //!   XM204 = "off"
 
@@ -14,6 +16,7 @@ use std::rc::Rc;
 use toml::{Table, Value};
 
 use crate::diagnostic::Severity;
+use crate::profile::{self, Profile};
 
 use super::is_rule_id;
 
@@ -61,11 +64,16 @@ impl std::error::Error for ConfigError {}
 #[derive(Debug, Default)]
 pub struct LintConfig {
     pub rules: HashMap<String, RuleSetting>,
+    /// The MI the folder's mods target, instead of detecting it.
+    pub profile: Option<&'static Profile>,
 }
 
 pub fn parse_config(text: &str, path: &Path) -> Result<LintConfig, ConfigError> {
     let data: Table = text.parse().map_err(|e| ConfigError::new(path, e))?;
-    let mut config = LintConfig::default();
+    let mut config = LintConfig {
+        profile: parse_profile(&data, path)?,
+        ..LintConfig::default()
+    };
 
     let entries: Vec<(&String, &Value)> = match data.get("rules") {
         None => return Ok(config),
@@ -104,12 +112,31 @@ pub fn parse_config(text: &str, path: &Path) -> Result<LintConfig, ConfigError> 
     Ok(config)
 }
 
+fn parse_profile(data: &Table, path: &Path) -> Result<Option<&'static Profile>, ConfigError> {
+    let Some(value) = data.get("profile") else {
+        return Ok(None);
+    };
+    let known = || profile::ids().collect::<Vec<_>>().join(", ");
+
+    let id = value
+        .as_str()
+        .ok_or_else(|| ConfigError::new(path, format!("profile must be one of {}", known())))?;
+    let found = profile::by_id(id).ok_or_else(|| {
+        ConfigError::new(
+            path,
+            format!("unknown profile {id}; use one of {}", known()),
+        )
+    })?;
+    Ok(Some(found))
+}
+
 /// Finds and parses the nearest xxmi.toml at or above a directory, caching per directory.
-#[derive(Default)]
+/// Clones share the cache.
+#[derive(Clone, Default)]
 pub struct ConfigLoader {
     /// No xxmi.toml is ever read (the server must not touch its own disk).
     disabled: bool,
-    cache: RefCell<HashMap<PathBuf, Rc<LintConfig>>>,
+    cache: Rc<RefCell<HashMap<PathBuf, Rc<LintConfig>>>>,
 }
 
 impl ConfigLoader {
@@ -160,6 +187,24 @@ mod tests {
         let config = parse("[rules]\nXM204 = \"off\"\nXM201 = \"warning\"\n").unwrap();
         assert_eq!(config.rules["XM204"], RuleSetting::Off);
         assert_eq!(config.rules["XM201"], RuleSetting::Level(Severity::Warning));
+    }
+
+    #[test]
+    fn reads_the_profile() {
+        assert!(parse("[rules]\n").unwrap().profile.is_none());
+        let config = parse("profile = \"WWMI\"\n").unwrap();
+        assert_eq!(config.profile.map(|p| p.id), Some("wwmi"));
+    }
+
+    #[test]
+    fn rejects_an_unknown_or_mistyped_profile() {
+        let unknown = parse("profile = \"nope\"\n").unwrap_err().to_string();
+        assert_eq!(
+            unknown,
+            "xxmi.toml: unknown profile nope; use one of xxmi, gimi, srmi, wwmi, zzmi, himi, efmi"
+        );
+        let mistyped = parse("profile = 3\n").unwrap_err().to_string();
+        assert!(mistyped.starts_with("xxmi.toml: profile must be one of"));
     }
 
     #[test]

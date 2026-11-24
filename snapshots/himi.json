@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "name": "himi",
+  "source": {
+    "repository": "https://github.com/leotorrez/HIMI-Package",
+    "commit": "d7241e78563f64ef0163782bd85b9d84930ad97a"
+  },
+  "namespaces": [
+    "Core\\HIMI\\Libraries\\Includes.ini",
+    "HIMIv1",
+    "Mouse",
+    "shaderfixes\\help.ini"
+  ],
+  "sections": [
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\PassWindowInfo",
+      "path": "Core/HIMI/main.ini",
+      "line": 74
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\PrintText",
+      "path": "Core/HIMI/API.ini",
+      "line": 4
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\RenderGUI",
+      "path": "Core/HIMI/main.ini",
+      "line": 193
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\RenderText",
+      "path": "Core/HIMI/main.ini",
+      "line": 79
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\Skin",
+      "path": "Core/HIMI/main.ini",
+      "line": 40
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\HIMIv1\\SkinTexture",
+      "path": "Core/HIMI/main.ini",
+      "line": 49
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandList\\shaderfixes\\help.ini\\Initialize",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 10
+    },
+    {
+      "kind": "commandlist",
+      "qualifiedName": "CommandListUnbindAllRenderTargets",
+      "path": "d3dx.ini",
+      "line": 939
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\HIMIv1\\FormatText",
+      "path": "Core/HIMI/main.ini",
+      "line": 97
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\HIMIv1\\RenderText",
+      "path": "Core/HIMI/main.ini",
+      "line": 125
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\Mouse\\SoftwareMouse",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 32
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\Mouse\\SoftwareMouseBW",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 107
+    },
+    {
+      "kind": "customshader",
+      "qualifiedName": "CustomShader\\shaderfixes\\help.ini\\FormatText",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 37
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\HIMIv1\\HideFirstRunNotification",
+      "path": "Core/HIMI/KeyBindings.ini",
+      "line": 21
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\HIMIv1\\ToggleHuntingModeGuide",
+      "path": "Core/HIMI/KeyBindings.ini",
+      "line": 16
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\HIMIv1\\ToggleMods",
+      "path": "Core/HIMI/KeyBindings.ini",
+      "line": 5
+    },
+    {
+      "kind": "key",
+      "qualifiedName": "Key\\HIMIv1\\ToggleUserGuide",
+      "path": "Core/HIMI/KeyBindings.ini",
+      "line": 11
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\DebugRW",
+      "path": "Core/HIMI/main.ini",
+      "line": 67
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\ErrorIncompatibleVersionModNameParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 242
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\Font",
+      "path": "Core/HIMI/main.ini",
+      "line": 177
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\HuntingModeGuide",
+      "path": "Core/HIMI/main.ini",
+      "line": 222
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\Text",
+      "path": "Core/HIMI/main.ini",
+      "line": 175
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TextExample",
+      "path": "Core/HIMI/API.ini",
+      "line": 16
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TextFileExample",
+      "path": "Core/HIMI/API.ini",
+      "line": 21
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TextParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 176
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TextParamsExample",
+      "path": "Core/HIMI/API.ini",
+      "line": 30
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TextPosition",
+      "path": "Core/HIMI/main.ini",
+      "line": 184
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\TopNotificationParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 227
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\UserGuide",
+      "path": "Core/HIMI/main.ini",
+      "line": 217
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\UserGuideParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 258
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\UserNotificationParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 234
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\VersionNotification",
+      "path": "Core/HIMI/main.ini",
+      "line": 28
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\HIMIv1\\VersionNotificationParams",
+      "path": "Core/HIMI/main.ini",
+      "line": 250
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\Color",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 26
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\Mask",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 27
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture1",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 28
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture2",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 29
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture3",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 30
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\Mouse\\SoftwareMouseBackupTexture4",
+      "path": "Core/HIMI/Libraries/Mouse.ini",
+      "line": 31
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Font",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 46
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Help",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 41
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpFull",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 39
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\HelpShort",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 40
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Notification",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 43
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParams",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 45
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\NotificationParamsDefault",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 64
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\Params",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 42
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsFull",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 48
+    },
+    {
+      "kind": "resource",
+      "qualifiedName": "Resource\\shaderfixes\\help.ini\\ParamsShort",
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 56
+    },
+    {
+      "kind": "shaderregex",
+      "qualifiedName": "ShaderRegex\\HIMIv1\\EnableTextureOverrides",
+      "path": "Core/HIMI/main.ini",
+      "line": 35
+    }
+  ],
+  "variables": [
+    {
+      "key": "$\\himiv1\\first_run",
+      "persist": true,
+      "locked": false,
+      "path": "Core/HIMI/main.ini",
+      "line": 18
+    },
+    {
+      "key": "$\\himiv1\\show_hunting_mode_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/HIMI/main.ini",
+      "line": 20
+    },
+    {
+      "key": "$\\himiv1\\show_user_guide",
+      "persist": false,
+      "locked": false,
+      "path": "Core/HIMI/main.ini",
+      "line": 19
+    },
+    {
+      "key": "$\\himiv1\\version",
+      "persist": false,
+      "locked": false,
+      "path": "Core/HIMI/main.ini",
+      "line": 16
+    },
+    {
+      "key": "$\\shaderfixes\\help.ini\\notification_timeout",
+      "persist": false,
+      "locked": false,
+      "path": "Core/HIMI/Libraries/Help.ini",
+      "line": 7
+    },
+    {
+      "key": "$costume_mods",
+      "persist": false,
+      "locked": false,
+      "path": "d3dx.ini",
+      "line": 322
+    }
+  ]
+}

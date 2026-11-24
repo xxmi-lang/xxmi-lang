@@ -203,7 +203,7 @@ fn variable_items(
     }
 
     let own = file.namespace.to_lowercase();
-    for variable in workspace.symbols().all_variables() {
+    for variable in workspace.symbols_for(file).all_variables() {
         // `$\ns\name`: offer the short form in the file's own namespace.
         let short = match variable.key.strip_prefix(&format!("$\\{own}\\")) {
             Some(rest) if !own.is_empty() => format!("${rest}"),
@@ -412,7 +412,7 @@ fn reference_items(
     let own = file.namespace.to_lowercase();
     let mut items = Items::default();
 
-    for symbol in workspace.symbols().all_sections() {
+    for symbol in workspace.symbols_for(file).all_sections() {
         if !kinds.contains(&symbol.kind.as_str()) {
             continue;
         }

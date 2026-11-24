@@ -187,28 +187,31 @@ Most library docs are free-form `;` comments (see `main.ini` "Input/Usage" block
 
 ## 4. Workspace index
 
-- **Roots:** the opened folder, plus the **package root**. The package root comes from `xxmi.toml` (`package = "../../"`) or is auto-detected by walking up from the mod to a folder containing `d3dx.ini` and `Core/<Game>/`. In a typical XXMI install, `ZZMI/Mods/<mod>/` walks up to `ZZMI/`.
+- **Roots:** the opened folder, plus the **package root**. The package root comes from `xxmi.toml` (`package = "../../"`) or is auto-detected by walking up from the mod to the nearest folder containing `d3dx.ini`. In a typical XXMI install, `ZZMI/Mods/<mod>/` walks up to `ZZMI/`.
 - **Includes:** follow `[Include*]` `include`, `include_recursive` and `exclude_recursive` like the DLL does, including the recursive `Mods/` include from `d3dx.ini`. Files are indexed lazily: open files first, then include targets, then the rest in the background.
-- **Bundled library snapshot:** each build of `xxmi-core` embeds a pre-built index of the latest ZZMI package libraries (symbols and docs only). A user with just a mod folder still gets completion and hover for `CommandList\ZZMI\…`. A local package, when found, overrides the snapshot.
+- **Bundled library snapshot:** each build of `xxmi-core` embeds a pre-built index of the libraries of each game profile that has one (symbols and docs only; see §5). A user with just a mod folder still gets completion and hover for `CommandList\ZZMI\…`. A local package, when found, overrides the snapshot.
 - **As built (M2, `rust/crates/xxmi-core/src/workspace/`):**
   - The package root is found by walking up to a folder with `d3dx.ini`; `xxmi.toml` `package =` is not read yet.
   - When a root is found, `d3dx.ini` (namespace `''`) and everything it `include`s are loaded, transitively. `include_recursive` folders (`Mods/`) are **not** bulk-loaded; only the files being linted are, each with the namespace the DLL would give it (its path from the root, `\`-separated).
   - Without a root, targets get path namespaces relative to the lint folder, which keeps them unique within the run.
   - `exclude_recursive` globs from `d3dx.ini` `[Include]` (ZZMI: `DISABLED*`, `desktop.ini`) are matched like `ParseIniFilesRecursive` does: caseless PCRE2 globs against each file and folder name below the package root (`DISABLED*` when there is no package). Linting a folder and the LSP's background index skip matching files. A file opened or linted on its own is still checked, but XM107 doesn't compare it with other files, since the DLL never loads it next to them. Files reached through `include =` are never excluded.
   - Symlinks: each path is its own file (the DLL loads both when both are walked), but an editor buffer applies to every loaded path of the same file on disk, so a library symlinked into `Core/` follows edits to its working copy.
-  - Library references then resolve through `snapshots/zzmi.json`, built with `pnpm xxmi index <ZZMI package> --out snapshots/zzmi.json --name zzmi`. A snapshot is used only when no loaded file declares any of its namespaces. CI checks it matches the pinned ZZMI-Package commit.
+  - Library references then resolve through the snapshot of the package's profile, `snapshots/<id>.json`, built with `pnpm xxmi index <package> --out snapshots/<id>.json --name <id>`. A snapshot is used only when no loaded file declares any of its namespaces. CI checks every snapshot matches its pinned package commit.
   - Include-derived namespaces use the on-disk spelling and `\`; the DLL keeps the path as written in `include =`. This only matters for explicit references to path namespaces, which libraries don't use (they declare `namespace =`).
 - **Invalidation:** file watcher (LSP `workspace/didChangeWatchedFiles`). Re-lower only changed files, then re-resolve references in files that depend on changed symbols.
 
 ## 5. Game profiles
 
-`spec/profiles/zzmi.toml` (fill in with maintainers):
+As built (`rust/crates/xxmi-core/src/profile/`):
 
-```toml
-game = "ZZZ"
-package_dir_markers = ["d3dx.ini", "Core/ZZMI/main.ini"]
-core_namespace = "ZZMIv1"
-libraries = ["SlotFix", "TTLib", "HP bar"]     # auto-discovered; this list is only for docs ordering
-format_eras = ["position", "blend-v1", "blend-v2"]   # names TBD, see 05-transforms.md
-hash_sources = []                                    # TBD: where component hash mappings come from
-```
+- **Profiles:** `xxmi` (generic: XXMI dialect, no library), `gimi` (GIMI dialect), and `srmi`, `wwmi`, `zzmi`, `himi`, `efmi` (XXMI dialect). Each of the last six has a library snapshot, `snapshots/<id>.json`, pinned to its package commit. `xxmi capabilities --json` lists them.
+- **Why `gimi` has its own dialect:** many Genshin players can't use the XXMI DLL because of its anti-cheat, so they run the GIMI DLL (XXMI-Libs-Package v0.1.0 is vanilla GIMI code). The latest GIMI-Package still works with it, and some players do run the XXMI DLL.
+- **A package** is the folder with `d3dx.ini` nearest above a file, i.e. one MI install. Files with none form one implicit package. Each package is checked against its own profile's library only. Symbols never resolve across packages in one run, but mods in the same package see each other.
+- **Which profile a package uses**, first match wins:
+  1. `--mi-package <id>` (CLI) or the `xxmi.miPackage` editor setting, unless it is `auto`.
+  2. `profile = "<id>"` in the `xxmi.toml` at or above the package root.
+  3. A package folder named after one of the six MI ids (`gimi`, `srmi`, `wwmi`, `zzmi`, `himi`, `efmi`; case-insensitive), or one holding `Core/<MI>/`.
+  4. References to a library namespace that only one profile's snapshot declares.
+  5. `xxmi`. A loose file with no reference or setting that picks an MI gets no library completion.
+
+Not implemented: the earlier `spec/profiles/zzmi.toml` sketch (format eras, hash sources, core namespace). The registry holds only id, name, dialect and snapshot.

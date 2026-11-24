@@ -12,7 +12,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
     let file = context.file;
     // Globals in files pulled in by includes are usually a library's API for other mods.
     let check_globals = context.workspace.is_target(file) && !context.is_library();
-    let used = context.workspace.usage();
+    let used = context.workspace.usage_for(file);
     // XM209 and XM210 own the declarations the DLL drops.
     let dropped: HashSet<usize> = redeclared_globals(file)
         .into_iter()
