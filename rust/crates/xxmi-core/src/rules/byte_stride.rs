@@ -210,7 +210,8 @@ fn is_copied_into(context: &RuleContext, qualified_name: &str) -> bool {
 }
 
 /// Whether a command list or custom shader the section runs, at any depth,
-/// might bind a vertex buffer (or can't be followed: an unresolved target is not a certainty either way).
+/// might bind a vertex buffer
+/// (or can't be followed: an unresolved target is not a certainty either way).
 fn calls_may_bind(
     context: &RuleContext,
     file_id: usize,

@@ -272,3 +272,29 @@ fn a_loose_mod_calling_the_zzmi_library_resolves_it() {
         assert!(found.is_empty(), "{code}: {found:?}");
     }
 }
+
+fn stride_mod(run: &str) -> String {
+    format!(
+        "[ResourcePosition]\ntype = Buffer\nstride = 40\nfilename = Position.buf\n\n\
+         [TextureOverrideCall]\nhash = 0223abcd\nvb0 = ResourcePosition\nrun = {run}\n\
+         override_vertex_count = 1000\noverride_byte_stride = 52\n"
+    )
+}
+
+#[test]
+fn xm306_looks_past_a_library_call_but_not_an_unresolved_one() {
+    let options = LintOptions {
+        rules: Some(vec!["XM306".to_string()]),
+        profile: profile::by_id("zzmi"),
+        ..LintOptions::bundled()
+    };
+    let flagged_run =
+        |run: &str| flagged(&[("/v/loose/a.ini", &stride_mod(run))], &options, "XM306");
+
+    // Library lists are known not to bind a vertex buffer, unlike unresolved ones.
+    assert_eq!(
+        flagged_run("CommandList\\ZZMI\\SetTextures"),
+        [resolved("/v/loose/a.ini")]
+    );
+    assert!(flagged_run("CommandListMissing").is_empty());
+}
