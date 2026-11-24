@@ -8,6 +8,6 @@ mod types;
 pub use collect::ChunkAnalysis;
 pub use lower::{LowerOptions, lower_ini};
 pub use types::{
-    Access, IniFile, Issue, LineModel, Reference, Scope, SectionModel, SymbolKind,
-    VariableDeclaration,
+    Access, IniFile, Issue, LineModel, Reference, Scope, SectionModel, SymbolKind, Usage,
+    UsageKind, VariableDeclaration,
 };

@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use xxmi_core::diagnostic::Position;
 use xxmi_core::lint::{LintOptions, lint_paths};
 use xxmi_core::paths::{display_path, resolve_path};
+use xxmi_core::profile;
 use xxmi_core::workspace::snapshot::Snapshots;
 
 fn fixtures() -> PathBuf {
@@ -152,8 +153,25 @@ rule_tests! {
     xm110 => "XM110", xm111 => "XM111", xm112 => "XM112", xm113 => "XM113", xm114 => "XM114", xm115 => "XM115",
     xm201 => "XM201", xm202 => "XM202", xm203 => "XM203", xm204 => "XM204", xm205 => "XM205",
     xm206 => "XM206", xm207 => "XM207", xm208 => "XM208", xm209 => "XM209", xm210 => "XM210",
-    xm211 => "XM211", xm212 => "XM212",
+    xm211 => "XM211", xm212 => "XM212", xm307 => "XM307",
     xm403 => "XM403",
+}
+
+/// The XXMI DLL has everything the GIMI DLL lacks, so the same fixture is clean under its profiles.
+#[test]
+fn xm307_is_silent_outside_the_gimi_profile() {
+    let dir = fixtures().join("rules/XM307");
+    for id in ["xxmi", "zzmi"] {
+        let options = LintOptions {
+            profile: profile::by_id(id),
+            ..options(Some(vec!["XM307".to_string()]))
+        };
+        let result = lint_paths(&[dir.join("bad.ini")], &options).expect("lint runs");
+        assert!(
+            result.files.iter().all(|f| f.diagnostics.is_empty()),
+            "{id}"
+        );
+    }
 }
 
 /// Windows checkouts and editors hand the tooling CRLF files; diagnostics must not change,
@@ -174,6 +192,7 @@ fn crlf_files_report_the_same_diagnostics_as_lf() {
 
         let crlf = scratch.join("bad.ini");
         fs::write(&crlf, to_crlf(&fs::read(&bad).unwrap())).unwrap();
+        copy_profile_config(&dir, &scratch);
         let rules = Some(vec![id.clone()]);
 
         let actual = diagnose(&crlf, &scratch, rules.clone());
@@ -222,6 +241,14 @@ fn quick_fixes_on_crlf_files_keep_the_files_line_breaks() {
         checked > 5,
         "only {checked} fixtures with quick fixes found"
     );
+}
+
+/// A fixture's `xxmi.toml` picks its profile, so the CRLF copy needs it too (and no stale one).
+fn copy_profile_config(fixture: &Path, scratch: &Path) {
+    let copy = scratch.join("xxmi.toml");
+    if fs::copy(fixture.join("xxmi.toml"), &copy).is_err() {
+        let _ = fs::remove_file(copy);
+    }
 }
 
 /// Fix texts with CRLF breaks turned back into LF, to compare against the LF run.

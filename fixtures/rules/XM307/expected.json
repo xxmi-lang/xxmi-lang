@@ -1,0 +1,322 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`locked` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 2,
+        "character": 7
+      },
+      "end": {
+        "line": 2,
+        "character": 13
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "[PoolSlots] isn't in the GIMI DLL: the DLL warns and ignores the whole section. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 5,
+        "character": 1
+      },
+      "end": {
+        "line": 5,
+        "character": 10
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "[FilterSlots] isn't in the GIMI DLL: the DLL warns and ignores the whole section. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 9,
+        "character": 1
+      },
+      "end": {
+        "line": 9,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "[Input] isn't in the GIMI DLL: the DLL warns and ignores the whole section. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 12,
+        "character": 1
+      },
+      "end": {
+        "line": 12,
+        "character": 6
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`color_space` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 17,
+        "character": 0
+      },
+      "end": {
+        "line": 17,
+        "character": 11
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`uav_byte_stride` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 21,
+        "character": 0
+      },
+      "end": {
+        "line": 21,
+        "character": 15
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`->width` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 23,
+        "character": 24
+      },
+      "end": {
+        "line": 23,
+        "character": 29
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "Operator `&` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 24,
+        "character": 11
+      },
+      "end": {
+        "line": 24,
+        "character": 12
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "Operator `<<` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 25,
+        "character": 11
+      },
+      "end": {
+        "line": 25,
+        "character": 13
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "Operator `~` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 26,
+        "character": 5
+      },
+      "end": {
+        "line": 26,
+        "character": 6
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`abs()` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 27,
+        "character": 5
+      },
+      "end": {
+        "line": 27,
+        "character": 8
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`countbits()` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 27,
+        "character": 18
+      },
+      "end": {
+        "line": 27,
+        "character": 27
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`frame_number` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 28,
+        "character": 4
+      },
+      "end": {
+        "line": 28,
+        "character": 16
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`fps` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 29,
+        "character": 3
+      },
+      "end": {
+        "line": 29,
+        "character": 6
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`SnapshotInitialTextures` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 32,
+        "character": 6
+      },
+      "end": {
+        "line": 32,
+        "character": 29
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`PoolSlots`, a [Pool] section, isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 33,
+        "character": 11
+      },
+      "end": {
+        "line": 33,
+        "character": 23
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "warning",
+    "message": "`->Size` isn't in the GIMI DLL: the whole line fails to parse. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 33,
+        "character": 25
+      },
+      "end": {
+        "line": 33,
+        "character": 29
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "hint",
+    "message": "`log_level` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 36,
+        "character": 0
+      },
+      "end": {
+        "line": 36,
+        "character": 9
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "hint",
+    "message": "`dll_initialization_delay` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 39,
+        "character": 0
+      },
+      "end": {
+        "line": 39,
+        "character": 24
+      }
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM307",
+    "severity": "hint",
+    "message": "`dump_mips` isn't in the GIMI DLL: the DLL ignores the line. Needs the XXMI DLL.",
+    "range": {
+      "start": {
+        "line": 42,
+        "character": 0
+      },
+      "end": {
+        "line": 42,
+        "character": 9
+      }
+    }
+  }
+]

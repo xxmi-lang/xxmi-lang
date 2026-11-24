@@ -6,7 +6,7 @@ use crate::document::Chunk;
 use crate::parse::{SyntaxIssue, collect_syntax_issues};
 use crate::scan::Span;
 
-use super::types::{Access, Reference, Scope, SymbolKind, VariableDeclaration};
+use super::types::{Access, Reference, Scope, SymbolKind, Usage, UsageKind, VariableDeclaration};
 
 /// Statements whose `name` field is written, not read.
 const ASSIGNMENTS: [&str; 3] = [
@@ -46,6 +46,7 @@ pub struct ChunkAnalysis {
     /// Chunk-local row and node kind of each statement, in document order.
     pub statements: Vec<(u32, String)>,
     pub references: Vec<Reference>,
+    pub usages: Vec<Usage>,
     pub variables: Vec<VariableDeclaration>,
 }
 
@@ -74,6 +75,7 @@ impl Walker<'_> {
             return;
         }
         self.record_statement(node);
+        self.record_usage(node);
 
         if DECLARATIONS.contains(&node.kind()) {
             self.visit_declaration(node);
@@ -104,7 +106,28 @@ impl Walker<'_> {
             .push((node.start_position().row as u32, kind.to_string()));
     }
 
+    fn record_usage(&mut self, node: Node) {
+        let Some((kind, named)) = usage_of(node) else {
+            return;
+        };
+        self.push_usage(kind, named);
+    }
+
+    fn push_usage(&mut self, kind: UsageKind, node: Node) {
+        self.analysis.usages.push(Usage {
+            kind,
+            text: self.text_of(node).trim().to_string(),
+            span: self.span_of(node),
+            section: None,
+        });
+    }
+
     fn visit_declaration(&mut self, node: Node) {
+        let mut cursor = node.walk();
+        for keyword in node.children(&mut cursor).filter(|c| is_keyword(*c)) {
+            self.push_usage(UsageKind::Modifier, keyword);
+        }
+
         if let Some(variable) = node.child_by_field_name("variable") {
             let has_flag = |flag: &str| node.children(&mut node.walk()).any(|c| c.kind() == flag);
             self.analysis.variables.push(VariableDeclaration {
@@ -163,6 +186,31 @@ impl Walker<'_> {
             end: node.end_byte(),
         }
     }
+}
+
+/// The node whose text names what `node` uses, for the constructs the spec has entries for.
+fn usage_of(node: Node) -> Option<(UsageKind, Node)> {
+    let child = |kind: &str| {
+        let mut cursor = node.walk();
+        node.named_children(&mut cursor).find(|c| c.kind() == kind)
+    };
+    match node.kind() {
+        "builtin_function" => child("function_name").map(|n| (UsageKind::Function, n)),
+        "property_access_expression" => child("resource_property").map(|n| (UsageKind::Member, n)),
+        "binary_expression" | "unary_expression" => {
+            let mut cursor = node.walk();
+            let operator = node.children(&mut cursor).find(|c| !c.is_named());
+            operator.map(|n| (UsageKind::Operator, n))
+        }
+        "runtime_parameter" => Some((UsageKind::RuntimeValue, node)),
+        "run_instruction_key_value" => Some((UsageKind::RunValue, node)),
+        _ => None,
+    }
+}
+
+/// An unnamed node spelt as a word, such as `global` or `locked` in a declaration.
+fn is_keyword(node: Node) -> bool {
+    !node.is_named() && node.kind().chars().all(|c| c.is_ascii_alphabetic())
 }
 
 fn is_statement(kind: &str) -> bool {

@@ -114,6 +114,30 @@ pub struct Reference {
     pub access: Access,
 }
 
+/// A construct the spec describes, found by the parser rather than by its text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UsageKind {
+    Function,
+    Operator,
+    /// `->width` and the like.
+    Member,
+    /// A keyword before a variable declaration (`persist`, `locked`).
+    Modifier,
+    /// `x = frame_number`, `if fps > 30`: a value the DLL reads at run time.
+    RuntimeValue,
+    /// The right-hand side of a `run =` line that names a built-in command.
+    RunValue,
+}
+
+#[derive(Debug)]
+pub struct Usage {
+    pub kind: UsageKind,
+    pub text: String,
+    pub span: Span,
+    /// Index into `IniFile::sections`, or `None` for the preamble.
+    pub section: Option<usize>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scope {
     Global,
@@ -143,6 +167,7 @@ pub struct IniFile {
     /// `;` comment lines, for suppression directives.
     pub comments: Vec<ScannedLine>,
     pub references: Vec<Reference>,
+    pub usages: Vec<Usage>,
     pub variables: Vec<VariableDeclaration>,
     pub line_index: LineIndex,
 }
