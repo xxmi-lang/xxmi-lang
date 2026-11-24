@@ -1,0 +1,104 @@
+[
+  {
+    "path": "bad.ini",
+    "id": "XM305",
+    "severity": "warning",
+    "message": "`Resource\\ZZMI\\Diffuse` is copied on every draw: with no `ref` the DLL copies into a custom resource.",
+    "range": {
+      "start": {
+        "line": 12,
+        "character": 0
+      },
+      "end": {
+        "line": 12,
+        "character": 21
+      }
+    },
+    "fix": {
+      "title": "Insert `ref`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 12,
+              "character": 24
+            },
+            "end": {
+              "line": 12,
+              "character": 24
+            }
+          },
+          "newText": "ref "
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM305",
+    "severity": "warning",
+    "message": "`post Resource\\ZZMI\\NormalMap` is copied on every draw: with no `ref` the DLL copies into a custom resource.",
+    "range": {
+      "start": {
+        "line": 13,
+        "character": 0
+      },
+      "end": {
+        "line": 13,
+        "character": 28
+      }
+    },
+    "fix": {
+      "title": "Insert `ref`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 31
+            },
+            "end": {
+              "line": 13,
+              "character": 31
+            }
+          },
+          "newText": "ref "
+        }
+      ]
+    }
+  },
+  {
+    "path": "bad.ini",
+    "id": "XM305",
+    "severity": "warning",
+    "message": "`Resource\\ZZMI\\Diffuse` is copied on every draw: with no `ref` the DLL copies into a custom resource.",
+    "range": {
+      "start": {
+        "line": 18,
+        "character": 0
+      },
+      "end": {
+        "line": 18,
+        "character": 21
+      }
+    },
+    "fix": {
+      "title": "Insert `ref`",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 18,
+              "character": 24
+            },
+            "end": {
+              "line": 18,
+              "character": 24
+            }
+          },
+          "newText": "ref "
+        }
+      ]
+    }
+  }
+]

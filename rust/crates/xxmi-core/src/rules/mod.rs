@@ -2,6 +2,7 @@
 
 mod argument_count;
 mod bare_line;
+mod copy_value;
 mod duplicate_grade;
 mod duplicate_key;
 mod duplicate_section;
@@ -25,6 +26,7 @@ mod missing_include;
 mod no_hash;
 mod outside_section;
 mod setting_inside_if;
+mod slotfix_copy;
 mod syntax;
 mod unknown_key;
 mod unknown_namespace;
@@ -62,6 +64,11 @@ pub struct RuleContext<'a> {
 impl RuleContext<'_> {
     pub fn symbols(&self) -> &SymbolTable {
         self.workspace.symbols_for(self.file)
+    }
+
+    /// The ZZMI profile: its library defines what XM305 and XM306 check.
+    pub fn is_zzmi(&self) -> bool {
+        self.profile.id == "zzmi"
     }
 
     /// Files under a package's `Core/` folder are libraries other mods call into.
@@ -196,7 +203,7 @@ impl Rule {
     }
 }
 
-pub const RULES: [Rule; 34] = [
+pub const RULES: [Rule; 35] = [
     rule(
         "XM001",
         Severity::Error,
@@ -401,6 +408,13 @@ pub const RULES: [Rule; 34] = [
         "Assignment to a locked global (the DLL rejects the line)",
         locked_assigned::check,
     ),
+    rule(
+        "XM305",
+        Severity::Warning,
+        "ZZMI `Resource\\ZZMI\\<Name>` slot copied instead of referenced, under the `zzmi` profile",
+        slotfix_copy::check,
+    )
+    .with_fix(),
     rule(
         "XM307",
         Severity::Warning,
