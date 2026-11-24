@@ -19,9 +19,10 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
     findings
 }
 
-/// The type prefix of each recognised header, when it isn't spelled as the spec has it. Only the
-/// prefix is touched: the rest of the name is the user's, and references compare it
-/// case-insensitively (`WStringInsensitiveLess`, IniHandler.cpp:172), so a fix breaks none.
+/// The type prefix of each recognised header, when it isn't spelled as the spec has it.
+/// Only the prefix is touched: the rest of the name is the user's,
+/// and references compare it case-insensitively
+/// (`WStringInsensitiveLess`, IniHandler.cpp:172), so a fix breaks none.
 fn section_type_findings(context: &RuleContext) -> Vec<Finding> {
     let mut findings = Vec::new();
     for section in &context.file.sections {
