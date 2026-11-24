@@ -56,9 +56,13 @@ fn check_kinds(context: &RuleContext, kinds: &[SymbolKind]) -> Vec<Finding> {
 }
 
 /// Older mods call library sections that the library defines without a namespace
-/// (`CommandListSkinTexture`). With no MI to say which library applies, that is no error.
+/// (`CommandListSkinTexture`). With no MI to say which library applies, that is no error;
+/// this is XM201's alone, XM202 keeps reporting unresolved resources.
 fn is_fallback_global(context: &RuleContext, reference: &Reference) -> bool {
-    context.workspace.profile_is_fallback(context.file)
+    matches!(
+        reference.kind,
+        SymbolKind::CommandList | SymbolKind::CustomShader
+    ) && context.workspace.profile_is_fallback(context.file)
         && is_library_global(reference.kind, &reference.text)
 }
 
