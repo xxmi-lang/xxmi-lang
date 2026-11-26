@@ -20,7 +20,7 @@ fn start(configuration: bool) -> Client {
 }
 
 fn exit_code(child: &mut Child) -> Option<i32> {
-    child.wait().unwrap().code()
+    common::wait_exit(child, "exit code").code()
 }
 
 #[test]
