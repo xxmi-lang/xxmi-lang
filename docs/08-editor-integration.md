@@ -1,6 +1,6 @@
 # 08 — Editor integration
 
-Priority: **VS Code** and **Kate**. Neovim ships a config too (see [Neovim](#neovim)). Helix, Zed and Sublime work later through their generic LSP support.
+Priority: **VS Code** and **Kate**. Neovim, Helix and Sublime Text ship configs too (see [Neovim](#neovim), [Helix](#helix) and [Sublime Text](#sublime-text)). Zed works later through its generic LSP support.
 
 Every release zip carries an `editors/` folder with the editor config and `manifest.json` for installers (see `editors/README.md`).
 
@@ -91,6 +91,14 @@ Their `migoto.xml` needs to keep up with the XXMI dialect (the same constructs a
 ## Neovim
 
 Neovim 0.11+ config ships under `editors/neovim/`. `lsp/xxmi.lua` starts `xxmi-lsp --stdio` for `dosini` and `ini` files, with `d3dx.ini` and `xxmi.toml` as root markers. `plugin/xxmi.lua` calls `vim.lsp.enable("xxmi")`. Install steps are in [INSTALL.md](../INSTALL.md#neovim). It's untested so far.
+
+## Helix
+
+`editors/helix/languages.toml` defines `[language-server.xxmi]` (`xxmi-lsp --stdio`) and adds it to Helix's built-in `ini` language, with roots `d3dx.ini` and `xxmi.toml`. There is no `migoto` language and no grammar, so highlighting stays Helix's INI one. It's a snippet to merge by hand, not an installer entry: the recommended place is `.helix/languages.toml` in the mods folder, so only that folder's `.ini` files use the server. Steps are in [editors/helix/README.md](../editors/helix/README.md). It's untested so far.
+
+## Sublime Text
+
+`editors/sublime/LSP.sublime-settings` is a `"clients"` snippet for the LSP package with selector `source.migoto`, the scope of lupomikti's `Migoto.sublime-syntax` (so that syntax package is required). It's merged by hand into `Packages/User/LSP.sublime-settings`, not installed. Steps are in [editors/sublime/README.md](../editors/sublime/README.md). It's untested so far.
 
 ## HLSL syntax for Kate (`editors/kate/hlsl.xml`)
 

@@ -4,13 +4,16 @@ Every release zip (`xxmi-<version>-<system>.zip`) has an `editors/` folder with 
 files and `manifest.json`. The manifest tells an installer which file goes where. Setup steps for
 people are in [INSTALL.md](../INSTALL.md#set-up-your-editor).
 
-| Path            | What it is                                                                   |
-| --------------- | ---------------------------------------------------------------------------- |
-| `manifest.json` | The install manifest (below). The zipped copy also has `version`.            |
-| `neovim/`       | Neovim 0.11+ config: `lsp/xxmi.lua` and `plugin/xxmi.lua`.                   |
-| `kate/`         | Kate LSP settings (`lspclient-settings.json`) and setup guide (`README.md`). |
+| Path            | What it is                                                                         |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `manifest.json` | The install manifest (below). The zipped copy also has `version`.                  |
+| `neovim/`       | Neovim 0.11+ config: `lsp/xxmi.lua` and `plugin/xxmi.lua`.                         |
+| `kate/`         | Kate LSP settings (`lspclient-settings.json`) and setup guide (`README.md`).       |
+| `helix/`        | Helix config snippet (`languages.toml`) to merge by hand, and setup guide.         |
+| `sublime/`      | Sublime LSP settings snippet (`LSP.sublime-settings`) to merge by hand, and guide. |
 
-This README isn't in the zip. The zip carries the manifest and the files it lists.
+This README isn't in the zip. The zip carries the manifest, the files it lists, and the `helix/` and
+`sublime/` folders: those are snippets the user merges by hand, so the manifest doesn't list them.
 
 ## Manifest
 
@@ -78,3 +81,11 @@ The config starts plain `xxmi-lsp`, so the binary must be on your PATH.
 ### Kate
 
 See [kate/README.md](kate/README.md).
+
+### Helix
+
+See [helix/README.md](helix/README.md).
+
+### Sublime Text
+
+See [sublime/README.md](sublime/README.md).

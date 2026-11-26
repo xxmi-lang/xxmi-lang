@@ -1,0 +1,8 @@
+[language-server.xxmi]
+command = "xxmi-lsp"
+args = ["--stdio"]
+
+[[language]]
+name = "ini"
+roots = ["d3dx.ini", "xxmi.toml"]
+language-servers = ["xxmi"]
