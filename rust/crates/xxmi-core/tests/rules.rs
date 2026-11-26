@@ -302,6 +302,24 @@ fn xm203_opens_constants_near_the_top_of_the_file() {
     fs::remove_dir_all(&scratch).unwrap();
 }
 
+/// A use before its own `local` is still an error, but never suggests the name itself.
+#[test]
+fn xm203_does_not_suggest_the_variables_own_name() {
+    let path = fixtures().join("rules/XM203/self-use/bad.ini");
+    let dir = path.parent().unwrap();
+
+    let diagnostics = diagnose(&path, dir, Some(vec!["XM203".to_string()]));
+
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    assert!(
+        !diagnostics[0]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Did you mean")
+    );
+    assert!(diagnostics[0]["fix"].is_null(), "{diagnostics:?}");
+}
+
 /// A fixture's `xxmi.toml` picks its profile, so the CRLF copy needs it too (and no stale one).
 fn copy_profile_config(fixture: &Path, scratch: &Path) {
     let copy = scratch.join("xxmi.toml");
