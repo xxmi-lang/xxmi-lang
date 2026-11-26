@@ -61,16 +61,18 @@ MCP **resources** (read-only): `xxmi://spec/{dll_ref}/sections.json`, `…/comma
 
 ## Deployment
 
-Railway autodeploys pushes to `main` once CI passes. Build settings live in the Railway service, not in the repo:
+Railway autodeploys pushes to `main` once CI passes. Build settings are declared in `.railway/railway.ts`:
 
 - Dockerfile: `/docker/mcp/Dockerfile` (`dockerfilePath`)
-- Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
+- Health check: `/healthz`, 60 s timeout (`healthcheck`, `healthcheckTimeout`)
 - Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
 
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`.
 - The build uses the service's Dockerfile path setting, which must be `/docker/mcp/Dockerfile`; no `RAILWAY_DOCKERFILE_PATH` variable is needed.
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
+
+Changes to those settings are not applied on push. From a checkout linked to the service, run `railway config plan` to review and `railway config apply` to apply them (Railway CLI 5.42.1 or newer). Variables stay in Railway: `preserve()` keeps their current values.
 
 ## Client setup (for the README)
 
