@@ -216,7 +216,7 @@ jobs:
 
       - run: node scripts/pack-dotnet.ts --out dist/nupkg
 
-      # One zip per platform (xxmi, xxmi-lsp, LICENSE, README.txt), the .vsix and SHA256SUMS.
+      # One zip per platform (xxmi, xxmi-lsp, LICENSE, README.txt, editors/), the .vsix and SHA256SUMS.
       - name: Bundle the release files
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -290,6 +290,7 @@ jobs:
           lsp="$PWD/unzipped/xxmi-lsp$exe"
           test -x "$xxmi" && test -x "$lsp"
           test -f unzipped/LICENSE && test -f unzipped/README.txt
+          test -f unzipped/editors/manifest.json
           "$xxmi" --version
           "$lsp" --version
           "$xxmi" lint fixtures/rules/XM201/good.ini
