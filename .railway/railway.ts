@@ -14,7 +14,7 @@ export default defineRailway(() => {
       builder: 'DOCKERFILE',
       dockerfilePath: '/docker/mcp/Dockerfile',
     },
-    deploy: { restartPolicyType: 'ON_FAILURE' },
+    // Railway's default (on failure, 10 retries) applies; setting it explicitly never settles in `config plan`.
     healthcheck: '/healthz',
     healthcheckTimeout: 60,
     replicas: { 'europe-west4-drams3a': 1 },

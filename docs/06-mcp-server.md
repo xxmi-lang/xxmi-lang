@@ -65,7 +65,7 @@ Railway autodeploys pushes to `main` once CI passes. Build settings are declared
 
 - Dockerfile: `/docker/mcp/Dockerfile` (`dockerfilePath`)
 - Health check: `/healthz`, 60 s timeout (`healthcheck`, `healthcheckTimeout`)
-- Restart policy: `ON_FAILURE`, up to 10 retries (`restartPolicyType`, `restartPolicyMaxRetries`)
+- Restart policy: Railway's default (on failure, up to 10 retries), not set in `railway.ts`
 
 - Env: `PORT` (set by Railway), `DATA_DIR=/data`, `ADMIN_TOKEN`, `POLL_INTERVAL_MIN=15`.
 - The build uses the service's Dockerfile path setting, which must be `/docker/mcp/Dockerfile`; no `RAILWAY_DOCKERFILE_PATH` variable is needed.
