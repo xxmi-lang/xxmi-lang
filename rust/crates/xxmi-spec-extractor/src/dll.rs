@@ -12,6 +12,10 @@ use crate::model::GitInfo;
 
 const COMPONENT_DIRS: [&str; 2] = ["D3DCompiler", "Injector"];
 
+/// Dropped upstream in XXMI-Libs-Package 08e967bb (legacy wrappers the DLL never linked),
+/// but still present in older checkouts and in 3Dmigoto.
+const OPTIONAL_COMPONENT_DIRS: [&str; 1] = ["D3DCompiler"];
+
 /// Why extraction stopped.
 #[derive(Debug)]
 pub enum ExtractError {
@@ -43,7 +47,7 @@ fn io_error(path: &Path, error: io::Error) -> ExtractError {
 /// The DirectX11 sources of a 3DMigoto-family DLL checkout.
 pub struct DllSource {
     files: BTreeMap<String, CppFile>,
-    /// Component folders (`D3DCompiler`, `Injector`) the checkout doesn't have.
+    /// Required component folders (`Injector`) the checkout doesn't have.
     pub missing_components: Vec<String>,
 }
 
@@ -87,7 +91,9 @@ impl DllSource {
         for component in COMPONENT_DIRS {
             let dir = root.join(component);
             if !dir.exists() {
-                missing.push(component.to_string());
+                if !OPTIONAL_COMPONENT_DIRS.contains(&component) {
+                    missing.push(component.to_string());
+                }
                 continue;
             }
             for name in sorted_names(&dir, |n| n.ends_with(".cpp"))? {
