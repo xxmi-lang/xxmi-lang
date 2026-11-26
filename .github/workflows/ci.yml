@@ -30,6 +30,7 @@ jobs:
       matrix:
         os: ${{ fromJSON(inputs.macos && '["ubuntu-latest","windows-latest","macos-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -183,6 +184,7 @@ jobs:
       matrix:
         os: ${{ fromJSON(inputs.macos && '["ubuntu-latest","windows-latest","macos-latest"]' || '["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
@@ -386,6 +388,7 @@ jobs:
   vscode:
     # A real VS Code (downloaded by @vscode/test-electron) with the bundled extension.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -425,6 +428,7 @@ jobs:
 
   plugin:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
 
@@ -443,6 +447,7 @@ jobs:
     # The hosted MCP server image (docs/06-mcp-server.md). Built, not pushed: Railway builds it
     # from the repo on deploy.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
