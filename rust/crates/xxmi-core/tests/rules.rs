@@ -264,6 +264,44 @@ fn quick_fixes_on_crlf_files_keep_the_files_line_breaks() {
     );
 }
 
+/// XM203 with no [Constants] opens one below the namespace line and the blank line that follows,
+/// or at the very top; line breaks follow the file, and a BOM changes no offset.
+#[test]
+fn xm203_opens_constants_near_the_top_of_the_file() {
+    let root = fixtures().join("rules/XM203/no-constants");
+    let scratch = std::env::temp_dir().join(format!("xxmi-constants-{}", std::process::id()));
+    fs::create_dir_all(&scratch).unwrap();
+
+    for entry in fs::read_dir(&root).unwrap() {
+        let dir = entry.unwrap().path();
+        let bad = fs::read(dir.join("bad.ini")).unwrap();
+        let fixed = fs::read(dir.join("fixed.ini")).unwrap();
+
+        let bom: Vec<u8> = [b"\xEF\xBB\xBF".as_slice(), &bad].concat();
+        let variants = [
+            (bad.clone(), fixed.clone()),
+            (to_crlf(&bad), to_crlf(&fixed)),
+            (bom, fixed),
+        ];
+        for (input, expected) in variants {
+            let path = scratch.join("bad.ini");
+            fs::write(&path, &input).unwrap();
+            let diagnostics = diagnose(&path, &scratch, Some(vec!["XM203".to_string()]));
+
+            let before = String::from_utf8(input).unwrap();
+            let before = before.trim_start_matches('\u{feff}');
+            let after = apply_fixes(before, &diagnostics);
+            assert_eq!(
+                after,
+                String::from_utf8(expected).unwrap(),
+                "{}",
+                dir.display()
+            );
+        }
+    }
+    fs::remove_dir_all(&scratch).unwrap();
+}
+
 /// A fixture's `xxmi.toml` picks its profile, so the CRLF copy needs it too (and no stale one).
 fn copy_profile_config(fixture: &Path, scratch: &Path) {
     let copy = scratch.join("xxmi.toml");

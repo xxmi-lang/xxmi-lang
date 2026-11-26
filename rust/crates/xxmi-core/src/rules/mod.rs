@@ -4,6 +4,7 @@ mod argument_count;
 mod bare_line;
 mod byte_stride;
 mod copy_value;
+mod declare_global;
 mod duplicate_grade;
 mod duplicate_key;
 mod duplicate_section;
@@ -351,10 +352,11 @@ pub const RULES: [Rule; 36] = [
     .with_fix(),
     rule(
         "XM203",
-        Severity::Warning,
-        "Variable used but never declared",
+        Severity::Error,
+        "Variable used but never declared (the DLL drops the line)",
         unknown_variable::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM204",
         Severity::Warning,
