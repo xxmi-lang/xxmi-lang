@@ -337,8 +337,13 @@ fn xm203_warns_on_a_namespaced_variable_and_errors_on_a_bare_one() {
         })
         .collect();
     assert_eq!(found.len(), 2, "{diagnostics:?}");
-    assert!(found[0].0.contains("$\\Lib\\missing") && found[0].1 == "warning");
-    assert!(found[1].0.contains("$bare") && found[1].1 == "error");
+    let missing = found
+        .iter()
+        .find(|(m, _)| m.contains("$\\Lib\\missing"))
+        .unwrap();
+    let bare = found.iter().find(|(m, _)| m.contains("$bare")).unwrap();
+    assert_eq!(missing.1, "warning");
+    assert_eq!(bare.1, "error");
 }
 
 /// A fixture's `xxmi.toml` picks its profile, so the CRLF copy needs it too (and no stale one).

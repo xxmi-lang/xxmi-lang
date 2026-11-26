@@ -22,7 +22,7 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                 reference.text
             ),
         );
-        // A variable's file may simply not be loaded; a missing command list or resource is surely broken.
+        // A variable's file may not be loaded; a missing command list or resource is surely broken.
         if reference.kind == SymbolKind::Variable {
             finding.severity = Some(Severity::Warning);
         }
