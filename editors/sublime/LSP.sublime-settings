@@ -1,0 +1,9 @@
+{
+  "clients": {
+    "xxmi": {
+      "enabled": true,
+      "command": ["xxmi-lsp", "--stdio"],
+      "selector": "source.migoto"
+    }
+  }
+}

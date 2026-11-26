@@ -1,5 +1,0 @@
-{
-  "command": ["xxmi-lsp", "--stdio"],
-  "selector": "source.migoto",
-  "enabled": true
-}

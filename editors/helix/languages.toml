@@ -3,9 +3,6 @@ command = "xxmi-lsp"
 args = ["--stdio"]
 
 [[language]]
-name = "migoto"
-scope = "source.migoto"
-file-types = ["ini", "3dm", "migoto"]
+name = "ini"
 roots = ["d3dx.ini", "xxmi.toml"]
-comment-token = ";"
 language-servers = ["xxmi"]

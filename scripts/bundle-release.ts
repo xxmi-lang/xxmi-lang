@@ -8,7 +8,8 @@
  *
  * Reads the loose `xxmi-<os>-<arch>[.exe]` files that `pnpm build:binaries --target <os>-<arch>` writes,
  * one per target (release.yml downloads them into dist/bin).
- * Each zip also carries `editors/` (the files the manifest ships, plus the versioned manifest).
+ * Each zip also carries `editors/` (the files the manifest ships, plus the versioned manifest,
+ * and the hand-merged snippet folders).
  * Needs the `zip` command (preinstalled on Linux and macOS runners). The binaries are chmod +x
  * before zipping and `zip -X` keeps the Unix mode, so they stay executable after `unzip`.
  */
@@ -17,6 +18,7 @@ import { createHash } from 'node:crypto';
 import {
   chmodSync,
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -56,6 +58,9 @@ const version = values.version;
 const binDir = resolve(values.bin ?? join(REPO, 'dist/bin'));
 const out = resolve(values.out ?? join(REPO, 'dist/release'));
 
+// Snippets the user merges into their own config by hand, so the manifest doesn't list them.
+const MANUAL_EDITOR_DIRS = ['editors/helix', 'editors/sublime'];
+
 const README = `xxmi-lang ${version}
 
 Two programs, both single files with nothing else to install:
@@ -86,9 +91,12 @@ function stageEditors(stage: string): string[] {
     copyFileSync(join(REPO, source), dest);
   }
 
+  for (const dir of MANUAL_EDITOR_DIRS)
+    cpSync(join(REPO, dir), join(stage, dir), { recursive: true });
+
   writeFileSync(join(stage, MANIFEST_PATH), versionedManifest(manifest, version));
 
-  return [...sources, MANIFEST_PATH];
+  return [...sources, ...MANUAL_EDITOR_DIRS, MANIFEST_PATH];
 }
 
 function bundle(zipName: string, binary: string, exe: string): void {
@@ -107,7 +115,17 @@ function bundle(zipName: string, binary: string, exe: string): void {
   rmSync(zip, { force: true });
   execFileSync(
     'zip',
-    ['-X', '-q', zip, `xxmi${exe}`, `xxmi-lsp${exe}`, 'LICENSE', 'README.txt', ...editorFiles],
+    [
+      '-X',
+      '-q',
+      '-r',
+      zip,
+      `xxmi${exe}`,
+      `xxmi-lsp${exe}`,
+      'LICENSE',
+      'README.txt',
+      ...editorFiles,
+    ],
     {
       cwd: stage,
     },

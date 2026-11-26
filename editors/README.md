@@ -4,15 +4,16 @@ Every release zip (`xxmi-<version>-<system>.zip`) has an `editors/` folder with 
 files and `manifest.json`. The manifest tells an installer which file goes where. Setup steps for
 people are in [INSTALL.md](../INSTALL.md#set-up-your-editor).
 
-| Path            | What it is                                                                        |
-| --------------- | --------------------------------------------------------------------------------- |
-| `manifest.json` | The install manifest (below). The zipped copy also has `version`.                 |
-| `neovim/`       | Neovim 0.11+ config: `lsp/xxmi.lua` and `plugin/xxmi.lua`.                        |
-| `kate/`         | Kate LSP settings (`lspclient-settings.json`) and setup guide (`README.md`).      |
-| `helix/`        | Helix language config (`languages.toml`) and setup guide (`README.md`).           |
-| `sublime/`      | Sublime LSP settings (`LSP-xxmi.sublime-settings`) and setup guide (`README.md`). |
+| Path            | What it is                                                                         |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `manifest.json` | The install manifest (below). The zipped copy also has `version`.                  |
+| `neovim/`       | Neovim 0.11+ config: `lsp/xxmi.lua` and `plugin/xxmi.lua`.                         |
+| `kate/`         | Kate LSP settings (`lspclient-settings.json`) and setup guide (`README.md`).       |
+| `helix/`        | Helix config snippet (`languages.toml`) to merge by hand, and setup guide.         |
+| `sublime/`      | Sublime LSP settings snippet (`LSP.sublime-settings`) to merge by hand, and guide. |
 
-This README isn't in the zip. The zip carries the manifest and the files it lists.
+This README isn't in the zip. The zip carries the manifest, the files it lists, and the `helix/` and
+`sublime/` folders: those are snippets the user merges by hand, so the manifest doesn't list them.
 
 ## Manifest
 
@@ -25,13 +26,13 @@ This README isn't in the zip. The zip carries the manifest and the files it list
 | `roots`           | Root key to base folder, per OS. OS keys: `linux`, `linux-flatpak`, `macos`, `windows`. |
 | `files`           | The files to install (table below).                                                     |
 
-Paths in `roots` use `~` (home folder), `%LOCALAPPDATA%` and `%APPDATA%`.
+Paths in `roots` use `~` (home folder) and `%LOCALAPPDATA%`.
 
 Each entry in `files`:
 
 | Field              | Meaning                                                                                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `editor`           | Editor name: `neovim`, `kate`, `helix` or `sublime`.                                                                                                   |
+| `editor`           | Editor name, `neovim` or `kate`.                                                                                                                       |
 | `root`             | Key into `roots`.                                                                                                                                      |
 | `target`           | Path relative to the root, with `/` as the separator.                                                                                                  |
 | `source`           | Path inside the zip. Copied to `target`.                                                                                                               |
