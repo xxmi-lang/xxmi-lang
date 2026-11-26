@@ -17,6 +17,16 @@
       "linux-flatpak": "~/.var/app/org.kde.kate/data/org.kde.syntax-highlighting/syntax",
       "macos": "~/Library/Application Support/org.kde.syntax-highlighting/syntax",
       "windows": "%LOCALAPPDATA%\\org.kde.syntax-highlighting\\syntax"
+    },
+    "helix-config": {
+      "linux": "~/.config/helix",
+      "macos": "~/.config/helix",
+      "windows": "%APPDATA%\\helix"
+    },
+    "sublime-user": {
+      "linux": "~/.config/sublime-text/Packages/User",
+      "macos": "~/Library/Application Support/Sublime Text/Packages/User",
+      "windows": "%APPDATA%\\Sublime Text\\Packages\\User"
     }
   },
   "files": [
@@ -52,6 +62,18 @@
       "url": "https://raw.githubusercontent.com/lupomikti/3dmigoto-ini-extensions/7c66ffdbd8e49740e6f5301d1e1428b2f25aeb9e/kate-plugin/syntaxes/pcre2.xml",
       "sha256": "626fe87cbacd5f74e551b5798fa58c12c840ad54d76534152aeefacfd6156b83",
       "target": "pcre2.xml"
+    },
+    {
+      "editor": "helix",
+      "root": "helix-config",
+      "source": "editors/helix/languages.toml",
+      "target": "languages.toml"
+    },
+    {
+      "editor": "sublime",
+      "root": "sublime-user",
+      "source": "editors/sublime/LSP-xxmi.sublime-settings",
+      "target": "LSP-xxmi.sublime-settings"
     }
   ]
 }
