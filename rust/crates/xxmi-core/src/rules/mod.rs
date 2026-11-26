@@ -244,7 +244,8 @@ pub const RULES: [Rule; 36] = [
         Severity::Error,
         "Unknown section prefix (not in the command-list or regular section tables)",
         unknown_section::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM102",
         Severity::Warning,

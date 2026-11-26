@@ -24,7 +24,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM003 | W | Preamble line other than `namespace` / `condition` (the DLL ignores it) | Comment out the line |
 | XM005 | W | Text after the `]` of a section header (the DLL ignores it) | Remove the text |
 | XM006 | W | Section header with no closing `]` | Add the `]` |
-| XM101 | E | Unknown section prefix (not in Command-list or Regular sections) | Suggest nearest prefix (edit distance) |
+| XM101 | E | Unknown section prefix (not in Command-list or Regular sections) | Replace the misspelt prefix with the nearest one, when only one is that close |
 | XM102 | W | Unknown key for this section kind | Suggest nearest key |
 | XM103 | E | Bare line (no `=`) in a section that doesn't allow it | Comment out the line |
 | XM104 | W | Duplicate key not in the DLL's duplicate whitelist | Remove the earlier one |
@@ -73,6 +73,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM001:** leaves the lines that XM003, XM005, XM006, XM103, XM110 and XM111 name more precisely to those rules, so a line is never reported twice.
 - **XM003:** the DLL's `ParseIniPreamble` reads only `namespace` and `condition` (any case) before the first section and warns "Entry outside of section" for every other line, bare lines included. Flow keywords go to XM111.
 - **XM005 / XM006:** `ParseIniSectionLine` takes the name up to the first `]`, or the rest of the line when there is none, and ignores whatever follows. A `;` after the `]` is therefore harmless and not reported; other text is (warning), since it can hide a second header such as `[A][B]`.
+- **XM101:** the DLL warns "Unknown section type" and never reads the section (`ParseIniSectionLine`, `IniHandler.cpp`). The fix compares each known prefix with the name's leading characters, as the hint does.
 - **XM102:** unknown keys in regular sections are checked against the extracted spec. Keys vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, …) get a message saying so. `[Profile]` is free-form. In command-list sections, only lines the grammar can't read as a command, resource copy or assignment are flagged (the DLL's "Unrecognised entry"); a misspelt keyword such as `runn` surfaces as XM001 instead.
 - **XM103:** reports lines without `=` in sections that don't allow them, with the DLL's "Malformed line" semantics (the line is dropped). A stray `else` or `endif` is XM111's.
 - **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini.
@@ -152,7 +153,7 @@ Default severity: warning. Section header with no closing `]` (the DLL takes the
 
 ### XM101
 
-Default severity: error. Unknown section prefix (not in the command-list or regular section tables). Quick fix: no.
+Default severity: error. Unknown section prefix (not in the command-list or regular section tables). Quick fix: yes, when exactly one known prefix is that close (swaps the misspelt leading characters and keeps the rest of the name; not when a section already has the new name).
 
 ### XM102
 
