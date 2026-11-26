@@ -42,7 +42,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM201 | E | Unresolved `run = CommandList…` target | Suggest nearest symbol; offer to create the section |
 | XM202 | E | Unresolved resource reference (`ref`, `copy`, `Resource\N\X`) | Suggest nearest |
 | XM203 | E | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment); the DLL drops the line | Rename to a close declared name, else add `global $x` to `[Constants]` |
-| XM204 | W | Variable declared but never used | Remove |
+| XM204 | W | Variable declared but never used | Remove the declaration line |
 | XM205 | I | Section defined but never referenced (CommandList, Resource, CustomShader) | — |
 | XM206 | E | Unresolved namespace in `\N\name` | — |
 | XM207 | E | Include target file not found | — |
@@ -89,7 +89,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM115:** a `;` at the start of a value or after a blank is part of the value for the DLL, so the line is read wrong. A `;` glued to text (`a;b.dds`) is left alone. The fix's line break matches the file's. XM113 skips such values.
 - **XM202:** covers resource and pool references on both sides of `=`. `ParseTargetCustomResource` fails for an undeclared destination too.
 - **XM203:** checks locals first (declared earlier in the same section), then `$\ns\name`, then the global name, as `parse_command_list_var_name` does. The DLL rejects the line, which is why it is an error: an undeclared assignment target fails in `CommandArgumentReader::GetVariable` (`ParseCommandListVariableAssignment`, `CommandList.cpp`), an undeclared operand in `CommandListOperand::parse_variable` (every expression and `if` condition), and `ParseCommandList` (`IniHandler.cpp`) then logs "Unrecognised entry". Variables the library snapshot declares resolve, so they are not reported. The fix renames to a close declared name (the locals of the section and the globals the file reaches), else adds `global $name` after the last line of the file's first `[Constants]`; with none it opens one below the `namespace` line and the blank line after it, or at the top of the file. It is the file's own `[Constants]` because the DLL namespaces a global by the file declaring it (`ParseConstantsSection`). A name with an explicit namespace, or one that is also a local elsewhere in the file, gets no fix. Line breaks match the file's.
-- **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt.
+- **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt. The fix deletes the declaration's line (comments above it stay); a global another mod outside the workspace reads would then be undeclared, so it stays an offered action.
 - **XM207:** only covers `include =`. A missing file gives the DLL's "Error opening" overlay warning, while a missing `include_recursive` folder is only logged at info level, so it isn't reported.
 - **XM208:** tries the ini's folder first, then the 3DMigoto folder, like `ParseResourceSection`, and skips absolute paths.
 - **XM209:** `ParseConstantsSection` registers globals from `[Constants]` only, and `RegisterGlobalVariable` refuses a name it already holds, so the first declaration wins (flags included, `persist` too) and the DLL warns "Redeclaration". Names compare case-insensitively and per namespace. The scope is one file; its declarations XM204 leaves to this rule.
@@ -225,7 +225,7 @@ Default severity: error. Variable used but never declared; the DLL drops the lin
 
 ### XM204
 
-Default severity: warning. Variable declared but never used. Quick fix: no.
+Default severity: warning. Variable declared but never used. Quick fix: yes (deletes the declaration line).
 
 ### XM205
 

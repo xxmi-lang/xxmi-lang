@@ -393,7 +393,8 @@ pub const RULES: [Rule; 36] = [
         Severity::Warning,
         "Variable declared but never used",
         unused_variable::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM205",
         Severity::Info,
