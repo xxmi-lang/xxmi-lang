@@ -20,7 +20,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | ID | Sev | Rule | Quick fix |
 |---|---|---|---|
 | XM001 | E | Parse error (tree-sitter ERROR/MISSING node) | — |
-| XM002 | W | File isn't valid UTF-8 (likely GBK/Shift-JIS) | Convert encoding (`normalize --encoding`) |
+| XM002 | W | File isn't valid UTF-8 (likely GBK/Shift-JIS) | Re-save the file as UTF-8 |
 | XM003 | W | Preamble line other than `namespace` / `condition` (the DLL ignores it) | Comment out the line |
 | XM005 | W | Text after the `]` of a section header (the DLL ignores it) | Remove the text |
 | XM006 | W | Section header with no closing `]` | Add the `]` |
@@ -61,7 +61,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM401 | I | Auto-generated or meaningless name (heuristics in `05-transforms.md`) | Rename (LSP rename) |
 | XM402 | I | Very long flat command list that repeats a block ≥ N times | Extract CommandList |
 | XM403 | H | Flow keyword (`if`, `elif`, `else`, `endif`) that isn't lowercase, or a section type not spelled as in the DLL | Lowercase the keyword; respell the section type |
-| XM501 | I | Mod detected as older format era (`position`, …) | "Run `xxmi migrate`" |
+| XM501 | I | Mod detected as older format era (`position`, …) | "Update the mod to the current format" |
 | XM502 | W | Construct known to break after a specific game or package update | Link to recipe |
 
 Messages quote the DLL's own warning text where one exists, so users can match log output to editor output.
