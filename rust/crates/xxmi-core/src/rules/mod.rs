@@ -146,6 +146,35 @@ fn line_start_indent(text: &str, offset: usize) -> (usize, &str) {
     (start, &text[start..offset])
 }
 
+/// The whole line holding `offset` with its break, for deleting it.
+/// A last line without a break takes the preceding one instead, so no blank line is left behind.
+fn line_with_break(text: &str, offset: usize) -> Span {
+    let (start, _) = line_start_indent(text, offset);
+    if let Some(i) = text[offset..].find('\n') {
+        return Span {
+            start,
+            end: offset + i + 1,
+        };
+    }
+
+    let before = text[..start].strip_suffix('\n').unwrap_or(&text[..start]);
+    let before = before.strip_suffix('\r').unwrap_or(before);
+    Span {
+        start: before.len(),
+        end: text.len(),
+    }
+}
+
+/// A quick fix that deletes the line holding `offset`.
+fn remove_line_fix(text: &str, offset: usize, title: &str) -> FixSpec {
+    FixSpec {
+        title: title.to_string(),
+        span: line_with_break(text, offset),
+        new_text: String::new(),
+        also: Vec::new(),
+    }
+}
+
 /// The line break an edit on the line holding `offset` should insert, so CRLF files stay CRLF.
 /// A last line without a terminator takes the file's first break.
 fn line_ending(text: &str, offset: usize) -> &'static str {
@@ -265,7 +294,8 @@ pub const RULES: [Rule; 36] = [
         Severity::Warning,
         "Duplicate key not in the DLL's duplicate whitelist",
         duplicate_key::check,
-    ),
+    )
+    .with_fix(),
     rule(
         "XM105",
         Severity::Error,

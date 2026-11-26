@@ -27,7 +27,7 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM101 | E | Unknown section prefix (not in Command-list or Regular sections) | Replace the misspelt prefix with the nearest one, when only one is that close |
 | XM102 | W | Unknown key for this section kind | Suggest nearest key |
 | XM103 | E | Bare line (no `=`) in a section that doesn't allow it | Comment out the line |
-| XM104 | W | Duplicate key not in the DLL's duplicate whitelist | Remove the earlier one |
+| XM104 | W | Duplicate key not in the DLL's duplicate whitelist | Remove the later line (the DLL ignores it) |
 | XM105 | E | Invalid enum value (resource `type`, `format`, key `type`, …) | Suggest valid values |
 | XM106 | E | Unbalanced `if`/`elif`/`else`/`endif` | Insert missing `endif` |
 | XM107 | E / W / I | Duplicate section name within the same namespace, graded by what ignoring the duplicate costs | — |
@@ -76,7 +76,7 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM101:** the DLL warns "Unknown section type" and never reads the section (`ParseIniSectionLine`, `IniHandler.cpp`). The fix compares each known prefix with the name's leading characters, as the hint does.
 - **XM102:** unknown keys in regular sections are checked against the extracted spec. Keys vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, …) get a message saying so. `[Profile]` is free-form. In command-list sections, only lines the grammar can't read as a command, resource copy or assignment are flagged (the DLL's "Unrecognised entry"); a misspelt keyword such as `runn` surfaces as XM001 instead.
 - **XM103:** reports lines without `=` in sections that don't allow them, with the DLL's "Malformed line" semantics (the line is dropped). A stray `else` or `endif` is XM111's.
-- **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini.
+- **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini. `ParseIniKeyValLine` (`IniHandler.cpp`) inserts only the first value of a key into the section's lookup map, to match `GetPrivateProfileString`, and a command-list section skips its whitelisted keys, so the later line is never read and the fix deletes just that line (its break included; a last line without one takes the preceding break instead).
 - **XM107:** follows DLL load order, reporting the later duplicate. Duplicates are only compared within one package. A prefixed section is stored as `Prefix\namespace\Name` (`get_namespaced_section_name`, `ParseIniSectionLine`) and the namespace defaults to the file's path, so two files only collide when they share a `namespace =`. `ParseIniSectionLine` keeps the first and clears the rest. A duplicate in the same file stays a warning. When the first copy is in another file the severity grades what ignoring the duplicate costs: info when it is identical to the first (keys and values equal after collapsing whitespace and lower-casing keys; comment lines don't count); error for a mesh resource (a Resource that a `vb0`-`vb2` or `ib` line binds anywhere in the namespace, `ref` and `copy` forms included, or whose `filename` ends in `.buf` or `.ib`); error for a mesh command list (a CommandList or TextureOverride with a `vb*` or `ib` line, or a TextureOverride with `handling = skip`, `draw` or `drawindexed`); warning for everything else, image resources included. The message names the first copy relative to the duplicate's folder. A severity set in `xxmi.toml` replaces the per-finding one.
 - **XM108:** uses extracted argument counts (draw commands, `store`) and skips lines that already have a syntax error.
 - **XM109:** takes over from XM001 for parse errors on expression lines (`if …`, `$x = …`, `local …`).
@@ -165,7 +165,7 @@ Default severity: error. Bare line (no `=`) in a section that doesn't allow it. 
 
 ### XM104
 
-Default severity: warning. Duplicate key not in the DLL's duplicate whitelist. Quick fix: no.
+Default severity: warning. Duplicate key not in the DLL's duplicate whitelist. Quick fix: yes (deletes the later line).
 
 ### XM105
 

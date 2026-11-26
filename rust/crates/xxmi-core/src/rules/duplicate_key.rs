@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use super::{Finding, RuleContext};
+use super::{Finding, RuleContext, remove_line_fix};
 use crate::spec::SectionKind;
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
@@ -49,13 +49,20 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
                     } else {
                         "Duplicate key found"
                     };
-                    findings.push(Finding::new(
-                        key_span,
-                        format!(
+                    findings.push(Finding {
+                        span: key_span,
+                        message: format!(
                             "{what}: {key_text} (first on line {}; the DLL uses the first)",
                             first + 1
                         ),
-                    ));
+                        // The DLL keeps the first value and never reads the later line.
+                        fix: Some(remove_line_fix(
+                            context.text,
+                            key_span.start,
+                            "Remove the duplicate line",
+                        )),
+                        severity: None,
+                    });
                 }
                 None => {
                     seen.insert(name, line.scanned.line);
