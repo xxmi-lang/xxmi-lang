@@ -1783,24 +1783,6 @@
       "allowsDuplicateKeys": false,
       "keys": [
         {
-          "name": "calls",
-          "valueType": "int",
-          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "unbuffered",
-          "valueType": "int",
-          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "force_cpu_affinity",
-          "valueType": "int",
-          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
-          "xxmi": false
-        },
-        {
           "name": "log_level",
           "valueType": "string",
           "source": "IniHandler.cpp:literal",
@@ -1808,8 +1790,26 @@
           "gimi": false
         },
         {
+          "name": "calls",
+          "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
           "name": "debug",
           "valueType": "int",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "unbuffered",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "force_cpu_affinity",
+          "valueType": "bool",
           "source": "IniHandler.cpp:literal",
           "xxmi": false
         },
@@ -2111,18 +2111,6 @@
       "allowsDuplicateKeys": false,
       "keys": [
         {
-          "name": "storage_directory",
-          "valueType": "string",
-          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
-          "xxmi": false
-        },
-        {
-          "name": "export_shaders",
-          "valueType": "int",
-          "source": "D3DCompiler/d3dcWrapper.cpp:literal",
-          "xxmi": false
-        },
-        {
           "name": "shader_hash",
           "valueType": "enum:ShaderHashNames",
           "source": "IniHandler.cpp:literal",
@@ -2232,6 +2220,12 @@
         },
         {
           "name": "export_fixed",
+          "valueType": "bool",
+          "source": "IniHandler.cpp:literal",
+          "xxmi": false
+        },
+        {
+          "name": "export_shaders",
           "valueType": "bool",
           "source": "IniHandler.cpp:literal",
           "xxmi": false
@@ -2382,6 +2376,10 @@
         }
       ],
       "removedKeys": [
+        {
+          "name": "storage_directory",
+          "source": "D3DCompiler/d3dcWrapper.cpp:literal"
+        },
         {
           "name": "stereo_params",
           "source": "IniHandler.cpp:literal"
