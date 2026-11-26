@@ -32,6 +32,7 @@ jobs:
   # caller's event (push or workflow_dispatch), so github.event_name cannot tell it from a build-only run.
   meta:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       tag: ${{ steps.resolve.outputs.tag }}
       publish: ${{ steps.resolve.outputs.publish }}
@@ -67,6 +68,7 @@ jobs:
             target: windows-arm64
             triple: aarch64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -171,6 +173,7 @@ jobs:
   build:
     needs: [meta, binaries, binaries-macos]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -248,6 +251,7 @@ jobs:
           - os: windows-latest
             suffix: windows-x64
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
@@ -310,6 +314,7 @@ jobs:
     # A build-only workflow_dispatch stops before this job: the release and nupkg artifacts are its output.
     if: needs.meta.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:
@@ -355,6 +360,7 @@ jobs:
   nuget:
     needs: publish
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       id-token: write # Trusted Publishing: the OIDC token NuGet/login exchanges for a short-lived key
     steps:

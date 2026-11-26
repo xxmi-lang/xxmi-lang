@@ -53,7 +53,7 @@ fn serves_a_session_over_the_fixture_package() {
 
     client.request("shutdown", Value::Null);
     client.notify("exit", Value::Null);
-    assert!(client.child.wait().unwrap().success());
+    assert!(common::wait_exit(&mut client.child, "exit after shutdown").success());
 }
 
 fn capabilities(initialized: &Value) {

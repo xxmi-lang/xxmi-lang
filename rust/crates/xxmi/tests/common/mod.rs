@@ -4,14 +4,23 @@
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+use std::process::{Child, ChildStdin, ChildStdout, Command, ExitStatus, Stdio};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
+use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
+
+/// A server that stays silent this long is hung: a CI job that waited forever left no log.
+const READ_DEADLINE: Duration = Duration::from_secs(30);
+const EXIT_DEADLINE: Duration = Duration::from_secs(10);
 
 pub struct Client {
     pub child: Child,
     pub stdin: ChildStdin,
-    pub stdout: BufReader<ChildStdout>,
+    /// Messages parsed by a reader thread, so `read` can give up instead of blocking on the pipe.
+    pub messages: Receiver<Value>,
+    /// The latest message sent, to name what a timed-out read was waiting for.
+    pub last_sent: String,
     pub next_id: i64,
     /// Latest diagnostics per document uri.
     pub diagnostics: Vec<(String, Value)>,
@@ -31,11 +40,12 @@ impl Client {
             .spawn()
             .expect("the binary starts");
         let stdin = child.stdin.take().unwrap();
-        let stdout = BufReader::new(child.stdout.take().unwrap());
+        let messages = spawn_reader(child.stdout.take().unwrap());
         Self {
             child,
             stdin,
-            stdout,
+            messages,
+            last_sent: String::from("(nothing)"),
             next_id: 0,
             diagnostics: Vec::new(),
         }
@@ -43,28 +53,31 @@ impl Client {
 
     pub fn write(&mut self, message: Value) {
         let body = message.to_string();
+        self.last_sent = message["method"]
+            .as_str()
+            .unwrap_or("a response")
+            .to_string();
         write!(self.stdin, "Content-Length: {}\r\n\r\n{body}", body.len()).unwrap();
         self.stdin.flush().unwrap();
     }
 
     pub fn read(&mut self) -> Value {
-        let mut length = 0;
-        loop {
-            let mut line = String::new();
-            self.stdout
-                .read_line(&mut line)
-                .expect("the server answers");
-            let line = line.trim();
-            if line.is_empty() {
-                break;
+        match self.messages.recv_timeout(READ_DEADLINE) {
+            Ok(message) => message,
+            Err(RecvTimeoutError::Timeout) => {
+                let _ = self.child.kill();
+                panic!(
+                    "{}: no message from the server within {READ_DEADLINE:?}; the last message sent was `{}`",
+                    test_name(),
+                    self.last_sent
+                );
             }
-            if let Some(value) = line.strip_prefix("Content-Length: ") {
-                length = value.parse().unwrap();
-            }
+            Err(RecvTimeoutError::Disconnected) => panic!(
+                "{}: the server closed stdout; the last message sent was `{}`",
+                test_name(),
+                self.last_sent
+            ),
         }
-        let mut body = vec![0; length];
-        self.stdout.read_exact(&mut body).unwrap();
-        serde_json::from_slice(&body).unwrap()
     }
 
     pub fn notify(&mut self, method: &str, params: Value) {
@@ -117,6 +130,62 @@ impl Client {
             let message = self.read();
             self.handle(message);
         }
+    }
+}
+
+fn test_name() -> String {
+    std::thread::current().name().unwrap_or("test").to_string()
+}
+
+fn spawn_reader(stdout: ChildStdout) -> Receiver<Value> {
+    let (sender, receiver) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut stdout = BufReader::new(stdout);
+        while let Some(message) = read_message(&mut stdout) {
+            if sender.send(message).is_err() {
+                break;
+            }
+        }
+    });
+    receiver
+}
+
+/// `None` once the pipe closes.
+fn read_message(stdout: &mut BufReader<ChildStdout>) -> Option<Value> {
+    let mut length = 0;
+    loop {
+        let mut line = String::new();
+        if stdout.read_line(&mut line).ok()? == 0 {
+            return None;
+        }
+        let line = line.trim();
+        if line.is_empty() {
+            break;
+        }
+        if let Some(value) = line.strip_prefix("Content-Length: ") {
+            length = value.parse().unwrap();
+        }
+    }
+    let mut body = vec![0; length];
+    stdout.read_exact(&mut body).ok()?;
+    Some(serde_json::from_slice(&body).unwrap())
+}
+
+/// Waits for the server to exit; `step` names what the test was waiting for.
+pub fn wait_exit(child: &mut Child, step: &str) -> ExitStatus {
+    let deadline = Instant::now() + EXIT_DEADLINE;
+    loop {
+        if let Some(status) = child.try_wait().unwrap() {
+            return status;
+        }
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            panic!(
+                "{}: the server did not exit within {EXIT_DEADLINE:?} ({step})",
+                test_name()
+            );
+        }
+        std::thread::sleep(Duration::from_millis(10));
     }
 }
 

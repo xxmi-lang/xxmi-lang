@@ -45,7 +45,7 @@ fn a_panicking_request_gets_an_error_and_the_session_carries_on() {
     assert_eq!(symbol_count(&mut client, &uri), 1);
     client.request("shutdown", Value::Null);
     client.notify("exit", Value::Null);
-    assert!(client.child.wait().unwrap().success());
+    assert!(common::wait_exit(&mut client.child, "exit after shutdown").success());
 }
 
 #[test]
@@ -63,5 +63,5 @@ fn a_panicking_notification_resyncs_the_document() {
     assert_eq!(symbol_count(&mut client, &uri), 2);
     client.request("shutdown", Value::Null);
     client.notify("exit", Value::Null);
-    assert!(client.child.wait().unwrap().success());
+    assert!(common::wait_exit(&mut client.child, "exit after shutdown").success());
 }

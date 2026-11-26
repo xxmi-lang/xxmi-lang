@@ -145,7 +145,7 @@ fn survives_hostile_documents_and_requests() {
 
     client.request("shutdown", Value::Null);
     client.notify("exit", Value::Null);
-    assert!(client.child.wait().unwrap().success());
+    assert!(common::wait_exit(&mut client.child, "exit after shutdown").success());
 }
 
 fn hostile_edits(client: &mut Client, root: &Path) {
