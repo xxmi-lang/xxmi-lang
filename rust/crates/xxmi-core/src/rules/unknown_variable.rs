@@ -5,7 +5,7 @@
 //! either leaves `ParseCommandList` to log "Unrecognised entry" (CommandList.cpp, IniHandler.cpp).
 
 use super::declare_global::declare_global;
-use super::{Finding, FixSpec, RuleContext, replace_fix};
+use super::{Finding, FixSpec, RuleContext, Severity, replace_fix};
 use crate::model::{Reference, Scope, SymbolKind};
 use crate::suggest::did_you_mean;
 use crate::workspace::symbols::explicit_namespace;
@@ -49,7 +49,8 @@ fn finding_for(context: &RuleContext, reference: &Reference) -> Finding {
         fix: own
             .then(|| fix_for(context, reference, &candidates))
             .flatten(),
-        severity: None,
+        // The namespace's file may simply not be loaded, so only a bare name is surely undeclared.
+        severity: (!own).then_some(Severity::Warning),
     }
 }
 

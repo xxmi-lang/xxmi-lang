@@ -1,6 +1,7 @@
 //! XM206: `CommandList\Ns\Name` or `$\Ns\name` where no loaded file declares the namespace.
 
-use super::{Finding, RuleContext};
+use super::{Finding, RuleContext, Severity};
+use crate::model::SymbolKind;
 use crate::workspace::symbols::explicit_namespace;
 
 pub fn check(context: &RuleContext) -> Vec<Finding> {
@@ -14,13 +15,18 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
         if symbols.has_namespace(&namespace) {
             continue;
         }
-        findings.push(Finding::new(
+        let mut finding = Finding::new(
             reference.span,
             format!(
                 "Unknown namespace `{namespace}` in `{}`: no loaded file declares `namespace = {namespace}`",
                 reference.text
             ),
-        ));
+        );
+        // A variable's file may not be loaded; a missing command list or resource is surely broken.
+        if reference.kind == SymbolKind::Variable {
+            finding.severity = Some(Severity::Warning);
+        }
+        findings.push(finding);
     }
     findings
 }

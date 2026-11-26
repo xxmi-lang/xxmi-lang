@@ -18,7 +18,7 @@
   {
     "path": "bad.ini",
     "id": "XM206",
-    "severity": "error",
+    "severity": "warning",
     "message": "Unknown namespace `NoSuchNamespace` in `$\\NoSuchNamespace\\value`: no loaded file declares `namespace = NoSuchNamespace`",
     "range": {
       "start": {
