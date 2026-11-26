@@ -10,8 +10,6 @@ plugin/
 ├── hooks/hooks.json             # optional fallback lint hook (see below)
 └── skills/
     ├── xxmi-ini-authoring/SKILL.md
-    ├── xxmi-migrate-mod/SKILL.md
-    ├── xxmi-normalize-mod/SKILL.md
     ├── xxmi-apply-library/SKILL.md
     └── xxmi-dll-dev/SKILL.md
 ```
@@ -65,23 +63,6 @@ Skills hold **workflow and judgment**. Facts come from the CLI, LSP or MCP, so s
 - Conventions: namespace declared at the top of every new file; doc comments (`;;` tags) on every new CommandList; don't write to `locked` library globals.
 - How to check that the tooling is installed, and what to say if it isn't.
 
-### `xxmi-migrate-mod`
-
-1. `xxmi migrate --detect`. If confidence is low, show the evidence and ask the user which era it is.
-2. Make sure the mod is in git (or let the CLI back it up).
-3. `xxmi migrate --to <latest> --report`.
-4. For each `manual` item in the report, follow the explanation from the recipe. Show the user the proposed change for anything that affects visuals (shape keys, vertex limits, blend weights).
-5. `xxmi lint` must be clean. Summarize the changes, and list what should be checked in game.
-
-### `xxmi-normalize-mod` (CN and messy mods)
-
-1. `xxmi normalize --dry-run --report`. Show the encoding detection and rename plan.
-2. Review the rename plan. Improve names the heuristics got wrong by writing a `--rename-map` (based on texture filenames, what the override draws, and the ZZZ slot names).
-3. Apply. Then translate non-English comments (the skill step), keeping the originals only if the user asks.
-4. Look for hand-rolled code that a ZZMI library replaces (handoff to `xxmi-apply-library`).
-5. Lint clean. Produce a short summary: the mod's components, toggles, and keys.
-6. If the mod is encrypted or the author forbids modification, stop and tell the user.
-
 ### `xxmi-apply-library`
 
 1. `xxmi query library` → pick a library. Read its module doc and the target symbol's `@in` tags.
@@ -103,4 +84,4 @@ Skills hold **workflow and judgment**. Facts come from the CLI, LSP or MCP, so s
 
 ## Evaluation
 
-`plugin/evals/` (Claude Code `claude plugin eval` format): cases like "fix this broken mod" (fixture with 5 seeded errors → lint clean), "migrate fixture X" (compare to golden output), "what inputs does `CommandList\ZZMI\SetTextures` need" (must answer from the tool, not by reading the whole package). Run before each plugin release.
+`plugin/evals/` (Claude Code `claude plugin eval` format): cases like "fix this broken mod" (fixture with 5 seeded errors → lint clean), "what inputs does `CommandList\ZZMI\SetTextures` need" (must answer from the tool, not by reading the whole package). Run before each plugin release.

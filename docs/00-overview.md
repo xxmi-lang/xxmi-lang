@@ -10,10 +10,10 @@ Mod `.ini` files for XXMI (3DMigoto fork) are a real programming language: secti
 
 ## Goals
 
-1. **Linter and LSP first.** Diagnostics, go-to-definition, references, rename, hover, completion and formatting, in VS Code and Kate. This serves humans and agents at the same time.
-2. **Mechanical transforms.** `fmt`, `normalize` (CN cleanup) and `migrate` (format-era upgrades) as deterministic, tested codemods.
+1. **Linter and LSP first.** Diagnostics, go-to-definition, references, rename, hover and completion, in VS Code and Kate. This serves humans and agents at the same time.
+2. **Mechanical transforms** (`fmt`, `normalize`, `migrate`) moved to the maintainer's C# app. `05-transforms.md` is their design reference.
 3. **Hosted MCP server.** Anyone's agent can query the DLL, the ZZMI package and XXMITools without cloning them, and can lint ini text remotely.
-4. **Skills.** Workflow knowledge for agents: migrate a mod, apply a library, clean up a CN mod. Skills call the CLI; they don't reimplement it.
+4. **Skills.** Workflow knowledge for agents: migrate a mod, apply a library. Skills call the CLI; they don't reimplement it.
 
 ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIMI profiles can be added as data.
 
@@ -23,14 +23,14 @@ ZZZ/ZZMI is the priority profile. The design stays general so GIMI/SRMI/WWMI/HIM
 - An HLSL language server. Only a Kate HLSL syntax file is in scope (see `08-editor-integration.md`).
 - Running the game or DLL, and frame analysis.
 - Full LSP support inside XXMITools Jinja templates (`*.ini.j2`). We lint their rendered output in CI instead (see `09-roadmap.md`).
-- Decrypting or bypassing protection on mods whose authors deliberately locked them. `normalize` targets messy-but-readable mods.
+- Decrypting or bypassing protection on mods whose authors deliberately locked them.
 
 ## Users
 
 | User                               | Surface                     | Main need                                                       |
 | ---------------------------------- | --------------------------- | --------------------------------------------------------------- |
 | Mod author (human)                 | VS Code, Kate               | Errors before launching the game, navigation, rename            |
-| Mod fixer / maintainer             | CLI, editor                 | Batch migrate and normalize, then review diffs                  |
+| Mod fixer / maintainer             | CLI, editor                 | Whole-mod lint, navigation and rename                           |
 | AI agent, local (Claude Code etc.) | LSP via plugin, CLI, skills | Diagnostics after each edit, precise lookups                    |
 | AI agent, remote / no clone        | Hosted MCP                  | Spec lookups, library catalog, source search, remote lint       |
 | XXMI / ZZMI maintainers            | CI                          | Lint the ZZMI package and XXMITools template output on every PR |
