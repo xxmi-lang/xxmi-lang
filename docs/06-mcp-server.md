@@ -72,6 +72,8 @@ Railway autodeploys pushes to `main` once CI passes. Build settings live in the 
 - Attach a volume at `/data`. On first boot the indexer clones everything. `/healthz` returns 200 immediately and a `"ready"` flag once the first index finishes; tools return a "warming up" error until then.
 - Custom domain optional (e.g. `mcp.xxmi.dev`).
 
+Deployment settings are in `.railway/railway.ts`, but changes there are not applied on push. From a checkout linked to the service, run `railway config plan` to review and `railway config apply` to apply them (Railway CLI 5.42.1 or newer). Variables stay in Railway: `preserve()` keeps their current values.
+
 ## Client setup (for the README)
 
 ```bash
