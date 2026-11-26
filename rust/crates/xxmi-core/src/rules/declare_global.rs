@@ -11,7 +11,7 @@ pub fn declare_global(context: &RuleContext, name: &str) -> FixSpec {
         Some((end, content_start)) => {
             insert_line_after(context.text, end, content_start, &declaration)
         }
-        None => open_constants(context.text, &declaration),
+        None => open_constants(context, &declaration),
     };
 
     FixSpec {
@@ -34,34 +34,43 @@ fn constants_anchor(context: &RuleContext) -> Option<(usize, usize)> {
     Some((last.content.end, last.content.start))
 }
 
-fn open_constants(text: &str, declaration: &str) -> (Span, String) {
-    let at = top_of_file(text);
+fn open_constants(context: &RuleContext, declaration: &str) -> (Span, String) {
+    let text = context.text;
+    let at = preamble_end(context);
     let eol = line_ending(text, at);
+    // A key line straight above would otherwise run into the header.
+    let gap = if text[..at]
+        .lines()
+        .next_back()
+        .is_some_and(|line| !line.trim().is_empty())
+    {
+        eol
+    } else {
+        ""
+    };
     (
         Span { start: at, end: at },
-        format!("[Constants]{eol}{declaration}{eol}{eol}"),
+        format!("{gap}[Constants]{eol}{declaration}{eol}{eol}"),
     )
 }
 
-/// The start of the line after the `namespace` line or the last blank line at the top.
+/// The start of the line after the last key or blank line before the first section.
+/// Keys there (`namespace`, `condition`, in any order) belong to the file, not to a section.
 /// A comment block touching the first section stays attached to it, so the new section goes above.
-fn top_of_file(text: &str) -> usize {
+fn preamble_end(context: &RuleContext) -> usize {
+    let limit = context
+        .file
+        .sections
+        .first()
+        .map_or(context.text.len(), |section| section.chunk.start);
     let mut anchor = 0;
     let mut end = 0;
 
-    for line in text.split_inclusive('\n') {
+    for line in context.text[..limit].split_inclusive('\n') {
         end += line.len();
-        let trimmed = line.trim();
-        if trimmed.is_empty() || is_namespace(trimmed) {
+        if !line.trim_start().starts_with(';') {
             anchor = end;
-        } else if !trimmed.starts_with(';') {
-            break;
         }
     }
     anchor
-}
-
-fn is_namespace(line: &str) -> bool {
-    line.split_once('=')
-        .is_some_and(|(key, _)| key.trim().eq_ignore_ascii_case("namespace"))
 }
