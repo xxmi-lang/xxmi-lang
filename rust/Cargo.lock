@@ -1159,7 +1159,7 @@ checksum = "d0af592be68c579aa78a16846bd19422978c3c52e438523d45ff5d1bff1f9d4a"
 
 [[package]]
 name = "tree-sitter-migoto"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "cc",
  "tree-sitter",
@@ -1376,7 +1376,7 @@ dependencies = [
 
 [[package]]
 name = "xxmi"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "crossbeam-channel",
  "gen-lsp-types",
@@ -1389,7 +1389,7 @@ dependencies = [
 
 [[package]]
 name = "xxmi-core"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "line-index",
  "serde",
@@ -1402,7 +1402,7 @@ dependencies = [
 
 [[package]]
 name = "xxmi-mcp"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1426,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "xxmi-spec-extractor"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "regex",
  "serde",
