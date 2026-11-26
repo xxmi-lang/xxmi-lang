@@ -320,6 +320,27 @@ fn xm203_does_not_suggest_the_variables_own_name() {
     assert!(diagnostics[0]["fix"].is_null(), "{diagnostics:?}");
 }
 
+/// A namespaced miss may live in a file that was not loaded, so it warns where a bare one errors.
+#[test]
+fn xm203_warns_on_a_namespaced_variable_and_errors_on_a_bare_one() {
+    let dir = fixtures().join("rules/XM203/namespaced");
+
+    let diagnostics = diagnose(&dir, &dir, Some(vec!["XM203".to_string()]));
+
+    let found: Vec<(&str, &str)> = diagnostics
+        .iter()
+        .map(|d| {
+            (
+                d["message"].as_str().unwrap(),
+                d["severity"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(found.len(), 2, "{diagnostics:?}");
+    assert!(found[0].0.contains("$\\Lib\\missing") && found[0].1 == "warning");
+    assert!(found[1].0.contains("$bare") && found[1].1 == "error");
+}
+
 /// A fixture's `xxmi.toml` picks its profile, so the CRLF copy needs it too (and no stale one).
 fn copy_profile_config(fixture: &Path, scratch: &Path) {
     let copy = scratch.join("xxmi.toml");

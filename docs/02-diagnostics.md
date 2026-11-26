@@ -41,10 +41,10 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM115 | W | `;` comment after a value (the DLL keeps it in the value) | Move the comment above the line |
 | XM201 | E | Unresolved `run = CommandList…` target | Suggest nearest symbol; offer to create the section |
 | XM202 | E | Unresolved resource reference (`ref`, `copy`, `Resource\N\X`) | Suggest nearest |
-| XM203 | E | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment); the DLL drops the line | Rename to a close declared name, else add `global $x` to `[Constants]` |
+| XM203 | E (W when namespaced) | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment); the DLL drops the line | Rename to a close declared name, else add `global $x` to `[Constants]` |
 | XM204 | W | Variable declared but never used | Remove the declaration line |
 | XM205 | I | Section defined but never referenced (CommandList, Resource, CustomShader) | — |
-| XM206 | E | Unresolved namespace in `\N\name` | — |
+| XM206 | E (W for `$\N\var`) | Unresolved namespace in `\N\name` | — |
 | XM207 | E | Include target file not found | — |
 | XM208 | W | `filename =` points to a missing file | — |
 | XM209 | W | Global declared twice in `[Constants]` (the DLL keeps the first) | — |
@@ -221,7 +221,7 @@ Default severity: error. Unresolved resource reference (`ref`, `copy`, `Resource
 
 ### XM203
 
-Default severity: error. Variable used but never declared; the DLL drops the line. Quick fix: yes (renames to a close declared name, else declares it with `global` in `[Constants]`).
+Default severity: error, but a warning for a variable with an explicit namespace (`$\ns\var`), whose declaring file may simply not be loaded. Variable used but never declared; the DLL drops the line. Quick fix: yes (renames to a close declared name, else declares it with `global` in `[Constants]`).
 
 ### XM204
 
@@ -233,7 +233,7 @@ Default severity: info. Section defined but never referenced (CommandList, Resou
 
 ### XM206
 
-Default severity: error. Unresolved namespace in `\N\name`. Quick fix: no.
+Default severity: error, but a warning for a variable (`$\N\var`), whose declaring file may simply not be loaded. Unresolved namespace in `\N\name`. Quick fix: no.
 
 ### XM207
 
