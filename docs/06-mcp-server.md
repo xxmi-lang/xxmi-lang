@@ -61,7 +61,7 @@ MCP **resources** (read-only): `xxmi://spec/{dll_ref}/sections.json`, `…/comma
 
 ## Deployment
 
-Railway autodeploys pushes to `main` once CI passes. Build settings live in the Railway service, not in the repo:
+Railway autodeploys pushes to `main` once CI passes. Build settings are declared in `.railway/railway.ts`:
 
 - Dockerfile: `/docker/mcp/Dockerfile` (`dockerfilePath`)
 - Health check: `/healthz`, 60 s timeout (`healthcheckPath`, `healthcheckTimeout`)
