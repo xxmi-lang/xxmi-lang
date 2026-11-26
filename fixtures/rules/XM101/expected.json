@@ -13,6 +13,24 @@
         "line": 0,
         "character": 19
       }
+    },
+    "fix": {
+      "title": "Change to [TextureOverride Body]",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 1
+            },
+            "end": {
+              "line": 0,
+              "character": 14
+            }
+          },
+          "newText": "TextureOverride"
+        }
+      ]
     }
   },
   {

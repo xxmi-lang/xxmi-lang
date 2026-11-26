@@ -6,29 +6,65 @@
     "message": "Duplicate key found: type (first on line 2; the DLL uses the first)",
     "range": {
       "start": {
-        "line": 2,
+        "line": 3,
         "character": 0
       },
       "end": {
-        "line": 2,
+        "line": 3,
         "character": 4
       }
+    },
+    "fix": {
+      "title": "Remove the duplicate line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 0
+            },
+            "end": {
+              "line": 4,
+              "character": 0
+            }
+          },
+          "newText": ""
+        }
+      ]
     }
   },
   {
     "path": "bad.ini",
     "id": "XM104",
     "severity": "warning",
-    "message": "Duplicate non-command list key found: hash (first on line 6; the DLL uses the first)",
+    "message": "Duplicate non-command list key found: hash (first on line 7; the DLL uses the first)",
     "range": {
       "start": {
-        "line": 6,
+        "line": 7,
         "character": 0
       },
       "end": {
-        "line": 6,
+        "line": 7,
         "character": 4
       }
+    },
+    "fix": {
+      "title": "Remove the duplicate line",
+      "edits": [
+        {
+          "range": {
+            "start": {
+              "line": 6,
+              "character": 15
+            },
+            "end": {
+              "line": 7,
+              "character": 15
+            }
+          },
+          "newText": ""
+        }
+      ]
     }
   }
 ]

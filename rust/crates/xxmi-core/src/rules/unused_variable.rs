@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use super::global_redeclared::redeclared_globals;
 use super::local_redeclared::redeclared_locals;
-use super::{Finding, RuleContext};
+use super::{Finding, RuleContext, remove_line_fix};
 use crate::model::Scope;
 use crate::workspace::symbols::global_variable_key;
 
@@ -40,7 +40,17 @@ pub fn check(context: &RuleContext) -> Vec<Finding> {
             } else {
                 "Global"
             };
-            Finding::new(v.span, format!("{scope} variable {} is never used", v.name))
+            Finding {
+                span: v.span,
+                message: format!("{scope} variable {} is never used", v.name),
+                // A declaration is a line of its own, so comments above it stay.
+                fix: Some(remove_line_fix(
+                    context.text,
+                    v.span.start,
+                    "Remove the unused declaration",
+                )),
+                severity: None,
+            }
         })
         .collect()
 }

@@ -24,10 +24,10 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM003 | W | Preamble line other than `namespace` / `condition` (the DLL ignores it) | Comment out the line |
 | XM005 | W | Text after the `]` of a section header (the DLL ignores it) | Remove the text |
 | XM006 | W | Section header with no closing `]` | Add the `]` |
-| XM101 | E | Unknown section prefix (not in Command-list or Regular sections) | Suggest nearest prefix (edit distance) |
+| XM101 | E | Unknown section prefix (not in Command-list or Regular sections) | Replace the misspelt prefix with the nearest one, when only one is that close |
 | XM102 | W | Unknown key for this section kind | Suggest nearest key |
 | XM103 | E | Bare line (no `=`) in a section that doesn't allow it | Comment out the line |
-| XM104 | W | Duplicate key not in the DLL's duplicate whitelist | Remove the earlier one |
+| XM104 | W | Duplicate key not in the DLL's duplicate whitelist | Remove the later line (the DLL ignores it) |
 | XM105 | E | Invalid enum value (resource `type`, `format`, key `type`, …) | Suggest valid values |
 | XM106 | E | Unbalanced `if`/`elif`/`else`/`endif` | Insert missing `endif` |
 | XM107 | E / W / I | Duplicate section name within the same namespace, graded by what ignoring the duplicate costs | — |
@@ -41,8 +41,8 @@ Build these in roughly this order. Severity: E = error, W = warning, I = info, H
 | XM115 | W | `;` comment after a value (the DLL keeps it in the value) | Move the comment above the line |
 | XM201 | E | Unresolved `run = CommandList…` target | Suggest nearest symbol; offer to create the section |
 | XM202 | E | Unresolved resource reference (`ref`, `copy`, `Resource\N\X`) | Suggest nearest |
-| XM203 | W | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment) | Add to `[Constants]` |
-| XM204 | W | Variable declared but never used | Remove |
+| XM203 | E | Variable used but never declared (`$x` with no `global`/`local`/`persist`/Constants assignment); the DLL drops the line | Rename to a close declared name, else add `global $x` to `[Constants]` |
+| XM204 | W | Variable declared but never used | Remove the declaration line |
 | XM205 | I | Section defined but never referenced (CommandList, Resource, CustomShader) | — |
 | XM206 | E | Unresolved namespace in `\N\name` | — |
 | XM207 | E | Include target file not found | — |
@@ -73,9 +73,10 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM001:** leaves the lines that XM003, XM005, XM006, XM103, XM110 and XM111 name more precisely to those rules, so a line is never reported twice.
 - **XM003:** the DLL's `ParseIniPreamble` reads only `namespace` and `condition` (any case) before the first section and warns "Entry outside of section" for every other line, bare lines included. Flow keywords go to XM111.
 - **XM005 / XM006:** `ParseIniSectionLine` takes the name up to the first `]`, or the rest of the line when there is none, and ignores whatever follows. A `;` after the `]` is therefore harmless and not reported; other text is (warning), since it can hide a second header such as `[A][B]`.
+- **XM101:** the DLL warns "Unknown section type" and never reads the section (`ParseIniSectionLine`, `IniHandler.cpp`). The fix compares each known prefix with the name's leading characters, as the hint does.
 - **XM102:** unknown keys in regular sections are checked against the extracted spec. Keys vanilla 3DMigoto reads but XXMI dropped (stereo options, `mode`, …) get a message saying so. `[Profile]` is free-form. In command-list sections, only lines the grammar can't read as a command, resource copy or assignment are flagged (the DLL's "Unrecognised entry"); a misspelt keyword such as `runn` surfaces as XM001 instead.
 - **XM103:** reports lines without `=` in sections that don't allow them, with the DLL's "Malformed line" semantics (the line is dropped). A stray `else` or `endif` is XM111's.
-- **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini.
+- **XM104:** skips global sections in included files, which the DLL lets override the main d3dx.ini. `ParseIniKeyValLine` (`IniHandler.cpp`) inserts only the first value of a key into the section's lookup map, to match `GetPrivateProfileString`, and a command-list section skips its whitelisted keys, so the later line is never read and the fix deletes just that line (its break included; a last line without one takes the preceding break instead).
 - **XM107:** follows DLL load order, reporting the later duplicate. Duplicates are only compared within one package. A prefixed section is stored as `Prefix\namespace\Name` (`get_namespaced_section_name`, `ParseIniSectionLine`) and the namespace defaults to the file's path, so two files only collide when they share a `namespace =`. `ParseIniSectionLine` keeps the first and clears the rest. A duplicate in the same file stays a warning. When the first copy is in another file the severity grades what ignoring the duplicate costs: info when it is identical to the first (keys and values equal after collapsing whitespace and lower-casing keys; comment lines don't count); error for a mesh resource (a Resource that a `vb0`-`vb2` or `ib` line binds anywhere in the namespace, `ref` and `copy` forms included, or whose `filename` ends in `.buf` or `.ib`); error for a mesh command list (a CommandList or TextureOverride with a `vb*` or `ib` line, or a TextureOverride with `handling = skip`, `draw` or `drawindexed`); warning for everything else, image resources included. The message names the first copy relative to the duplicate's folder. A severity set in `xxmi.toml` replaces the per-finding one.
 - **XM108:** uses extracted argument counts (draw commands, `store`) and skips lines that already have a syntax error.
 - **XM109:** takes over from XM001 for parse errors on expression lines (`if …`, `$x = …`, `local …`).
@@ -87,8 +88,8 @@ All of XM001, XM002, XM101–XM109 and XM201–XM208 are in `rust/crates/xxmi-co
 - **XM114:** the keys are the section's own settings from the spec (`TextureOverride` and `ShaderOverride`): ParseCommandList skips them before it reads flow control and the `GetIni*` readers never look at `if`, so a copy inside a branch is not conditional. `handling` is a command, not a setting, so it isn't flagged. The fix applies when one chain has an `else` and every branch sets the key once to the same value: it adds one copy above the `if` (same indent) and deletes the copies. Only the first copy's diagnostic carries it, and its line break matches the file's.
 - **XM115:** a `;` at the start of a value or after a blank is part of the value for the DLL, so the line is read wrong. A `;` glued to text (`a;b.dds`) is left alone. The fix's line break matches the file's. XM113 skips such values.
 - **XM202:** covers resource and pool references on both sides of `=`. `ParseTargetCustomResource` fails for an undeclared destination too.
-- **XM203:** checks locals first (declared earlier in the same section), then `$\ns\name`, then the global name, as `parse_command_list_var_name` does.
-- **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt.
+- **XM203:** checks locals first (declared earlier in the same section), then `$\ns\name`, then the global name, as `parse_command_list_var_name` does. The DLL rejects the line, which is why it is an error: an undeclared assignment target fails in `CommandArgumentReader::GetVariable` (`ParseCommandListVariableAssignment`, `CommandList.cpp`), an undeclared operand in `CommandListOperand::parse_variable` (every expression and `if` condition), and `ParseCommandList` (`IniHandler.cpp`) then logs "Unrecognised entry". Variables the library snapshot declares resolve, so they are not reported. The fix renames to a close declared name (the locals of the section and the globals the file reaches), else adds `global $name` after the last line of the file's first `[Constants]`; with none it opens one after the file's top-level keys (`namespace`, `condition`, in any order) and the blank lines after them, above the first section's comment block. A single file of a multi-file mod is linted without its sibling `.ini` files, so a global declared in a sibling is reported and the fix would declare a duplicate: lint the mod folder, not one file. It is the file's own `[Constants]` because the DLL namespaces a global by the file declaring it (`ParseConstantsSection`). A name with an explicit namespace, or one that is also a local elsewhere in the file, gets no fix. Line breaks match the file's.
+- **XM204 / XM205:** only check files being linted, never libraries (`Core/` under a package) or d3dx.ini. For XM204, globals in those files are a library's API for other mods, so they're exempt. The fix deletes the declaration's line (comments above it stay); a global another mod outside the workspace reads would then be undeclared, so it stays an offered action.
 - **XM207:** only covers `include =`. A missing file gives the DLL's "Error opening" overlay warning, while a missing `include_recursive` folder is only logged at info level, so it isn't reported.
 - **XM208:** tries the ini's folder first, then the 3DMigoto folder, like `ParseResourceSection`, and skips absolute paths.
 - **XM209:** `ParseConstantsSection` registers globals from `[Constants]` only, and `RegisterGlobalVariable` refuses a name it already holds, so the first declaration wins (flags included, `persist` too) and the DLL warns "Redeclaration". Names compare case-insensitively and per namespace. The scope is one file; its declarations XM204 leaves to this rule.
@@ -152,7 +153,7 @@ Default severity: warning. Section header with no closing `]` (the DLL takes the
 
 ### XM101
 
-Default severity: error. Unknown section prefix (not in the command-list or regular section tables). Quick fix: no.
+Default severity: error. Unknown section prefix (not in the command-list or regular section tables). Quick fix: yes, when exactly one known prefix is that close (swaps the misspelt leading characters and keeps the rest of the name; not when a section already has the new name).
 
 ### XM102
 
@@ -164,7 +165,7 @@ Default severity: error. Bare line (no `=`) in a section that doesn't allow it. 
 
 ### XM104
 
-Default severity: warning. Duplicate key not in the DLL's duplicate whitelist. Quick fix: no.
+Default severity: warning. Duplicate key not in the DLL's duplicate whitelist. Quick fix: yes (deletes the later line).
 
 ### XM105
 
@@ -220,11 +221,11 @@ Default severity: error. Unresolved resource reference (`ref`, `copy`, `Resource
 
 ### XM203
 
-Default severity: warning. Variable used but never declared. Quick fix: no.
+Default severity: error. Variable used but never declared; the DLL drops the line. Quick fix: yes (renames to a close declared name, else declares it with `global` in `[Constants]`).
 
 ### XM204
 
-Default severity: warning. Variable declared but never used. Quick fix: no.
+Default severity: warning. Variable declared but never used. Quick fix: yes (deletes the declaration line).
 
 ### XM205
 
