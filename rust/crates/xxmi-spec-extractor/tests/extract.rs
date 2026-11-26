@@ -476,6 +476,26 @@ fn fails_loudly_when_a_component_folder_is_missing() {
 }
 
 #[test]
+fn accepts_a_checkout_without_the_dropped_d3dcompiler_folder() {
+    let root = std::env::temp_dir().join(format!("xxmi-no-d3dc-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    for dir in ["DirectX11", "Injector"] {
+        fs::create_dir_all(root.join(dir)).unwrap();
+        for entry in fs::read_dir(fixtures().join("xxmi").join(dir)).unwrap() {
+            let path = entry.unwrap().path();
+            fs::copy(&path, root.join(dir).join(path.file_name().unwrap())).unwrap();
+        }
+    }
+    fs::copy(fixtures().join("xxmi/util.h"), root.join("util.h")).unwrap();
+
+    let dll = DllSource::load(&root).unwrap();
+    fs::remove_dir_all(&root).unwrap();
+
+    assert!(dll.missing_components.is_empty());
+    extract_ok(dll, true);
+}
+
+#[test]
 fn records_instead_of_failing_in_baseline_mode() {
     let dll = with_edit("CommandList.h", |t| {
         t.replace("VariableFlagNames", "RenamedFlagNames")

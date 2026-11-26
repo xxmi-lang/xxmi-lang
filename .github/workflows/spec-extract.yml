@@ -44,7 +44,6 @@ jobs:
           # Keep in sync with DllSource::load (rust/crates/xxmi-spec-extractor/src/dll.rs).
           sparse-checkout: |
             /DirectX11/
-            /D3DCompiler/
             /Injector/
             /util.h
           sparse-checkout-cone-mode: false
